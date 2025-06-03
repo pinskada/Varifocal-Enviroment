@@ -12,27 +12,11 @@ public class Madgwick
 
     public Madgwick(float samplePeriod, float betaMoving, float betaStill)
     {
-        // Validate parameters
-        if (samplePeriod <= 0f)
-        {
-            Debug.LogError($"[Madgwick] Sample period must be greater than zero. Current sample period set to {samplePeriod} seconds.");
-            return; 
-        }
-        else
-        {
-            this.samplePeriod = samplePeriod; // Initial time between updates in seconds
-        }
+         // Set initial sample period
+        SetSamplePeriod(samplePeriod);
 
-        if (betaMoving <= 0f || betaStill <= 0f || betaMoving >= 1f || betaStill >= 1f || betaMoving >= betaStill)
-        {
-            Debug.LogError("[Madgwick] Beta values must be greater than zero and betaMoving must be less than betaStill.");
-            return;
-        }
-        else
-        {
-            this.betaMoving = betaMoving; // Beta for moving state
-            this.betaStill = betaStill;   // Beta for still state
-        }
+        // Set the beta values for moving and still states
+        SetBetas(betaMoving, betaStill);
 
         // Initialize quaternion to identity
         Quaternion = new float[] { 0f, 0f, 0f, 1f };
@@ -40,7 +24,7 @@ public class Madgwick
 
     public void Update9DOF(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz)
     {
- 
+
         // Calculate gyro magnitude (radians/sec)
         float gyroMag = Mathf.Sqrt(gx * gx + gy * gy + gz * gz);
 
@@ -134,6 +118,13 @@ public class Madgwick
         q2 += qDot2 * samplePeriod;
         q3 += qDot3 * samplePeriod;
         q4 += qDot4 * samplePeriod;
+
+        if (float.IsNaN(q1) || float.IsNaN(q2) || float.IsNaN(q3) || float.IsNaN(q4))
+        {
+            Debug.LogWarning("[Madgwick] NaN detected in quaternion update. Skipping frame.");
+            return;
+        }
+
         norm = (float)Math.Sqrt(q1 * q1 + q2 * q2 + q3 * q3 + q4 * q4);
         norm = 1f / norm;
         Quaternion[3] = q1 * norm;
@@ -186,11 +177,47 @@ public class Madgwick
         q2 += qDot2 * samplePeriod;
         q3 += qDot3 * samplePeriod;
         q4 += qDot4 * samplePeriod;
+
+        if (float.IsNaN(q1) || float.IsNaN(q2) || float.IsNaN(q3) || float.IsNaN(q4))
+        {
+            Debug.LogWarning("[Madgwick] NaN detected in quaternion update. Skipping frame.");
+            return;
+        }
+
         norm = (float)Math.Sqrt(q1 * q1 + q2 * q2 + q3 * q3 + q4 * q4);
         norm = 1f / norm;
         Quaternion[3] = q1 * norm;
         Quaternion[0] = q2 * norm;
         Quaternion[1] = q3 * norm;
         Quaternion[2] = q4 * norm;
+    }
+
+
+    public void SetSamplePeriod(float samplePeriod)
+    {
+        // Validate sample period
+        if (samplePeriod <= 0f)
+        {
+            Debug.LogError($"[Madgwick] Sample period must be greater than zero. Current sample period set to {samplePeriod} seconds.");
+            return;
+        }
+        else
+        {
+            this.samplePeriod = samplePeriod; // Initial time between updates in seconds
+        }
+    }
+    public void SetBetas(float betaMoving, float betaStill)
+    {
+        // Validate beta values
+        if (betaMoving <= 0f || betaStill <= 0f || betaMoving >= 1f || betaStill >= 1f || betaMoving > betaStill)
+        {
+            Debug.LogError("[Madgwick] Beta values must be greater than zero and betaMoving must be less than betaStill.");
+            return;
+        }
+        else
+        {
+            this.betaMoving = betaMoving; // Beta for moving state
+            this.betaStill = betaStill;   // Beta for still state
+        }
     }
 }

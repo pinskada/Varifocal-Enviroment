@@ -10,9 +10,9 @@ public class IMUHandler : MonoBehaviour
     public bool use9DOF = true; // Use 9DOF (gyro, accel, mag) or 6DOF (gyro, accel)
     private Madgwick filter; // Madgwick filter instance for orientation estimation
     private Quaternion initialRotation; // Initial rotation of the target transform to reset to
-    private Quaternion q; // Quaternion to hold the current orientation
+    private Quaternion q = Quaternion.identity; // Quaternion to hold the current orientation
     private double lastPacketTime = 0f; // Last packet time for calculating sample period
-
+    private double deltaTime = 0f; // Time since last packet for filter updates
     void Start()
     {
         filter = new Madgwick(1.0f / sampleFreq, betaMoving, betaStill);
@@ -52,10 +52,11 @@ public class IMUHandler : MonoBehaviour
         double currentTime = (double)System.Diagnostics.Stopwatch.GetTimestamp() / System.Diagnostics.Stopwatch.Frequency;
         if (lastPacketTime != 0f)
         {
-            double deltaTime = currentTime - lastPacketTime; // Calculate time since last packet
-            filter.samplePeriod = (float)deltaTime; // Update sample period inside the filter
+            deltaTime = currentTime - lastPacketTime; // Calculate time since last packet
         }
         lastPacketTime = currentTime; // Store the current time for the next update
+
+        filter.SetSamplePeriod((float)deltaTime); // Update the filter's sample period
 
         // Update the filter with the new sensor data
         if (use9DOF)
