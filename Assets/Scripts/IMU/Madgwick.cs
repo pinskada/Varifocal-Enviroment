@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class Madgwick
 {
+    // This script implements the Madgwick filter for orientation estimation based on IMU data.
+    // It supports both 9DOF (gyro, accelerometer, magnetometer) and 6DOF (gyro, accelerometer) modes.
+
     public float samplePeriod; // Time between updates in seconds
     private float beta; // Current beta value based on motion state
     private float betaMoving; // Smoother when moving fast

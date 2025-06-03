@@ -3,6 +3,9 @@ using Newtonsoft.Json.Linq;
 
 public class IMUHandler : MonoBehaviour
 {
+    // This script handles the IMU data processing and applies the orientation to a target transform in Unity.
+    // It uses the Madgwick filter for orientation estimation based on sensor data.
+
     public Transform target; // Camera or object to apply the IMU orientation to
     private float sampleFreq = 100.0f; // Initial refresh rate of the IMU in Hz
     public float betaMoving = 0.005f; // Madgwick filter beta gain
