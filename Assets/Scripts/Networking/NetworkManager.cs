@@ -4,37 +4,36 @@ using UnityEngine;
 using Newtonsoft.Json.Linq;
 using System.Collections;
 
+// This class handles communication between the Unity application and external devices like Raspberry Pi or ESP32 or local EyeTracker.
+// It can run in two modes: testbed - connects to a RPI as client or real - connects to the ESP32 via serial port and creates
+// a local TCP server for the EyeTracker.
+
 public class NetworkManager : MonoBehaviour
 {
-    // This class handles communication between the Unity application and external devices like Raspberry Pi or ESP32 or local EyeTracker.
-    // It can run in two modes: testbed - connects to a RPI as client or real - connects to the ESP32 via serial port and creates
-    // a local TCP server for the EyeTracker.
-
     [SerializeField] private bool isTestbed = true; // Flag to indicate if this is a testbed environment
     private GuiRenderer guiRenderer; // Reference to the GuiRenderer script
     private GuiHub guiHub; // Reference to the GuiHub script
     private TCP tcp; // Reference to the TCP script
     private Serial serial; // Reference to the Serial script
-    private IMUHandler imuHandler; // Reference to the IMUHandler script
-
-    public static event Action<NetworkManager> OnTCPReady;
+    [SerializeField] private IMUHandler imuHandler; // Reference to the IMUHandler script
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         // Initializes TCP client or server and serial port based on the setup.
 
+        StartCoroutine(FindGuiReferences());
         tcp = new TCP(isTestbed, this);
         if (!isTestbed)
         {
             serial = new Serial(this);
         }
-        StartCoroutine(FindGuiReferences());
     }
 
     void OnApplicationQuit()
     {
         // This method kills tcp client and serial connection
+
         tcp.Shutdown();
         if (serial != null)
             serial.Shutdown();
@@ -42,17 +41,27 @@ public class NetworkManager : MonoBehaviour
 
     private IEnumerator FindGuiReferences()
     {
-        yield return new WaitForSeconds(0.5f);
+        // This method attempts to find the GuiRenderer and GuiHub references in the scene.
 
-        guiRenderer = FindFirstObjectByType<GuiRenderer>();
-        guiHub = FindFirstObjectByType<GuiHub>();
+        int linkAttempts = 0;
+        while (linkAttempts < 50)
+        {
+            yield return new WaitForSeconds(0.1f);
 
-        if (guiRenderer == null)
-            Debug.LogError("GuiRenderer not found!");
-        if (guiHub == null)
-            Debug.LogError("GuiHub not found!");
+            if (guiRenderer == null)
+                guiRenderer = FindFirstObjectByType<GuiRenderer>();
 
-        OnTCPReady?.Invoke(this); // Notify listeners
+            if (guiHub == null)
+                guiHub = FindFirstObjectByType<GuiHub>();
+
+            if (guiHub != null && guiRenderer != null)
+            {
+                // If both references are found, break the loop
+                break;
+            }
+
+            linkAttempts++;
+        }
     }
 
     public void HandleJson(byte[] payload)
@@ -67,7 +76,6 @@ public class NetworkManager : MonoBehaviour
 
             string type = message["type"]?.ToString();
 
-            // Optionally: special handling based on type
             switch (type)
             {
                 case "IMU":
