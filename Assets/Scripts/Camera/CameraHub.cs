@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections;
 
 // Manages the camera setup for a VR application, including setting up the left and right eye frustrums and managing IPD.
 
