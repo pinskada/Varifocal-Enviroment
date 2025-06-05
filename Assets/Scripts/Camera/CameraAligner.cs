@@ -25,6 +25,8 @@ public class CameraAligner : MonoBehaviour
 
     private IEnumerator AlignToAnchorNextFrame()
     {
+        // Alligns the camera to the specified anchor GameObject after the scene has loaded.
+
         yield return null; // Wait one frame for objects in the new scene to initialize
 
         GameObject anchor = GameObject.Find(anchorName);
