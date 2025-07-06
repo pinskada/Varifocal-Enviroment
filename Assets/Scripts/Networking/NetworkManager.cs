@@ -11,7 +11,6 @@ using System.Collections;
 public class NetworkManager : MonoBehaviour
 {
     [SerializeField] private bool isTestbed = true; // Flag to indicate if this is a testbed environment
-    private GuiRenderer guiRenderer; // Reference to the GuiRenderer script
     private GuiHub guiHub; // Reference to the GuiHub script
     private TCP tcp; // Reference to the TCP script
     private Serial serial; // Reference to the Serial script
@@ -21,7 +20,7 @@ public class NetworkManager : MonoBehaviour
     void Start()
     {
         // Initializes TCP client or server and serial port based on the setup.
-
+        
         StartCoroutine(FindGuiReferences());
         tcp = new TCP(isTestbed, this);
         if (!isTestbed)
@@ -50,12 +49,8 @@ public class NetworkManager : MonoBehaviour
 
             if (guiHub == null)
                 guiHub = FindFirstObjectByType<GuiHub>();
-
-            if (guiHub != null && guiRenderer != null)
-            {
-                // If both references are found, break the loop
+            else 
                 break;
-            }
 
             linkAttempts++;
         }

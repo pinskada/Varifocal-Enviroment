@@ -56,5 +56,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "Varifocal Enviroment.sln"
+    "dotnet.defaultSolution": "Varifocal-Enviroment.sln"
 }

@@ -24,12 +24,6 @@ public class ConfigManager : MonoBehaviour
 
     private string _configPath;
 
-    // Events for subscribers to receive their config blocks
-    public static event Action<DisplaySettings> OnDisplaySettingsLoaded;
-    public static event Action<IMUSettings>     OnIMUSettingsLoaded;
-    public static event Action<RpiConfig>       OnRpiConfigLoaded;
-    public static event Action<Esp32Config>     OnEspConfigLoaded;
-    public static event Action<EyeLoopConfig>   OnEyeLoopConfigLoaded;
 
     void Awake()
     {
@@ -40,13 +34,6 @@ public class ConfigManager : MonoBehaviour
         }
         Instance = this;
         DontDestroyOnLoad(gameObject);
-
-        // Subscribe to component-ready events
-        DisplayManager.OnReady   += InvokeDisplaySettings;
-        IMUManager.OnReady       += InvokeIMUSettings;
-        RpiManager.OnReady       += InvokeRpiConfig;
-        Esp32Manager.OnReady     += InvokeEspConfig;
-        EyeLoopManager.OnReady   += InvokeEyeLoopConfig;
     }
 
     void Start()
@@ -101,38 +88,12 @@ public class ConfigManager : MonoBehaviour
         Debug.Log($"[ConfigManager] Saved config: {_configPath}");
     }
 
-    // These methods are called by component-ready events
-    private void InvokeDisplaySettings()
+    public void getIMUSettings(out IMUSettings settings)
     {
-        var cfg = (mode == VRMode.Testbed)
-            ? TestbedConfig.displaySettings
-            : UserVRConfig.displaySettings;
-        OnDisplaySettingsLoaded?.Invoke(cfg);
-    }
-
-    private void InvokeIMUSettings()
-    {
-        var cfg = (mode == VRMode.Testbed)
-            ? TestbedConfig.imuSettings
-            : UserVRConfig.imuSettings;
-        OnIMUSettingsLoaded?.Invoke(cfg);
-    }
-
-    private void InvokeRpiConfig()
-    {
-        if (mode == VRMode.Testbed)
-            OnRpiConfigLoaded?.Invoke(TestbedConfig.rpi);
-    }
-
-    private void InvokeEspConfig()
-    {
-        if (mode == VRMode.UserVR)
-            OnEspConfigLoaded?.Invoke(UserVRConfig.esp);
-    }
-
-    private void InvokeEyeLoopConfig()
-    {
-        if (mode == VRMode.UserVR)
-            OnEyeLoopConfigLoaded?.Invoke(UserVRConfig.eyeTracker);
+        if (mode == VRMode.Testbed) {
+            settings = TestbedConfig.imuSettings;
+        } else {
+            settings = UserVRConfig.imuSettings;
+        }
     }
 }

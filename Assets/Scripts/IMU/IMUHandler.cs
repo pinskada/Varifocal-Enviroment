@@ -1,5 +1,6 @@
 using UnityEngine;
 using Newtonsoft.Json.Linq;
+using System;
 
 public class IMUHandler : MonoBehaviour
 {
@@ -7,6 +8,8 @@ public class IMUHandler : MonoBehaviour
     // It uses the Madgwick filter for orientation estimation based on sensor data.
 
     public Transform target; // Camera or object to apply the IMU orientation to
+    public static event Action OnReady;
+
     private float sampleFreq = 100.0f; // Initial refresh rate of the IMU in Hz
     public float betaMoving = 0.005f; // Madgwick filter beta gain
     public float betaStill = 0.1f; // Madgwick filter beta gain when still
@@ -18,6 +21,9 @@ public class IMUHandler : MonoBehaviour
     private double deltaTime = 0f; // Time since last packet for filter updates
     void Start()
     {
+        //ConfigManager.OnIMUSettingsLoaded += ApplySettings;
+        OnReady?.Invoke(); // Notify that the IMUHandler is ready
+        
         filter = new Madgwick(1.0f / sampleFreq, betaMoving, betaStill);
         if (target != null)
             initialRotation = target.rotation; // Save the starting rotation
@@ -41,6 +47,15 @@ public class IMUHandler : MonoBehaviour
         {
             Debug.LogWarning("[IMUHandler] Target transform is not assigned. Cannot apply rotation.");
         }
+    }
+
+    private void ApplySettings()
+    {
+        //settings = cfg;
+        // Use the settings to configure your IMU (example)
+        // Debug.Log($"[IMUManager] Applying IMU settings: Sensitivity={_settings.sensitivity}, SamplingRate={_settings.samplingRate}");
+        // imuDevice.SetSensitivity(cfg.sensitivity);
+        // imuDevice.SetSamplingRate(cfg.samplingRate);
     }
 
     public void UpdateFilter(JToken data)
