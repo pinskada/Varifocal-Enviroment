@@ -48,9 +48,6 @@ public class NetworkManager : MonoBehaviour
         {
             yield return new WaitForSeconds(0.1f);
 
-            if (guiRenderer == null)
-                guiRenderer = FindFirstObjectByType<GuiRenderer>();
-
             if (guiHub == null)
                 guiHub = FindFirstObjectByType<GuiHub>();
 
@@ -108,7 +105,7 @@ public class NetworkManager : MonoBehaviour
     {
         // This method handles the preview image from RPI.
 
-        guiRenderer.OnImageReceived(payload);
+        guiHub.HandlePreviewImage(payload);
     }
 
     public void HandleEyeTrackerImage(byte[] payload)
@@ -122,7 +119,15 @@ public class NetworkManager : MonoBehaviour
     {
         // This method sends the configuration to the Raspberry Pi or other devices via guiHub->guiInterface.
 
-        guiHub.sendConfigToRpi();
+        if (isTestbed)
+        {
+            guiHub.SendConfigToRpi();
+        }
+        else
+        {
+            guiHub.SendConfigToEsp32();
+            guiHub.SendConfigToLocalEyeTracker();
+        }
     }
 
     public void SendMessage()

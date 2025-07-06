@@ -14,5 +14,11 @@ public class GuiHub : MonoBehaviour
 
     }
 
-    public void sendConfigToRpi() { }
+    public void SendConfigToRpi() { }
+
+    public void SendConfigToEsp32() { }
+
+    public void SendConfigToLocalEyeTracker() { }
+
+    public void HandlePreviewImage(byte[] payload) { }
 }

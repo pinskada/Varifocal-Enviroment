@@ -45,7 +45,7 @@ public class VRSceneManager : MonoBehaviour
 
     private IEnumerator SwitchVRScene(string newScene)
     {
-        // Check if the new scene is already loaded and skip loading if it is
+        // Checks if the new scene is already loaded and skip loading if it is
 
         bool skipSceneLoad = false;
         if (newScene == currentVRScene)

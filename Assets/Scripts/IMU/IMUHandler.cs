@@ -21,6 +21,7 @@ public class IMUHandler : MonoBehaviour
         filter = new Madgwick(1.0f / sampleFreq, betaMoving, betaStill);
         if (target != null)
             initialRotation = target.rotation; // Save the starting rotation
+
     }
 
     void Update()

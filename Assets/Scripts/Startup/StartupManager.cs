@@ -6,9 +6,10 @@ public class StartupManager : MonoBehaviour
 {
     private void Start()
     {
-        Application.targetFrameRate = 50;
-        QualitySettings.vSyncCount = 1;
+        // Set the target frame rate to the default value (-1) to allow Unity to manage it automatically.
+        Application.targetFrameRate = -1;
 
+        // Set the initial screen resolution and full-screen mode.
         if (Display.displays.Length > 1)
         {
             // Activate second display (external)
