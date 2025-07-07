@@ -75,8 +75,8 @@ public class NetworkManager : MonoBehaviour
 
                     if (imuHandler != null)
                     {
-                        JToken gyroData = message["data"];
-                        imuHandler.UpdateFilter(gyroData);
+                        JToken imuData = message["data"];
+                        imuHandler.UpdateFilter(imuData);
                     }
                     else
                     {
