@@ -1,0 +1,6 @@
+{
+  "name": "Networking",
+  "references": [
+    "Contracts"
+  ]
+}

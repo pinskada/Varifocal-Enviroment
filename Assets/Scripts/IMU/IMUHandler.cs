@@ -1,8 +1,9 @@
 using UnityEngine;
 using Newtonsoft.Json.Linq;
 using System;
+using Contracts;
 
-public class IMUHandler : MonoBehaviour
+public class IMUHandler : MonoBehaviour, IIMUDataReceiver, IIMUController
 {
     // This script handles the IMU data processing and applies the orientation to a target transform in Unity.
     // It uses the Madgwick filter for orientation estimation based on sensor data.
@@ -18,8 +19,10 @@ public class IMUHandler : MonoBehaviour
     private double lastPacketTime = 0f; // Last packet time for calculating sample period
     private double deltaTime = 0f; // Time since last packet for filter updates
 
+    private IOrientationApplier _orientationApplier; // Reference to the orientation applier interface
+
     void Start()
-    {        
+    {
         filter = new Madgwick(1.0f / sampleFreq, betaMoving, betaStill);
         if (target != null)
             initialRotation = target.rotation; // Save the starting rotation
@@ -33,30 +36,30 @@ public class IMUHandler : MonoBehaviour
             ResetOrientation();
             return;
         }
-       
+
         // Update the target rotation based on the filter's quaternion
         q.x = filter.Quaternion[0]; q.y = filter.Quaternion[1]; q.z = filter.Quaternion[2]; q.w = filter.Quaternion[3];
         if (target != null)
-            target.rotation = ConvertSensorToUnity(q);
+            _orientationApplier.ApplyOrientation(ConvertSensorToUnity(q));
         else
         {
             Debug.LogWarning("[IMUHandler] Target transform is not assigned. Cannot apply rotation.");
         }
     }
 
-    private void ApplySettings()
+    public void InjectOrientationApplier(IOrientationApplier receiver)
     {
-
+        _orientationApplier = receiver;
     }
 
-    public void UpdateFilter(JToken imuData)
+    public void UpdateFilter(IMUData imuData)
     {
         // Update the IMU filter with new sensor data
 
         // Parse the sensor data from the JSON object
-        Vector3 gyro = ParseVector3(imuData["gyro"]) * Mathf.Deg2Rad;
-        Vector3 accel = ParseVector3(imuData["accel"]).normalized;
-        Vector3 mag = ParseVector3(imuData["mag"]).normalized;
+        Vector3 gyro = imuData.Gyro * Mathf.Deg2Rad;
+        Vector3 accel = imuData.Accel.normalized;
+        Vector3 mag = imuData.Mag.normalized;
 
         // Update the sample period based on the time since the last packet
         double currentTime = (double)System.Diagnostics.Stopwatch.GetTimestamp() / System.Diagnostics.Stopwatch.Frequency;

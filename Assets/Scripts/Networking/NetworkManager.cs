@@ -3,6 +3,7 @@ using System.Text;
 using UnityEngine;
 using Newtonsoft.Json.Linq;
 using System.Collections;
+using Contracts;
 
 // This class handles communication between the Unity application and external devices like Raspberry Pi or ESP32 or local EyeTracker.
 // It can run in two modes: testbed - connects to a RPI as client or real - connects to the ESP32 via serial port and creates
@@ -11,17 +12,17 @@ using System.Collections;
 public class NetworkManager : MonoBehaviour
 {
     [SerializeField] private bool isTestbed = true; // Flag to indicate if this is a testbed environment
-    private GuiHub guiHub; // Reference to the GuiHub script
+    //private GuiHub guiHub; // Reference to the GuiHub script
     private TCP tcp; // Reference to the TCP script
     private Serial serial; // Reference to the Serial script
-    [SerializeField] private IMUHandler imuHandler; // Reference to the IMUHandler script
+    private IIMUDataReceiver _imuDataReceiver; // Reference to the IMUHandler script
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         // Initializes TCP client or server and serial port based on the setup.
-        
-        StartCoroutine(FindGuiReferences());
+
+        //StartCoroutine(FindGuiReferences());
         tcp = new TCP(isTestbed, this);
         if (!isTestbed)
         {
@@ -38,69 +39,77 @@ public class NetworkManager : MonoBehaviour
             serial.Shutdown();
     }
 
-    private IEnumerator FindGuiReferences()
+    public void InitializeDataReceiver(IIMUDataReceiver receiver)
     {
-        // This method attempts to find the GuiRenderer and GuiHub references in the scene.
-
-        int linkAttempts = 0;
-        while (linkAttempts < 50)
-        {
-            yield return new WaitForSeconds(0.1f);
-
-            if (guiHub == null)
-                guiHub = FindFirstObjectByType<GuiHub>();
-            else 
-                break;
-
-            linkAttempts++;
-        }
+        _imuDataReceiver = receiver;
     }
 
+    /*
+        private IEnumerator FindGuiReferences()
+        {
+            // This method attempts to find the GuiRenderer and GuiHub references in the scene.
+
+            int linkAttempts = 0;
+            while (linkAttempts < 50)
+            {
+                yield return new WaitForSeconds(0.1f);
+
+                if (guiHub == null)
+                    guiHub = FindFirstObjectByType<GuiHub>();
+                else 
+                    break;
+
+                linkAttempts++;
+            }
+        }
+    */
     public void HandleJson(byte[] payload)
     {
         // This method handles the JSON payload received peripherals.
 
         string json = Encoding.UTF8.GetString(payload);
 
-        try
-        {
-            JObject message = JObject.Parse(json);
+        
+                try
+                {
+                    JObject message = JObject.Parse(json);
 
-            string type = message["type"]?.ToString();
-
-            switch (type)
-            {
-                case "IMU":
-                    //UnityEngine.Debug.Log($"9DOF data recieved");
-
-                    if (imuHandler != null)
+                    string type = message["type"]?.ToString();
+                    switch (type)
                     {
-                        JToken imuData = message["data"];
-                        imuHandler.UpdateFilter(imuData);
+
+                        case "IMU":
+                            //UnityEngine.Debug.Log($"9DOF data recieved");
+
+                            if (_imuDataReceiver != null)
+                            {
+                                IMUData imuData = message["data"].ToObject<IMUData>();
+                                _imuDataReceiver.UpdateFilter(imuData);
+                            }
+                            else
+                            {
+                                Debug.LogWarning("IMUHandler is not assigned!");
+                            }
+                            break;
+                        case "GazeDistance":
+                        // Not yet implemented
+                        default:
+                            Debug.LogWarning($"Unknown message type: {type}");
+                            break;
                     }
-                    else
-                    {
-                        Debug.LogWarning("IMUHandler is not assigned!");
-                    }
-                    break;
-                case "GazeDistance":
-                // Not yet implemented
-                default:
-                    Debug.LogWarning($"Unknown message type: {type}");
-                    break;
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError($"Failed to parse JSON: {ex.Message}");
-        }
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"Failed to parse JSON: {ex.Message}");
+                }
+                
     }
 
     public void HandlePreviewImage(byte[] payload)
     {
         // This method handles the preview image from RPI.
 
-        guiHub.HandlePreviewImage(payload);
+        //guiHub.HandlePreviewImage(payload);
     }
 
     public void HandleEyeTrackerImage(byte[] payload)
@@ -113,16 +122,17 @@ public class NetworkManager : MonoBehaviour
     public void SendConfig()
     {
         // This method sends the configuration to the Raspberry Pi or other devices via guiHub->guiInterface.
-
-        if (isTestbed)
-        {
-            guiHub.SendConfigToRpi();
-        }
-        else
-        {
-            guiHub.SendConfigToEsp32();
-            guiHub.SendConfigToLocalEyeTracker();
-        }
+        /*
+                if (isTestbed)
+                {
+                    guiHub.SendConfigToRpi();
+                }
+                else
+                {
+                    guiHub.SendConfigToEsp32();
+                    guiHub.SendConfigToLocalEyeTracker();
+                }
+                */
     }
 
     public void SendMessage()

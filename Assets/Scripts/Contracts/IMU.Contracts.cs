@@ -1,7 +1,7 @@
+using UnityEngine;
+
 namespace Contracts {
-    
     // Data Transfer Object carrying raw IMU readings (gyro, accel, mag) and timing info.
-    
     public class IMUData {
         // Gyroscope readings in radians/sec.
         public Vector3 Gyro { get; }
@@ -20,12 +20,21 @@ namespace Contracts {
         }
     }
 
-    // Contract for consuming IMU data streams.
-    public interface IIMUWriter
-    {
-        // Called each time a new IMU sample or batch is available.
-        void OnIMUDataUpdate(IMUData data);
+    // Contract for consuming IMU data streams by updating the internal filter.
+    public interface IIMUDataReceiver {
+        // Called each time a new IMU sample is available to process.
+        void UpdateFilter(IMUData data);
+    }
 
+    // Contract for sending commands or real-time parameters to the IMU module.
+    public interface IIMUController {
+        // Reset the IMU’s orientation state.
         void ResetOrientation();
+    }
+
+    // Contract for applying orientation updates from IMU to any target (e.g., camera, network stream).
+    public interface IOrientationApplier {
+        // Apply a world-space rotation quaternion.
+        void ApplyOrientation(Quaternion worldRotation);
     }
 }

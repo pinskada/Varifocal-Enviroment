@@ -1,8 +1,9 @@
 using UnityEngine;
+using Contracts;
 
 // Manages the camera setup for a VR application, including setting up the left and right eye frustrums and managing IPD.
 
-public class CameraHub : MonoBehaviour
+public class CameraHub : MonoBehaviour, IOrientationApplier
 {
     [SerializeField] private CameraFrustrum leftEyeFrustrum; // Reference to the left eye camera frustrum.
     [SerializeField] private CameraFrustrum rightEyeFrustrum; // Reference to the right eye camera frustrum.
@@ -15,7 +16,7 @@ public class CameraHub : MonoBehaviour
     private float eyeToScreenDistance = 0.06f; // Default distance from eye to screen in meters
     private float screenWidth = 0.12f; // Default screen width in meters
     private float screenHeight = 0.068f; // Default screen height in meters
-
+    public Transform target; // Target transform to apply the camera orientation to
 
     void Start()
     {
@@ -33,6 +34,12 @@ public class CameraHub : MonoBehaviour
         SetEyeToScreenDistance(eyeToScreenDistance);
         SetScreenWidth(screenWidth);
         SetScreenHeight(screenHeight);
+    }
+
+
+    public void ApplyOrientation(Quaternion worldRotation)
+    {
+        target.rotation = worldRotation;
     }
 
     public void SetFOV(float fov)
