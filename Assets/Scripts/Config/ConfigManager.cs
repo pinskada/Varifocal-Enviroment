@@ -42,12 +42,11 @@ public class ConfigManager : MonoBehaviour
         LoadConfig();
     }
 
-    /// <summary>
-    /// Reads the JSON file for the chosen mode (Testbed or UserVR).
-    /// Creates defaults if none exists, and saves them.
-    /// </summary>
     private void LoadConfig()
     {
+        // Reads the JSON file for the chosen mode (Testbed or UserVR).
+        // Creates defaults if none exists, and saves them.
+
         string fileName = (mode == VRMode.Testbed)
             ? "testbedConfig.json"
             : "userVRConfig.json";
@@ -73,11 +72,10 @@ public class ConfigManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Serializes the active config back to JSON on disk.
-    /// </summary>
     public void SaveConfig()
     {
+        // Serializes the active config back to JSON on disk.
+
         if (string.IsNullOrEmpty(_configPath))
             throw new InvalidOperationException("ConfigManager: LoadConfig() must be called before SaveConfig().");
 

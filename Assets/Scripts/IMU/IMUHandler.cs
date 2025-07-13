@@ -2,6 +2,7 @@ using UnityEngine;
 using Newtonsoft.Json.Linq;
 using System;
 using Contracts;
+using System.Collections;
 
 public class IMUHandler : MonoBehaviour, IIMUDataReceiver, IIMUController
 {
@@ -19,13 +20,11 @@ public class IMUHandler : MonoBehaviour, IIMUDataReceiver, IIMUController
     private double lastPacketTime = 0f; // Last packet time for calculating sample period
     private double deltaTime = 0f; // Time since last packet for filter updates
 
-    private IOrientationApplier _orientationApplier; // Reference to the orientation applier interface
+    private IOrientationHandler _orientationApplier; // Reference to the orientation applier interface
 
     void Start()
     {
-        filter = new Madgwick(1.0f / sampleFreq, betaMoving, betaStill);
-        if (target != null)
-            initialRotation = target.rotation; // Save the starting rotation
+        WaitForConnection(); // Wait for the orientation applier to be assigned
     }
 
     void Update()
@@ -39,7 +38,7 @@ public class IMUHandler : MonoBehaviour, IIMUDataReceiver, IIMUController
 
         // Update the target rotation based on the filter's quaternion
         q.x = filter.Quaternion[0]; q.y = filter.Quaternion[1]; q.z = filter.Quaternion[2]; q.w = filter.Quaternion[3];
-        if (target != null)
+        if (_orientationApplier != null)
             _orientationApplier.ApplyOrientation(ConvertSensorToUnity(q));
         else
         {
@@ -47,8 +46,23 @@ public class IMUHandler : MonoBehaviour, IIMUDataReceiver, IIMUController
         }
     }
 
-    public void InjectOrientationApplier(IOrientationApplier receiver)
+    private IEnumerator WaitForConnection()
     {
+        while (_orientationApplier == null)
+        {
+            yield return new WaitForSeconds(0.1f); // Wait until the orientation applier is assigned
+        }
+
+        initialRotation = _orientationApplier.GetCurrentOrientation(); // Save the starting rotation
+        
+        // Initialize the Madgwick filter with the specified sample frequency and beta values
+        filter = new Madgwick(1.0f / sampleFreq, betaMoving, betaStill);
+    }
+
+    public void InjectOrientationApplier(IOrientationHandler receiver)
+    {
+        // Inject the orientation applier to later apply the computed orientation
+
         _orientationApplier = receiver;
     }
 
@@ -93,11 +107,11 @@ public class IMUHandler : MonoBehaviour, IIMUDataReceiver, IIMUController
 
     public void ResetOrientation()
     {
-        // Request a full reset of the orientation
+        // Make a full reset of the orientation inside the filter and therefore target transform
 
-        if (target != null)
+        if (_orientationApplier != null)
         {
-            target.rotation = initialRotation;
+            _orientationApplier.ApplyOrientation(initialRotation);
 
             // Hard reset Madgwick filter quaternion to identity
             filter.Quaternion[0] = 0f;
@@ -116,6 +130,9 @@ public class IMUHandler : MonoBehaviour, IIMUDataReceiver, IIMUController
         return new Quaternion(q.x, q.y, -q.z, -q.w);
     }
 
+    /* 
+    Discontinued code for parsing JSON data
+
     private Vector3 ParseVector3(JToken token)
     {
         // Parse a Vector3 from a JToken, defaulting to (0, 0, 0) if any component is missing
@@ -126,5 +143,6 @@ public class IMUHandler : MonoBehaviour, IIMUDataReceiver, IIMUController
             token["z"]?.ToObject<float>() ?? 0f
         );
     }
+    */
 
 }

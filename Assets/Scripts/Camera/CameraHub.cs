@@ -3,7 +3,7 @@ using Contracts;
 
 // Manages the camera setup for a VR application, including setting up the left and right eye frustrums and managing IPD.
 
-public class CameraHub : MonoBehaviour, IOrientationApplier
+public class CameraHub : MonoBehaviour, IOrientationHandler
 {
     [SerializeField] private CameraFrustrum leftEyeFrustrum; // Reference to the left eye camera frustrum.
     [SerializeField] private CameraFrustrum rightEyeFrustrum; // Reference to the right eye camera frustrum.
@@ -36,10 +36,14 @@ public class CameraHub : MonoBehaviour, IOrientationApplier
         SetScreenHeight(screenHeight);
     }
 
-
     public void ApplyOrientation(Quaternion worldRotation)
     {
         target.rotation = worldRotation;
+    }
+
+    public Quaternion GetCurrentOrientation()
+    {
+        return target.rotation;
     }
 
     public void SetFOV(float fov)

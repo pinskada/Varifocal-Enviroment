@@ -27,14 +27,18 @@ namespace Contracts {
     }
 
     // Contract for sending commands or real-time parameters to the IMU module.
-    public interface IIMUController {
+    public interface IIMUController
+    {
         // Reset the IMU’s orientation state.
         void ResetOrientation();
     }
 
     // Contract for applying orientation updates from IMU to any target (e.g., camera, network stream).
-    public interface IOrientationApplier {
+    public interface IOrientationHandler
+    {
         // Apply a world-space rotation quaternion.
         void ApplyOrientation(Quaternion worldRotation);
+        
+        Quaternion GetCurrentOrientation();
     }
 }

@@ -1,5 +1,5 @@
 using UnityEngine;
-using Contracts;
+//using Contracts;
 
 namespace Startup {
     [DisallowMultipleComponent]

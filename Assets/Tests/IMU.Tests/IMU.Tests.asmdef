@@ -1,5 +1,5 @@
 {
-    "name": "Config.Tests",
+	"name": "IMU.Tests",
     "references": [
       "Config"
     ],
@@ -9,5 +9,4 @@
     "includePlatforms": [
       "Editor"
     ]
-  }
-  
+}
