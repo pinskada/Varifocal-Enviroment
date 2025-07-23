@@ -4,7 +4,7 @@ using System;
 using Contracts;
 using System.Collections;
 
-public class IMUHandler : MonoBehaviour, IIMUDataReceiver, IIMUController
+public class IMUHandler : MonoBehaviour, IIMUDataReceiver, IIMUController, ISettingsApllier
 {
     // This script handles the IMU data processing and applies the orientation to a target transform in Unity.
     // It uses the Madgwick filter for orientation estimation based on sensor data.
@@ -37,7 +37,11 @@ public class IMUHandler : MonoBehaviour, IIMUDataReceiver, IIMUController
         }
 
         // Update the target rotation based on the filter's quaternion
-        q.x = filter.Quaternion[0]; q.y = filter.Quaternion[1]; q.z = filter.Quaternion[2]; q.w = filter.Quaternion[3];
+        q.x = filter.Quaternion[0];
+        q.y = filter.Quaternion[1];
+        q.z = filter.Quaternion[2];
+        q.w = filter.Quaternion[3];
+
         if (_orientationApplier != null)
             _orientationApplier.ApplyOrientation(ConvertSensorToUnity(q));
         else
@@ -130,19 +134,9 @@ public class IMUHandler : MonoBehaviour, IIMUDataReceiver, IIMUController
         return new Quaternion(q.x, q.y, -q.z, -q.w);
     }
 
-    /* 
-    Discontinued code for parsing JSON data
-
-    private Vector3 ParseVector3(JToken token)
+    public void ApplySettings(string settingName, JToken value)
     {
-        // Parse a Vector3 from a JToken, defaulting to (0, 0, 0) if any component is missing
 
-        return new Vector3(
-            token["x"]?.ToObject<float>() ?? 0f,
-            token["y"]?.ToObject<float>() ?? 0f,
-            token["z"]?.ToObject<float>() ?? 0f
-        );
     }
-    */
 
 }

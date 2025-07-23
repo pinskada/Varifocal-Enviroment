@@ -32,13 +32,4 @@ namespace Contracts {
         // Reset the IMU’s orientation state.
         void ResetOrientation();
     }
-
-    // Contract for applying orientation updates from IMU to any target (e.g., camera, network stream).
-    public interface IOrientationHandler
-    {
-        // Apply a world-space rotation quaternion.
-        void ApplyOrientation(Quaternion worldRotation);
-        
-        Quaternion GetCurrentOrientation();
-    }
 }

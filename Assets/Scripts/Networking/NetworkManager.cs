@@ -3,7 +3,7 @@ using System.Text;
 using UnityEngine;
 using Newtonsoft.Json.Linq;
 using System.Collections;
-using Contracts;
+using IMUContracts;
 
 // This class handles communication between the Unity application and external devices like Raspberry Pi or ESP32 or local EyeTracker.
 // It can run in two modes: testbed - connects to a RPI as client or real - connects to the ESP32 via serial port and creates
