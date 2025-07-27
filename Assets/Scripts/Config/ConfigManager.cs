@@ -24,6 +24,11 @@ public class ConfigManager : MonoBehaviour
     public UserVRConfig UserVRConfig { get; private set; }
     private string _configPath;
 
+    // Dictionary to hold listeners for config changes
+    // 1. Arg. - string: config key (e.g., "TestbedConfig.FieldName")
+    // 2. Arg. - list of handlers: List<Action<object>> for that key points to a lambda function
+    private Dictionary<string, List<Action<object>>> _subscriptions
+    = new Dictionary<string, List<Action<object>>>();
 
     void Awake()
     {
@@ -45,8 +50,8 @@ public class ConfigManager : MonoBehaviour
 
     void OnDestroy()
     {
-        // 1. Save config
-        // 2. Unregister all listeners
+        SaveConfig();
+        UnregisterAllListeners();
     }
 
     private void LoadConfig()
@@ -81,7 +86,7 @@ public class ConfigManager : MonoBehaviour
         }
     }
 
-    public void SaveConfig()
+    private void SaveConfig()
     {
         // Serializes the active config back to JSON on disk.
 
@@ -95,75 +100,175 @@ public class ConfigManager : MonoBehaviour
         Debug.Log($"[ConfigManager] Saved config: {_configPath}");
     }
 
-    void ChangeSetting<T>(string key, T newValue)
+    public void BindModule(object handler, string moduleName)
     {
-        // Change a setting in the current config
-        // 1. Set the value - void SetFieldByKeyPath(string key, object newValue)
-        // 2. Save the config - SaveConfig()
-        // 3. Broadcast to the listeners - void Broadcast(string key, object newValue)
-    }
+        // Bind a handler to the required module and initilize handlers values.
+        // 1. Compute the key path for each property in the module - key = moduleName + "." + X
+        // 2. Writes the initial values in the handler - GetValue<T>(key) and SetValue(prop, value)
+        // 3. Subscribes to changes - 
+        // - RegisterListener(string key, newValue => propInfo.SetValue(moduleInstance, newValue))
 
-    void BindSection(object module)
-    {
-        // Bind a module to the current config section
-        // 1. Reads the module's section prefix
-        // 2. Scans the module for public properties
-        // 3. a) Compute the key path for each property - Some.Prefix + "." + X
-        //    b) Writes the initial value in the module - GetValue<T>(key) and SetValue(prop, value)
-        //    c) Subscribes to changes - RegisterListener(key, v => prop.SetValue(module, v))
-    }
+        // Example:
 
-    void RegisterSectionListener(string sectionPrefix, Action<string, object> handler)
-    {
-        // Register a listener for changes to all keys in a section
-        // 1. Gets all keys - GetSectionValues(sectionPrefix)
-        // 2. For each key, register the handler - RegisterListener(key, handler)
-    }
+        // Get the handler instance by name
+        var handlerType = handler.GetType();
 
-    void RegisterListener(string key, Action<object> handler)
-    {
-        // Register a listener for changes to a specific config key
-        // Adds the handler to a dictionary - Dictionary<string, List<Action<object>>> _listeners;
-    }
+        // Returns a dictionary of key-value pairs.
+        var initialPropsValuesDict = GetPropValueDictFromModule(moduleName); 
 
-    Dictionary<string, object> GetSectionValues(string sectionPrefix)
+        // Iterate through the keys and values
+        foreach (var (key, initValue) in initialPropsValuesDict)
+        {
+            // Split the key into module name and property name
+            var (_, propertyName) = SplitKey(key);
+
+            // Try to get the property info by key
+            try 
+            { 
+                var singleProp = handlerType.GetProperty(propertyName);
+
+                singleProp.SetValue(handler, initValue);
+
+                // Register a listener for changes to this key
+                RegisterListenerToProperty(key, newValue => singleProp.SetValue(handler, newValue));
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[ConfigManager] Failed to bind property '{propertyName}' in module '{moduleName}': {ex.Message}");
+            }
+        
+        }
+    }
+    
+    Dictionary<string, object> GetPropValueDictFromModule(string moduleName)
     {
-        // Get all values in a section as a dictionary
-        // 1. Find all properties that start with the section prefix
-        // 2. Create a dictionary of key-value pairs
-        // 3. Return the dictionary
+        // Returns a dictionary of key-value pairs from a given module
+        // 1. Find all properties in the module by name
+        // 2. For each property, get its value using - GetPropertyValue(key)
+        // 3. Create a dictionary of property-value pairs
+        // 4. Return the dictionary
 
         return new Dictionary<string, object>(); // Placeholder, implement logic to get section values
     }
 
-    void UnregisterListener(string key, Action<object> handler)
-    {
-        // Unregister a listener for changes to a specific config key
-        // Removes the handler from the dictionary - Dictionary<string, List<Action<object>>> _listeners;
-    }
-
-    void Broadcast(string key, object newValue)
-    {
-        // Invoke all registered handlers for that key
-        // Loops through the dictionary/list of handlers for the key
-        // and calls each handler with the new value
-        // foreach (var h in _listeners[key]) h(newValue);
-    }
-
-    void SetFieldByKeyPath(string key, object value)
-    {
-        // Set a field in the current config by key path
-        // 1. Split the key by '.' to get the path
-        // 2. Navigate through the config object using reflection
-        // 3. Set the final property or field to the new value
-    }
-
-    T GetValue<T>(string key)
+    T GetPropertyValue<T>(string key)
     {
         // Extract a single setting value by its dot-path and return it
 
         return default(T); // Placeholder, implement logic to get value by key
     }
 
+    private void RegisterListenerToProperty(string key, Action<object> handler)
+    {
+        // Register a listener for changes to a specific config key
+        // Adds the handler lambda function to a dictionary - 
+        //      - Dictionary<string, List<Action<object>>> _subscriptions;
 
+        // Example:
+
+        // If this is the first listener for this key, make a new list
+        if (!_subscriptions.TryGetValue(key, out var list))
+        {
+            list = new List<Action<object>>();
+            _subscriptions[key] = list;
+        }
+
+        // Add the handler to the list
+        list.Add(handler);
+        
+    }
+
+    private void UnregisterAllListeners()
+    {
+        // Unregister all listeners for changes
+        _subscriptions.Clear();
+    }
+
+    public void ChangeProperty<T>(string key, T newValue)
+    {
+        // Change a Property in the current config
+        // 1. Set the value - void SetFieldByKeyPath(key, newValue)
+        // 2. Save the config - SaveConfig()
+        // 3. Broadcast to the listeners - void Broadcast(key, newValue)
+
+        SetFieldByKeyPath(key, newValue);
+        SaveConfig();
+        Broadcast(key, newValue);
+    }
+
+    private void SetFieldByKeyPath(string key, object rawValue)
+    {
+        // Set a field in the current config by key path
+        // 1. Split the key by '.' to get the path - SplitKey(key)
+        // 2. Navigate through the config object using reflection
+        // 3. Set the final property or field to the new value
+
+        var (moduleName, fieldName) = SplitKey(key);
+        object root = (mode == VRMode.Testbed) ? TestbedConfig : UserVRConfig;
+
+        // Grab the module block as a field
+        var moduleField = root.GetType().GetField(moduleName);
+        if (moduleField == null) {
+            Debug.LogError($"Module '{moduleName}' not found on config.");
+            return;
+        }
+        var moduleObj = moduleField.GetValue(root);
+
+        // Grab the target field
+        var targetField = moduleObj.GetType().GetField(fieldName);
+        if (targetField == null) {
+            Debug.LogError($"Field '{fieldName}' not found on module '{moduleName}'.");
+            return;
+        }
+
+        // Convert + set
+        try {
+            var converted = Convert.ChangeType(rawValue, targetField.FieldType);
+            targetField.SetValue(moduleObj, converted);
+        }
+        catch (Exception ex) {
+            Debug.LogError($"Failed to set '{fieldName}' on '{moduleName}': {ex.Message}");
+        }
+    }
+
+
+    private (string moduleName, string propertyName) SplitKey(string key)
+    {
+        // Checks if the key has only one '.' character
+        // Split the key by '.' to get the path
+        // Returns an array of strings representing the path
+
+        // Example:
+
+        // Check if the key is valid and contains exactly one '.'
+        if (string.IsNullOrEmpty(key) || key.Split('.').Length != 2)
+            Debug.LogError($"[ConfigManager] Invalid key format: {key}");
+
+        // Split the key into module name and property name
+        var parts = key.Split(new[]{'.'});
+
+        // Return the module name and property name
+        return (parts[0], parts[1]);
+    }
+
+    private void Broadcast(string key, object newValue)
+    {
+        // Invoke all registered handlers for that key
+        // Loops through the dictionary/list of handlers for the key
+        // and calls each handler with the new value
+
+        // Example:
+
+        // Look up all subscribers
+        if (_subscriptions.TryGetValue(key, out var handlers))
+        {
+            // Call each one, handing it the new value
+            foreach (var h in handlers)
+                h(newValue);
+        }
+        else
+        {
+            Debug.LogWarning($"No listeners registered for key: {key}");
+        }
+    }
 }
