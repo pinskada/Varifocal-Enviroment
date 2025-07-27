@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using UnityEngine;
 using Contracts;
+using System.Collections.Generic;
 
 public enum VRMode { Testbed, UserVR }
 
@@ -112,10 +113,27 @@ public class ConfigManager : MonoBehaviour
         //    c) Subscribes to changes - RegisterListener(key, v => prop.SetValue(module, v))
     }
 
+    void RegisterSectionListener(string sectionPrefix, Action<string, object> handler)
+    {
+        // Register a listener for changes to all keys in a section
+        // 1. Gets all keys - GetSectionValues(sectionPrefix)
+        // 2. For each key, register the handler - RegisterListener(key, handler)
+    }
+
     void RegisterListener(string key, Action<object> handler)
     {
         // Register a listener for changes to a specific config key
         // Adds the handler to a dictionary - Dictionary<string, List<Action<object>>> _listeners;
+    }
+
+    Dictionary<string, object> GetSectionValues(string sectionPrefix)
+    {
+        // Get all values in a section as a dictionary
+        // 1. Find all properties that start with the section prefix
+        // 2. Create a dictionary of key-value pairs
+        // 3. Return the dictionary
+
+        return new Dictionary<string, object>(); // Placeholder, implement logic to get section values
     }
 
     void UnregisterListener(string key, Action<object> handler)
@@ -143,7 +161,9 @@ public class ConfigManager : MonoBehaviour
     T GetValue<T>(string key)
     {
         // Extract a single setting value by its dot-path and return it
-        
+
         return default(T); // Placeholder, implement logic to get value by key
     }
+
+
 }
