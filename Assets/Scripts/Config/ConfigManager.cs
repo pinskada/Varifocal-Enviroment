@@ -16,12 +16,16 @@ public class ConfigManager : MonoBehaviour
     // Singleton instance
     public static ConfigManager Instance { get; private set; }
 
+    // Setup for different VR modes
     [Header("Mode Selection")]
     [SerializeField]
     private VRMode mode = VRMode.Testbed;
     public VRMode Mode => mode;
+
+    // Configurations for different VR modes
     public TestbedConfig TestbedConfig { get; private set; }
     public UserVRConfig UserVRConfig { get; private set; }
+    object Config;
     private string _configPath;
 
     // Dictionary to hold listeners for config changes
@@ -44,7 +48,7 @@ public class ConfigManager : MonoBehaviour
 
     void Start()
     {
-        // Load JSON config once at startup
+        // Load config
         LoadConfig();
     }
 
@@ -56,33 +60,37 @@ public class ConfigManager : MonoBehaviour
 
     private void LoadConfig()
     {
-        // Reads the JSON file for the chosen mode (Testbed or UserVR).
-        // Creates defaults if none exists, and saves them.
+        /* Loads the default configuration based on the selected VR mode.
+         * Sets the path for JSON storage and if it JSON exists, it loads it.
+         * Applies the loaded values to the current config object.
+         */
 
+        // Initialize the default config based on the selected mode
+        if (mode == VRMode.Testbed)
+            Config = new TestbedConfig();
+        else
+            Config = new UserVRConfig();
+
+        // Set the JSON config path based on the mode
         string fileName = (mode == VRMode.Testbed)
             ? "testbedConfig.json"
             : "userVRConfig.json";
         _configPath = Path.Combine(Application.persistentDataPath, fileName);
 
+        // Load the config from disk if it exists, otherwise create defaults
         if (File.Exists(_configPath))
         {
+            // Read the JSON file and deserialize into the config object
             string json = File.ReadAllText(_configPath);
-            if (mode == VRMode.Testbed)
-                TestbedConfig = JsonUtility.FromJson<TestbedConfig>(json);
-            else
-                UserVRConfig = JsonUtility.FromJson<UserVRConfig>(json);
-            Debug.Log($"[ConfigManager] Loaded config: {_configPath}");
+            // Apply any differences from the JSON to the current config
+            JsonUtility.FromJsonOverwrite(json, Config);
+            Debug.Log($"Loaded config: {_configPath}");
         }
         else
         {
-            // No config on disk → create defaults and persist
-            if (mode == VRMode.Testbed)
-                TestbedConfig = new TestbedConfig();
-            else
-                UserVRConfig = new UserVRConfig();
-
+            // If no JSON config exists, create it
             SaveConfig();
-            Debug.LogWarning($"[ConfigManager] No config found; created default at {_configPath}");
+            Debug.Log($"No config found; created default at {_configPath}");
         }
     }
 
@@ -91,13 +99,11 @@ public class ConfigManager : MonoBehaviour
         // Serializes the active config back to JSON on disk.
 
         if (string.IsNullOrEmpty(_configPath))
-            throw new InvalidOperationException("ConfigManager: LoadConfig() must be called before SaveConfig().");
+            Debug.LogError("LoadConfig() must be called before SaveConfig().");
 
-        string json = (mode == VRMode.Testbed)
-            ? JsonUtility.ToJson(TestbedConfig, prettyPrint: true)
-            : JsonUtility.ToJson(UserVRConfig, prettyPrint: true);
+        string json = JsonUtility.ToJson(Config, prettyPrint: true);
         File.WriteAllText(_configPath, json);
-        Debug.Log($"[ConfigManager] Saved config: {_configPath}");
+        Debug.Log($"Saved config: {_configPath}");
     }
 
     public void BindModule(object handler, string moduleName)
@@ -123,8 +129,8 @@ public class ConfigManager : MonoBehaviour
             var (_, propertyName) = SplitKey(key);
 
             // Try to get the property info by key
-            try 
-            { 
+            try
+            {
                 var singleProp = handlerType.GetProperty(propertyName);
 
                 singleProp.SetValue(handler, initValue);
@@ -134,9 +140,8 @@ public class ConfigManager : MonoBehaviour
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[ConfigManager] Failed to bind property '{propertyName}' in module '{moduleName}': {ex.Message}");
+                Debug.LogError($"Failed to bind property '{propertyName}' in module '{moduleName}': {ex.Message}");
             }
-        
         }
     }
     
@@ -184,6 +189,7 @@ public class ConfigManager : MonoBehaviour
         _subscriptions.Clear();
     }
 
+    // CORRECT
     public void ChangeProperty<T>(string key, T newValue)
     {
         // Change a Property in the current config
@@ -196,6 +202,7 @@ public class ConfigManager : MonoBehaviour
         Broadcast(key, newValue);
     }
 
+    // CORRECT
     private void SetFieldByKeyPath(string key, object rawValue)
     {
         // Set a field in the current config by key path
@@ -204,48 +211,84 @@ public class ConfigManager : MonoBehaviour
         // 3. Set the final property or field to the new value
 
         var (moduleName, fieldName) = SplitKey(key);
-        object root = (mode == VRMode.Testbed) ? TestbedConfig : UserVRConfig;
 
         // Grab the module block as a field
-        var moduleField = root.GetType().GetField(moduleName);
-        if (moduleField == null) {
+        var moduleField = Config.GetType().GetField(moduleName);
+        if (moduleField == null)
+        {
             Debug.LogError($"Module '{moduleName}' not found on config.");
             return;
         }
-        var moduleObj = moduleField.GetValue(root);
+        var moduleObj = moduleField.GetValue(Config);
 
         // Grab the target field
         var targetField = moduleObj.GetType().GetField(fieldName);
-        if (targetField == null) {
+        if (targetField == null)
+        {
             Debug.LogError($"Field '{fieldName}' not found on module '{moduleName}'.");
             return;
         }
 
+        // Determine the type of the target field
+        var targetType = targetField.FieldType;
+
+        // If the field is nullable, get the underlying type
+        var underlying = Nullable.GetUnderlyingType(targetType);
+        if (underlying != null)
+            targetType = underlying;
+
         // Convert + set
-        try {
-            var converted = Convert.ChangeType(rawValue, targetField.FieldType);
-            targetField.SetValue(moduleObj, converted);
+        try
+        {
+            object valueToSet;
+
+            if (targetType.IsEnum)
+            {
+                // Convert enum
+                valueToSet = Enum.Parse(targetType, rawValue.ToString(), ignoreCase: true);
+            }
+            else
+            {
+                // Convert other types
+                valueToSet = Convert.ChangeType(rawValue, targetType);
+            }
+
+            // Set the value on the target field
+            targetField.SetValue(moduleObj, valueToSet);
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             Debug.LogError($"Failed to set '{fieldName}' on '{moduleName}': {ex.Message}");
         }
     }
 
 
+    // CORRECT
     private (string moduleName, string propertyName) SplitKey(string key)
     {
         // Checks if the key has only one '.' character
         // Split the key by '.' to get the path
         // Returns an array of strings representing the path
 
-        // Example:
+
+        // Check if the key is null or whitespace
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            Debug.LogError("Key cannot be null or whitespace");
+            return (null, null);
+        }
+
+        // Split the key by '.' to get the module name and property name
+        var parts = key.Split(new[] { '.' }, StringSplitOptions.None);
 
         // Check if the key is valid and contains exactly one '.'
-        if (string.IsNullOrEmpty(key) || key.Split('.').Length != 2)
-            Debug.LogError($"[ConfigManager] Invalid key format: {key}");
-
-        // Split the key into module name and property name
-        var parts = key.Split(new[]{'.'});
+        if (parts.Length != 2
+            || string.IsNullOrWhiteSpace(parts[0])
+            || string.IsNullOrWhiteSpace(parts[1]))
+        {
+            Debug.LogError($"Key must be in the form 'ModuleName.PropertyName': '{key}'");
+            return (null, null);
+        }
 
         // Return the module name and property name
         return (parts[0], parts[1]);
