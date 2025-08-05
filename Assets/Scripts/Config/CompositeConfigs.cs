@@ -3,6 +3,7 @@
 [System.Serializable]
 public class TestbedConfig
 {
+    public TestSettings testSettings = new TestSettings();
     public TrackerSettings tracker = new TrackerSettings();
     public GazeProcessorSettings gaze = new GazeProcessorSettings();
     public CameraSettings camera = new CameraSettings();
@@ -15,6 +16,7 @@ public class TestbedConfig
 [System.Serializable]
 public class UserVRConfig
 {
+    public TestSettings testSettings = new TestSettings();
     public TrackerSettings tracker = new TrackerSettings();
     public GazeProcessorSettings gaze = new GazeProcessorSettings();
     public CameraSettings camera = new CameraSettings();

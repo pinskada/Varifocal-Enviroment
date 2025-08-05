@@ -1,14 +1,19 @@
-using UnityEngine;
-using Newtonsoft.Json.Linq;
 
 namespace Contracts
 {
-    // Contract for applying orientation updates to the camera.
-    public interface ISettingsApllier
+    // Contract for managing configuration settings.
+    public interface IConfigManager
     {
-        // Apply a world-space rotation quaternion.
-        void ApplySettings(string settingName, JToken value);
+        // Apply the settings
+        public void ChangeProperty<T>(string key, T newValue);
 
-        //void ChangeSettings(string settingName, JToken value);
+        // Bind a handler to a specific module
+        public void BindModule(object handler, string moduleName);
+
+        // Change current configuration profile
+        public void ChangeCurrentProfile(string profileName);
+
+        // Create a new configuration profile
+        public void CreateNewConfigProfile(string profileName);
     }
 }

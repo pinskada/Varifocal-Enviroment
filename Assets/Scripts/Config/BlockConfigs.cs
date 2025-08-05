@@ -1,6 +1,14 @@
 // Block-level data models for settings
 
 [System.Serializable]
+public class TestSettings
+{
+    public int testInt = 42;
+    public float testFloat = 3.14f;
+    public string testString = "TEST1";
+}
+
+[System.Serializable]
 public class DisplaySettings
 {
     public float camIPD = 63f;

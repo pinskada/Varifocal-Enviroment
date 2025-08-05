@@ -3,15 +3,16 @@ using System.IO;
 using UnityEngine;
 using Contracts;
 using System.Collections.Generic;
+using System.Reflection;
+
 
 public enum VRMode { Testbed, UserVR }
 
-/// <summary>
+
 /// MonoBehaviour-based manager that loads config at startup
 /// and dispatches settings when components signal readiness.
 /// Attach this to a GameObject in your initial scene.
-/// </summary>
-public class ConfigManager : MonoBehaviour
+public class ConfigManager : MonoBehaviour, IConfigManager
 {
     // Singleton instance
     public static ConfigManager Instance { get; private set; }
@@ -25,8 +26,12 @@ public class ConfigManager : MonoBehaviour
     // Configurations for different VR modes
     public TestbedConfig TestbedConfig { get; private set; }
     public UserVRConfig UserVRConfig { get; private set; }
-    object Config;
-    private string _configPath;
+    internal object Config;
+    private string configPath;
+    private string configSubfolder = "Configs";
+    private string headsetSubFolder;
+    private string configFolder;
+    private List<string> configFileNames;
 
     // Dictionary to hold listeners for config changes
     // 1. Arg. - string: config key (e.g., "TestbedConfig.FieldName")
@@ -34,7 +39,8 @@ public class ConfigManager : MonoBehaviour
     private Dictionary<string, List<Action<object>>> _subscriptions
     = new Dictionary<string, List<Action<object>>>();
 
-    void Awake()
+
+    public void Awake()
     {
         // Enforce singleton
         if (Instance != null && Instance != this)
@@ -46,17 +52,20 @@ public class ConfigManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    void Start()
+
+    public void Start()
     {
         // Load config
         LoadConfig();
     }
 
-    void OnDestroy()
+
+    public void OnDestroy()
     {
         SaveConfig();
         UnregisterAllListeners();
     }
+
 
     private void LoadConfig()
     {
@@ -71,40 +80,140 @@ public class ConfigManager : MonoBehaviour
         else
             Config = new UserVRConfig();
 
-        // Set the JSON config path based on the mode
-        string fileName = (mode == VRMode.Testbed)
-            ? "testbedConfig.json"
-            : "userVRConfig.json";
-        _configPath = Path.Combine(Application.persistentDataPath, fileName);
+        // Set the config subfolder based on the mode
+        headsetSubFolder = (mode == VRMode.Testbed) ? "Testbed" : "UserVR";
+
+        // Combine the persistent data path with the subfolders
+        configFolder = Path.Combine(Application.persistentDataPath, configSubfolder, headsetSubFolder);
+
+        // Check if ...\Config folder exists, if not create it
+        if (!Directory.Exists(Path.Combine(Application.persistentDataPath, configSubfolder)))
+            Directory.CreateDirectory(Path.Combine(Application.persistentDataPath, configSubfolder));
+
+        // Check if ...\UserVR or ...\Testbed folder exist, if not create it
+        if (!Directory.Exists(configFolder))
+            Directory.CreateDirectory(configFolder);
+
+        // Combine the persistent data path with the subfolder and base name
+        configPath = Path.Combine(configFolder, "Default.json");
 
         // Load the config from disk if it exists, otherwise create defaults
-        if (File.Exists(_configPath))
+        if (File.Exists(configPath))
         {
             // Read the JSON file and deserialize into the config object
-            string json = File.ReadAllText(_configPath);
+            string json = File.ReadAllText(configPath);
             // Apply any differences from the JSON to the current config
             JsonUtility.FromJsonOverwrite(json, Config);
-            Debug.Log($"Loaded config: {_configPath}");
+            Debug.Log($"Loaded config: {configPath}");
         }
         else
         {
             // If no JSON config exists, create it
             SaveConfig();
-            Debug.Log($"No config found; created default at {_configPath}");
+            Debug.Log($"No config found; created default at {configPath}");
         }
+
+        // Initialize the config file names list
+        ListFileNames(configFolder);
     }
+
 
     private void SaveConfig()
     {
         // Serializes the active config back to JSON on disk.
 
-        if (string.IsNullOrEmpty(_configPath))
-            Debug.LogError("LoadConfig() must be called before SaveConfig().");
+        if (string.IsNullOrEmpty(configPath))
+            Debug.LogError("configPath is empty.");
 
+        // Serialize the current config to JSON and write it to the new path
         string json = JsonUtility.ToJson(Config, prettyPrint: true);
-        File.WriteAllText(_configPath, json);
-        Debug.Log($"Saved config: {_configPath}");
+        File.WriteAllText(configPath, json);
+
+        Debug.Log($"Saved config: {configPath}");
     }
+
+
+    public void CreateNewConfigProfile(string profileName)
+    {
+        // Creates a new config profile by copying the current config
+        // and saving it with the specified profile name.
+
+        if (string.IsNullOrEmpty(profileName))
+        {
+            Debug.LogWarning("Profile name cannot be null or empty.");
+            return;
+        }
+
+        // Create a new config path with the profile name
+        configPath = Path.Combine(configFolder, $"{profileName}.json");
+
+        SaveConfig();
+
+        // Initialize the config file names list
+        ListFileNames(configFolder);
+
+        Debug.Log($"Created new config profile: {configPath}");
+    }
+
+
+    public void ChangeCurrentProfile(string profileName)
+    {
+        // Changes the current config profile to the specified one.
+        // Loads the JSON file and applies it to the current config object.
+
+        if (string.IsNullOrEmpty(profileName))
+        {
+            Debug.LogWarning("Profile name cannot be null or empty.");
+            return;
+        }
+
+        // Create a new config path with the profile name
+        configPath = Path.Combine(configFolder, $"{profileName}.json");
+
+        if (File.Exists(configPath))
+        {
+            string json = File.ReadAllText(configPath);
+            JsonUtility.FromJsonOverwrite(json, Config);
+            Debug.Log($"Changed to config profile: {configPath}");
+        }
+        else
+        {
+            Debug.Log($"Config profile not found: {configPath}");
+        }
+    }
+
+
+    public static void ListFileNames(string folderPath)
+    {
+        // Creates a list of file names in the specified folder.
+        var result = new List<string>();
+
+        // Check if the folder exists
+        if (!Directory.Exists(folderPath))
+        {
+            Debug.LogWarning($"Folder does not exist: {folderPath}");
+            return;
+        }
+        // Get all files in that folder (non‐recursive)
+        string[] files = Directory.GetFiles(folderPath, "*.*", SearchOption.TopDirectoryOnly);
+
+        foreach (var fullPath in files)
+        {
+            // Extract the file name
+            var fileName = Path.GetFileName(fullPath);
+
+            // Skip "Test.json" (case-insensitive)
+            if (string.Equals(fileName, "Test.json", StringComparison.OrdinalIgnoreCase))
+                continue;
+                
+            // Extract just the file name and add to the list
+            result.Add(Path.GetFileName(fullPath));
+        }
+
+        // Send the list to GUI
+        //IGUIreceiver.getConfigList(configFileNames); // Placeholder for GUI receiver
+    }
+
 
     public void BindModule(object handler, string moduleName)
     {
@@ -114,37 +223,36 @@ public class ConfigManager : MonoBehaviour
         // 3. Subscribes to changes - 
         // - RegisterListener(string key, newValue => propInfo.SetValue(moduleInstance, newValue))
 
-        // Example:
-
         // Get the handler instance by name
         var handlerType = handler.GetType();
 
         // Returns a dictionary of key-value pairs.
-        var initialPropsValuesDict = GetPropValueDictFromModule(moduleName); 
+        var initialPropsValuesDict = GetPropValueDictFromModule(moduleName);
 
         // Iterate through the keys and values
         foreach (var (key, initValue) in initialPropsValuesDict)
         {
             // Split the key into module name and property name
-            var (_, propertyName) = SplitKey(key);
+            var (_, fieldName) = SplitKey(key);
 
             // Try to get the property info by key
             try
             {
-                var singleProp = handlerType.GetProperty(propertyName);
+                var singleField = handlerType.GetField(fieldName);
 
-                singleProp.SetValue(handler, initValue);
+                singleField.SetValue(handler, initValue);
 
                 // Register a listener for changes to this key
-                RegisterListenerToProperty(key, newValue => singleProp.SetValue(handler, newValue));
+                RegisterListenerToProperty(key, newValue => singleField.SetValue(handler, newValue));
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Failed to bind property '{propertyName}' in module '{moduleName}': {ex.Message}");
+                Debug.LogError($"Failed to bind property '{fieldName}' in module '{moduleName}': {ex.Message}");
             }
         }
     }
-    
+
+
     Dictionary<string, object> GetPropValueDictFromModule(string moduleName)
     {
         // Returns a dictionary of key-value pairs from a given module
@@ -153,23 +261,37 @@ public class ConfigManager : MonoBehaviour
         // 3. Create a dictionary of property-value pairs
         // 4. Return the dictionary
 
-        return new Dictionary<string, object>(); // Placeholder, implement logic to get section values
+        // Initialize a dictionary to hold key-value pairs
+        var keyValuePairs = new Dictionary<string, object>();
+
+        // Get the module object by name
+        var moduleObj = GetModuleObject(moduleName);
+        if (moduleObj == null)
+            return keyValuePairs;
+
+        // Get module type
+        Type moduleType = moduleObj.GetType();
+
+        // Iterate through all public instance fields in the module type
+        foreach (var field in moduleType.GetFields(BindingFlags.Public | BindingFlags.Instance))
+        {
+            // Get the value and key of the field from the module object
+            object val = field.GetValue(moduleObj);
+            string fullKey = $"{moduleName}.{field.Name}";
+
+            // Add the key-value pair to the dictionary
+            keyValuePairs[fullKey] = val;
+        }
+
+        return keyValuePairs;
     }
 
-    T GetPropertyValue<T>(string key)
-    {
-        // Extract a single setting value by its dot-path and return it
-
-        return default(T); // Placeholder, implement logic to get value by key
-    }
 
     private void RegisterListenerToProperty(string key, Action<object> handler)
     {
         // Register a listener for changes to a specific config key
         // Adds the handler lambda function to a dictionary - 
         //      - Dictionary<string, List<Action<object>>> _subscriptions;
-
-        // Example:
 
         // If this is the first listener for this key, make a new list
         if (!_subscriptions.TryGetValue(key, out var list))
@@ -180,8 +302,8 @@ public class ConfigManager : MonoBehaviour
 
         // Add the handler to the list
         list.Add(handler);
-        
     }
+
 
     private void UnregisterAllListeners()
     {
@@ -189,7 +311,7 @@ public class ConfigManager : MonoBehaviour
         _subscriptions.Clear();
     }
 
-    // CORRECT
+
     public void ChangeProperty<T>(string key, T newValue)
     {
         // Change a Property in the current config
@@ -202,7 +324,7 @@ public class ConfigManager : MonoBehaviour
         Broadcast(key, newValue);
     }
 
-    // CORRECT
+
     private void SetFieldByKeyPath(string key, object rawValue)
     {
         // Set a field in the current config by key path
@@ -210,16 +332,11 @@ public class ConfigManager : MonoBehaviour
         // 2. Navigate through the config object using reflection
         // 3. Set the final property or field to the new value
 
+        // Split the key into module name and field name
         var (moduleName, fieldName) = SplitKey(key);
 
-        // Grab the module block as a field
-        var moduleField = Config.GetType().GetField(moduleName);
-        if (moduleField == null)
-        {
-            Debug.LogError($"Module '{moduleName}' not found on config.");
-            return;
-        }
-        var moduleObj = moduleField.GetValue(Config);
+        // Get the module object by name
+        var moduleObj = GetModuleObject(moduleName);
 
         // Grab the target field
         var targetField = moduleObj.GetType().GetField(fieldName);
@@ -263,13 +380,11 @@ public class ConfigManager : MonoBehaviour
     }
 
 
-    // CORRECT
-    private (string moduleName, string propertyName) SplitKey(string key)
+    private (string moduleName, string fieldName) SplitKey(string key)
     {
         // Checks if the key has only one '.' character
         // Split the key by '.' to get the path
         // Returns an array of strings representing the path
-
 
         // Check if the key is null or whitespace
         if (string.IsNullOrWhiteSpace(key))
@@ -286,13 +401,14 @@ public class ConfigManager : MonoBehaviour
             || string.IsNullOrWhiteSpace(parts[0])
             || string.IsNullOrWhiteSpace(parts[1]))
         {
-            Debug.LogError($"Key must be in the form 'ModuleName.PropertyName': '{key}'");
+            Debug.LogError($"Key must be in the form 'ModuleName.fieldName': '{key}'");
             return (null, null);
         }
 
         // Return the module name and property name
         return (parts[0], parts[1]);
     }
+
 
     private void Broadcast(string key, object newValue)
     {
@@ -313,5 +429,24 @@ public class ConfigManager : MonoBehaviour
         {
             Debug.LogWarning($"No listeners registered for key: {key}");
         }
+    }
+
+
+    private object GetModuleObject(string moduleName)
+    {
+        // Returns the module object by name
+        // 1. Get the field from the config object
+        // 2. Return the value of that field
+
+        // Grab the module block as a field
+        var moduleField = Config.GetType().GetField(moduleName);
+        if (moduleField == null)
+        {
+            Debug.LogError($"Module '{moduleName}' not found on config.");
+            return null;
+        }
+        var moduleObj = moduleField.GetValue(Config);
+
+        return moduleObj;
     }
 }

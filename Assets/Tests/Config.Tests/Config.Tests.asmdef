@@ -1,7 +1,8 @@
 {
     "name": "Config.Tests",
     "references": [
-      "Config"
+      "Config",
+      "Contracts"
     ],
     "optionalUnityReferences": [
       "TestAssemblies"

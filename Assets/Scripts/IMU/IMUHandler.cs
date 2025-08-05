@@ -4,7 +4,7 @@ using System;
 using Contracts;
 using System.Collections;
 
-public class IMUHandler : MonoBehaviour, IIMUDataReceiver, IIMUController, ISettingsApllier
+public class IMUHandler : MonoBehaviour, IIMUDataReceiver, IIMUController
 {
     // This script handles the IMU data processing and applies the orientation to a target transform in Unity.
     // It uses the Madgwick filter for orientation estimation based on sensor data.
@@ -46,7 +46,7 @@ public class IMUHandler : MonoBehaviour, IIMUDataReceiver, IIMUController, ISett
             _orientationApplier.ApplyOrientation(ConvertSensorToUnity(q));
         else
         {
-            Debug.LogWarning("[IMUHandler] Target transform is not assigned. Cannot apply rotation.");
+            Debug.LogWarning("Target transform is not assigned. Cannot apply rotation.");
         }
     }
 
@@ -123,7 +123,7 @@ public class IMUHandler : MonoBehaviour, IIMUDataReceiver, IIMUController, ISett
             filter.Quaternion[2] = 0f;
             filter.Quaternion[3] = 1f;
 
-            Debug.Log("[IMUHandler] Full reset: camera and filter set to default orientation.");
+            Debug.Log("Full reset: camera and filter set to default orientation.");
         }
     }
 
@@ -133,10 +133,4 @@ public class IMUHandler : MonoBehaviour, IIMUDataReceiver, IIMUController, ISett
 
         return new Quaternion(q.x, q.y, -q.z, -q.w);
     }
-
-    public void ApplySettings(string settingName, JToken value)
-    {
-
-    }
-
 }
