@@ -11,13 +11,12 @@ public class Madgwick
     private float beta; // Current beta value based on motion state
     private float betaMoving; // Smoother when moving fast
     private float betaStill; // More correction when still
+    private float minGyroMagnitude = 0.01f; // Threshold to skip updates when gyro is nearly zero
+    private float betaThreshold = 0.1f; // Threshold to switch between moving and still states
     public float[] Quaternion { get; private set; }// Quaternion representing the orientation (x, y, z, w)
 
-    public Madgwick(float samplePeriod, float betaMoving, float betaStill)
+    public Madgwick(float betaMoving, float betaStill, float betaThreshold, float minGyroMagnitude)
     {
-         // Set initial sample period
-        SetSamplePeriod(samplePeriod);
-
         // Set the beta values for moving and still states
         SetBetas(betaMoving, betaStill);
 
@@ -31,14 +30,14 @@ public class Madgwick
         // Calculate gyro magnitude (radians/sec)
         float gyroMag = Mathf.Sqrt(gx * gx + gy * gy + gz * gz);
 
-        if (gyroMag < 0.01f)
+        if (gyroMag < minGyroMagnitude)
         {
             // If gyro is nearly zero, we can skip the update
             return;
         }
 
         // Dynamic Beta Adjustment based on motion
-        if (gyroMag > 0.1f) // If rotation speed is above 0.1 rad/s (~6 deg/s)
+        if (gyroMag > betaThreshold) // If rotation speed is above 0.1 rad/s (~6 deg/s)
         {
             beta = betaMoving; // Moving: trust gyro more, low beta
         }

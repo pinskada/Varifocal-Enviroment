@@ -6,9 +6,6 @@ using System.Collections.Generic;
 using System.Reflection;
 
 
-public enum VRMode { Testbed, UserVR }
-
-
 /// MonoBehaviour-based manager that loads config at startup
 /// and dispatches settings when components signal readiness.
 /// Attach this to a GameObject in your initial scene.
@@ -19,8 +16,7 @@ public class ConfigManager : MonoBehaviour, IConfigManager
 
     // Setup for different VR modes
     [Header("Mode Selection")]
-    [SerializeField]
-    private VRMode mode = VRMode.Testbed;
+    [SerializeField] private VRMode mode = VRMode.Testbed;
     public VRMode Mode => mode;
 
     // Configurations for different VR modes

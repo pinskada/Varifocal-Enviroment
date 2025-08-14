@@ -10,13 +10,13 @@ namespace Contracts {
         // Magnetometer readings in µT.
         public Vector3 Mag { get; }
         // Time since last sample in seconds (measured at the data source).
-        public float DeltaTime { get; }
+        public float TimeStamp { get; }
 
-        public IMUData(Vector3 gyro, Vector3 accel, Vector3 mag, float deltaTime) {
+        public IMUData(Vector3 gyro, Vector3 accel, Vector3 mag, float timeStamp) {
             Gyro = gyro;
             Accel = accel;
             Mag = mag;
-            DeltaTime = deltaTime;
+            TimeStamp = timeStamp;
         }
     }
 

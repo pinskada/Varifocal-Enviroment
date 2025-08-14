@@ -8,6 +8,7 @@ public class TestSettings
     public string testString = "TEST1";
 }
 
+
 [System.Serializable]
 public class DisplaySettings
 {
@@ -17,14 +18,19 @@ public class DisplaySettings
     public float eyeToScreen = 50f;
 }
 
+
 [System.Serializable]
 public class IMUSettings
 {
-    public float Alfa = 63f;
-    public float Beta = 120f;
-    public float Fs = 68f;
-    public float type = 50f;
+    public float betaMoving = 0.005f; // Madgwick filter beta gain when moving [-]
+    public float betaStill = 0.1f; // Madgwick filter beta gain when still [-]
+    public float betaThreshold = 0.1f; // Threshold to switch between moving and still states [-]
+    public float MinDt = 0.001f; // Minimum delta time for filter updates [s]
+    public float MaxDt = 0.1f; // Maximum delta time for filter updates [s]
+    public float minGyroMagnitude = 0.01f;  // Threshold to skip updates when gyro is nearly zero [rad/s]
+
 }
+
 
 [System.Serializable]
 public class CameraSettings {
@@ -37,6 +43,7 @@ public class CameraSettings {
     public int previewFps  = 5;
 }
 
+
 [System.Serializable]
 public class CropSettings {
     public float left   = 0f;
@@ -45,12 +52,14 @@ public class CropSettings {
     public float bottom = 1f;
 }
 
+
 [System.Serializable]
 public class TrackerSettings {
     public int minRadius  = 5;
     public int maxRadius  = 20;
     public int searchStep = 10;
 }
+
 
 [System.Serializable]
 public class GazeProcessorSettings {

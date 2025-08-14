@@ -1,7 +1,8 @@
 {
 	"name": "IMU.Tests",
     "references": [
-      "Config"
+      "IMU",
+      "Contracts"
     ],
     "optionalUnityReferences": [
       "TestAssemblies"
