@@ -1,6 +1,8 @@
 using UnityEngine;
+using Contracts;
+using System.Collections.Generic;
 
-public class GuiHub : MonoBehaviour
+public class GuiHub : MonoBehaviour, IGUIHub
 {
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -11,6 +13,11 @@ public class GuiHub : MonoBehaviour
     void Update()
     {
 
+    }
+
+    public void pushConfigList(List<string> configFileNames)
+    {
+        // Implementation for pushing config file names to the GUI
     }
 
     public void SendConfigToRpi() { }

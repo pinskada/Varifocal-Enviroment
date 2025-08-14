@@ -9,10 +9,11 @@ using System.Reflection;
 /// MonoBehaviour-based manager that loads config at startup
 /// and dispatches settings when components signal readiness.
 /// Attach this to a GameObject in your initial scene.
-public class ConfigManager : MonoBehaviour, IConfigManager
+public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigManagerCommunicator
 {
     // Singleton instance
     public static ConfigManager Instance { get; private set; }
+    private IGUIHub _IGuiHub;
 
     // Setup for different VR modes
     [Header("Mode Selection")]
@@ -34,6 +35,13 @@ public class ConfigManager : MonoBehaviour, IConfigManager
     // 2. Arg. - list of handlers: List<Action<object>> for that key points to a lambda function
     private Dictionary<string, List<Action<object>>> _subscriptions
     = new Dictionary<string, List<Action<object>>>();
+
+
+    public void InjectModules(IGUIHub guiHub)
+    {
+        // Inject GUIhub
+        _IGuiHub = guiHub;
+    }
 
 
     public void Awake()
@@ -179,7 +187,7 @@ public class ConfigManager : MonoBehaviour, IConfigManager
     }
 
 
-    public static void ListFileNames(string folderPath)
+    public void ListFileNames(string folderPath)
     {
         // Creates a list of file names in the specified folder.
         var result = new List<string>();
@@ -201,13 +209,15 @@ public class ConfigManager : MonoBehaviour, IConfigManager
             // Skip "Test.json" (case-insensitive)
             if (string.Equals(fileName, "Test.json", StringComparison.OrdinalIgnoreCase))
                 continue;
-                
+
             // Extract just the file name and add to the list
             result.Add(Path.GetFileName(fullPath));
         }
 
+        configFileNames = result;
+
         // Send the list to GUI
-        //IGUIreceiver.getConfigList(configFileNames); // Placeholder for GUI receiver
+        _IGuiHub.pushConfigList(configFileNames); // Placeholder for GUI receiver
     }
 
 

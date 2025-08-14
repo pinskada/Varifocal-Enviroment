@@ -6,7 +6,8 @@ using Contracts;
 
 public class ConfigManagerTests
 {
-    private IConfigManager _IConfigManager;
+    private IConfigManagerCommunicator _IConfigManagerCommunicator;
+    private IConfigManagerConnector _IConfigManagerConnector;
 
 
     [Test]
@@ -37,14 +38,15 @@ public class ConfigManagerTests
         // Get the initial config path
         string configPath = GetConfigPath(configManager, "Default");
 
-        // Inject the IConfigManager interface
-        _IConfigManager = configManager;
+        // Inject the IConfigManager interfaces
+        _IConfigManagerCommunicator = configManager;
+        _IConfigManagerConnector = configManager;
 
         // Get the current time
         var currentWriteTime = System.DateTime.Now;
 
         // Change properties in the config
-        (int randomInt, float randomFloat, string randomString) = ChangeTestProperties(_IConfigManager);
+        (int randomInt, float randomFloat, string randomString) = ChangeTestProperties(_IConfigManagerCommunicator);
 
         // Determine the last write time of the config file
         var lastWriteTime = File.GetLastWriteTime(configPath);
@@ -71,14 +73,15 @@ public class ConfigManagerTests
         // Start the ConfigManager to initialize it
         configManager.Start();
 
-        // Inject the IConfigManager interface
-        _IConfigManager = configManager;
+        // Inject the IConfigManager interfaces
+        _IConfigManagerCommunicator = configManager;
+        _IConfigManagerConnector = configManager;
 
         // Create a dummy handler
         DummyConfigProvider dummyHandler = new GameObject("DummyHandler").AddComponent<DummyConfigProvider>();
 
         // Bind the dummy handler to the ConfigManager
-        dummyHandler.bindThisModule(_IConfigManager);
+        dummyHandler.bindThisModule(_IConfigManagerConnector);
 
         // Get the initial config path
         string configPath = GetConfigPath(configManager, "Default");
@@ -97,7 +100,7 @@ public class ConfigManagerTests
         Assert.AreEqual(dummyHandler.testString, actualString, "The string value in the config file does not match the dummy handler's value.");
 
         // Change properties in the config using the IConfigManager
-        (int randomInt, float randomFloat, string randomString) = ChangeTestProperties(_IConfigManager);
+        (int randomInt, float randomFloat, string randomString) = ChangeTestProperties(_IConfigManagerCommunicator);
 
         // Verify that the dummy handler's properties are updated correctly
         Assert.AreEqual(randomInt, dummyHandler.testInt, "The integer value in the dummy handler does not match the expected value after change.");
@@ -115,11 +118,12 @@ public class ConfigManagerTests
         // Start the ConfigManager to initialize it
         configManager.Start();
 
-        // Inject the IConfigManager interface
-        _IConfigManager = configManager;
+        // Inject the IConfigManager interfaces
+        _IConfigManagerCommunicator = configManager;
+        _IConfigManagerConnector = configManager;
 
         // Create a new test profile
-        _IConfigManager.CreateNewConfigProfile("Test");
+        _IConfigManagerCommunicator.CreateNewConfigProfile("Test");
 
         // Get path to test profile
         string configPath = GetConfigPath(configManager, "Test");
@@ -138,7 +142,7 @@ public class ConfigManagerTests
         Assert.GreaterOrEqual(timeDelta, -1, $"Test config file was not written to disk");
 
         // Change profile back to default
-        _IConfigManager.ChangeCurrentProfile("Default");
+        _IConfigManagerCommunicator.ChangeCurrentProfile("Default");
 
         // Get path to test profile
         configPath = GetConfigPath(configManager, "Default");
@@ -228,7 +232,7 @@ public class ConfigManagerTests
     }
 
 
-    public (int, float, string) ChangeTestProperties(IConfigManager _IConfigManager)
+    public (int, float, string) ChangeTestProperties(IConfigManagerCommunicator _IConfigManagerCommunicator)
     {
         // Create a random integer, float, and string to modify the config
         int randomInt = Random.Range(0, 1000);
@@ -236,9 +240,9 @@ public class ConfigManagerTests
         string randomString = "TestString_" + Random.Range(0, 1000);
 
         // Modify a property in the config
-        _IConfigManager.ChangeProperty("testSettings.testInt", randomInt);
-        _IConfigManager.ChangeProperty("testSettings.testFloat", randomFloat);
-        _IConfigManager.ChangeProperty("testSettings.testString", randomString);
+        _IConfigManagerCommunicator.ChangeProperty("testSettings.testInt", randomInt);
+        _IConfigManagerCommunicator.ChangeProperty("testSettings.testFloat", randomFloat);
+        _IConfigManagerCommunicator.ChangeProperty("testSettings.testString", randomString);
 
         return (randomInt, randomFloat, randomString);
     }
@@ -253,9 +257,9 @@ public class DummyConfigProvider : MonoBehaviour
     public float testFloat;
     public string testString;
 
-    public void bindThisModule(IConfigManager _IConfigManager)
+    public void bindThisModule(IConfigManagerConnector _IConfigManagerConnector)
     {
         // Bind this handler to the module
-        _IConfigManager.BindModule(this, moduleName);
+        _IConfigManagerConnector.BindModule(this, moduleName);
     }
 }

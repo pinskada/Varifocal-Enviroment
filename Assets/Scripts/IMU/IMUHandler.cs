@@ -2,14 +2,14 @@ using UnityEngine;
 using System.Collections;
 using Contracts;
 
-public class IMUHandler : MonoBehaviour, IIMUDataReceiver, IIMUController
+public class IMUHandler : MonoBehaviour, IIMUHandler
 {
     // This script handles the IMU data processing and applies the orientation to a target transform in Unity.
     // It uses the Madgwick filter for orientation estimation based on sensor data.
 
     string moduleName = "IMUHandler"; // Name of the module for configuration
-    public IConfigManager _IConfigManager;
-    private IOrientationHandler _orientationApplier; // Reference to the orientation applier interface
+    private IConfigManagerConnector _IConfigManager;
+    private ICameraHub _ICameraHub; // Reference to the camera hub interface
     public Transform target; // Camera or object to apply the IMU orientation to
     public bool use9DOF = true; // Use 9DOF (gyro, accel, mag) or 6DOF (gyro, accel)
     private Madgwick filter; // Madgwick filter instance for orientation estimation
@@ -18,6 +18,8 @@ public class IMUHandler : MonoBehaviour, IIMUDataReceiver, IIMUController
     private double deltaTime = 0f; // Time since last packet for filter updates
     private double lastPacketTime = 0.0f; // Last packet time for calculating sample period
 
+
+    //*********************************************************************************************
     // Constants imported from ConfigManager
     public float betaMoving; // Madgwick filter beta gain when moving
     public float betaStill; // Madgwick filter beta gain when still
@@ -25,7 +27,8 @@ public class IMUHandler : MonoBehaviour, IIMUDataReceiver, IIMUController
     public float MaxDt; // Maximum delta time for filter updates
     public float betaThreshold; // Threshold to switch between moving and still states
     public float minGyroMagnitude; // Threshold to skip updates when gyro is nearly zero
-
+    //*********************************************************************************************
+    
 
     // Ensure that the sensor data is valid and finite
     static bool IsFinite(double x) => !(double.IsNaN(x) || double.IsInfinity(x));
@@ -33,15 +36,40 @@ public class IMUHandler : MonoBehaviour, IIMUDataReceiver, IIMUController
     static bool IsFinite(Quaternion q) => IsFinite(q.x) && IsFinite(q.y) && IsFinite(q.z) && IsFinite(q.w);
 
 
-    void Start()
+    public void InjectModules(ICameraHub cameraHub, IConfigManagerConnector configManager)
+    {
+        // Inject the external modules interfaces into this handler
+
+        _ICameraHub = cameraHub;
+        _IConfigManager = configManager;
+    }
+
+
+    public void Start()
     {
         StartCoroutine(WaitForConnection()); // Wait for the orientation applier to be assigned
     }
 
+
+    private IEnumerator WaitForConnection()
+    {
+        while (_ICameraHub == null || _IConfigManager == null)
+        {
+            yield return new WaitForSeconds(0.1f); // Wait until everything is assigned
+        }
+
+        _IConfigManager.BindModule(this, moduleName); // Bind this module to the config manager
+        initialRotation = _ICameraHub.GetCurrentOrientation(); // Save the starting rotation
+
+        // Initialize the Madgwick filter with the specified sample frequency and beta values
+        filter = new Madgwick(betaMoving, betaStill, betaThreshold, minGyroMagnitude);
+    }
+
+
     void LateUpdate()
     {
         // Ensure the filter and config manager are initialized
-        if (filter == null || _IConfigManager == null) return;
+        if (filter == null || _IConfigManager == null || _ICameraHub == null) return;
 
         // Check for reset input
         if (Input.GetKeyDown(KeyCode.R))
@@ -57,35 +85,14 @@ public class IMUHandler : MonoBehaviour, IIMUDataReceiver, IIMUController
         q.w = filter.Quaternion[3];
 
         // Apply the computed orientation to the target transform
-        if (_orientationApplier != null)
-            _orientationApplier.ApplyOrientation(ConvertSensorToUnity(q));
+        if (_ICameraHub != null)
+            _ICameraHub.ApplyOrientation(ConvertSensorToUnity(q));
         else
         {
-            Debug.LogWarning("_orientationApplier is not assigned. Cannot apply rotation.");
+            Debug.LogWarning("_ICameraHub is not assigned. Cannot apply rotation.");
         }
     }
 
-    private IEnumerator WaitForConnection()
-    {
-        while (_orientationApplier == null || _IConfigManager == null)
-        {
-            yield return new WaitForSeconds(0.1f); // Wait until everything is assigned
-        }
-
-        _IConfigManager.BindModule(this, moduleName); // Bind this module to the config manager
-        initialRotation = _orientationApplier.GetCurrentOrientation(); // Save the starting rotation
-
-        // Initialize the Madgwick filter with the specified sample frequency and beta values
-        filter = new Madgwick(betaMoving, betaStill, betaThreshold, minGyroMagnitude);
-    }
-
-    public void InjectModules(IOrientationHandler orientationHandler, IConfigManager configManager)
-    {
-        // Inject the orientation applier to later apply the computed orientation
-
-        _orientationApplier = orientationHandler;
-        _IConfigManager = configManager;
-    }
 
     public void UpdateFilter(IMUData imuData)
     {
@@ -141,13 +148,14 @@ public class IMUHandler : MonoBehaviour, IIMUDataReceiver, IIMUController
         }
     }
 
+
     public void ResetOrientation()
     {
         // Make a full reset of the orientation inside the filter and therefore target transform
 
-        if (_orientationApplier != null && initialRotation != null)
+        if (_ICameraHub != null && initialRotation != null)
         {
-            _orientationApplier.ApplyOrientation(initialRotation);
+            _ICameraHub.ApplyOrientation(initialRotation);
 
             // Hard reset Madgwick filter quaternion to identity
             filter.Quaternion[0] = 0f;
@@ -158,6 +166,7 @@ public class IMUHandler : MonoBehaviour, IIMUDataReceiver, IIMUController
             Debug.Log("Full reset: camera and filter set to default orientation.");
         }
     }
+
 
     private Quaternion ConvertSensorToUnity(Quaternion q)
     {

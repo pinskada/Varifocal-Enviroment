@@ -15,7 +15,7 @@ public class NetworkManager : MonoBehaviour
     //private GuiHub guiHub; // Reference to the GuiHub script
     private TCP tcp; // Reference to the TCP script
     private Serial serial; // Reference to the Serial script
-    private IIMUDataReceiver _imuDataReceiver; // Reference to the IMUHandler script
+    private IIMUHandler _IIMUHandler; // Reference to the IMUHandler script
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -39,9 +39,9 @@ public class NetworkManager : MonoBehaviour
             serial.Shutdown();
     }
 
-    public void InitializeDataReceiver(IIMUDataReceiver receiver)
+    public void InjectModules(IIMUHandler imuHandler)
     {
-        _imuDataReceiver = receiver;
+        _IIMUHandler = imuHandler;
     }
 
     /*
@@ -81,10 +81,10 @@ public class NetworkManager : MonoBehaviour
                         case "IMU":
                             //UnityEngine.Debug.Log($"9DOF data recieved");
 
-                            if (_imuDataReceiver != null)
+                            if (_IIMUHandler != null)
                             {
                                 IMUData imuData = message["data"].ToObject<IMUData>();
-                                _imuDataReceiver.UpdateFilter(imuData);
+                                _IIMUHandler.UpdateFilter(imuData);
                             }
                             else
                             {

@@ -20,15 +20,12 @@ namespace Contracts {
         }
     }
 
-    // Contract for consuming IMU data streams by updating the internal filter.
-    public interface IIMUDataReceiver {
+    // Contract for consuming data or controls by the IMUHandler.
+    public interface IIMUHandler
+    {
         // Called each time a new IMU sample is available to process.
         void UpdateFilter(IMUData data);
-    }
-
-    // Contract for sending commands or real-time parameters to the IMU module.
-    public interface IIMUController
-    {
+        
         // Reset the IMU’s orientation state.
         void ResetOrientation();
     }

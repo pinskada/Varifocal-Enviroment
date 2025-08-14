@@ -4,6 +4,8 @@
     "IMU",
     "Networking",
     "Camera",
-    "Contracts"
+    "Contracts",
+    "Config",
+    "Gui"
   ]
 }
