@@ -215,6 +215,15 @@ public class ConfigManager : MonoBehaviour, IConfigManager
     }
 
 
+    public VRMode GetVRType()
+    {
+        // Returns the current VR mode
+        // This is used to determine which setup to load in each module.
+
+        return mode;
+    }
+
+
     public void BindModule(object handler, string moduleName)
     {
         // Bind a handler to the required module and initilize handlers values.
