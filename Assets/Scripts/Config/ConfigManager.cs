@@ -13,7 +13,6 @@ public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigMana
 {
     // Singleton instance
     public static ConfigManager Instance { get; private set; }
-    private IGUIHub _IGuiHub;
 
     // Setup for different VR modes
     [Header("Mode Selection")]
@@ -37,13 +36,6 @@ public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigMana
     = new Dictionary<string, List<Action<object>>>();
 
 
-    public void InjectModules(IGUIHub guiHub)
-    {
-        // Inject GUIhub
-        _IGuiHub = guiHub;
-    }
-
-
     public void Awake()
     {
         // Enforce singleton
@@ -60,7 +52,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigMana
     public void Start()
     {
         // Load config
-        LoadConfig();
+       LoadConfig();
     }
 
 
@@ -117,8 +109,12 @@ public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigMana
             Debug.Log($"No config found; created default at {configPath}");
         }
 
+        Debug.Log("ConfigManager: Config loaded successfully.");
+
         // Initialize the config file names list
         ListFileNames(configFolder);
+
+        Debug.Log("ConfigManager: Config file names listed successfully.");
     }
 
 
@@ -215,9 +211,13 @@ public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigMana
         }
 
         configFileNames = result;
+    }
 
-        // Send the list to GUI
-        _IGuiHub.pushConfigList(configFileNames); // Placeholder for GUI receiver
+
+    public List<string> GetConfigFileNames()
+    {
+        // Returns the list of config file names
+        return configFileNames;
     }
 
 
@@ -268,7 +268,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigMana
     }
 
 
-    Dictionary<string, object> GetPropValueDictFromModule(string moduleName)
+    private Dictionary<string, object> GetPropValueDictFromModule(string moduleName)
     {
         // Returns a dictionary of key-value pairs from a given module
         // 1. Find all properties in the module by name

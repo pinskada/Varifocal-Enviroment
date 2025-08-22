@@ -9,8 +9,8 @@ public class IMUHandlerTests
     private ICameraHub _ICameraHub;
     private IConfigManagerConnector _IConfigManager;
 
-    [Test]
-    public void TestIMUHandlerInitialization()
+    [UnityTest]
+    public IEnume TestIMUHandlerInitialization()
     {
         // Create a GameObject to attach the IMUHandler component
         IMUHandler imuHandler = CreateIMUHandler();
@@ -22,6 +22,10 @@ public class IMUHandlerTests
 
         object initialRotation = GetPrivateField<object>(imuHandler, "initialRotation");
         Assert.IsNull(initialRotation, "Initial rotation should not be null after initialization in IMUHandler");
+
+
+        _ICameraHub = new DummyCameraHub();
+        _IConfigManager = new DummyConfigManager();
 
         imuHandler.InjectModules(_ICameraHub, _IConfigManager);
 
@@ -49,16 +53,30 @@ public class IMUHandlerTests
 }
 
 
-public class DummyConfigManager : MonoBehaviour, IConfigManagerConnector
+public class DummyConfigManager : IConfigManagerConnector
 {
 
     public void BindModule(object handler, string moduleName)
     {
         // Dummy implementation for testing
     }
-    
+
     public VRMode GetVRType()
     {
         return VRMode.Testbed; // Dummy return value for testing
+    }
+}
+
+
+public class DummyCameraHub : ICameraHub
+{
+    public Quaternion GetCurrentOrientation()
+    {
+        return Quaternion.identity; // Return a default orientation for testing
+    }
+
+    public void ApplyOrientation(Quaternion orientation)
+    {
+        // Dummy implementation for testing
     }
 }

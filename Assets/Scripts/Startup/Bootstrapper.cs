@@ -19,9 +19,6 @@ public class Bootstrapper : MonoBehaviour
             return;
         }
 
-        // Wire ConfigManager → GuiHub (for configuration display)
-        configManager.InjectModules(guiHub);
-
         // Wire NetworkManager → IMUHandler (filter pipeline)
         networkManager.InjectModules(imuHandler);
 

@@ -3,6 +3,9 @@ using UnityEngine;
 using System.Reflection;
 using System.IO;
 using Contracts;
+using System.Collections.Generic;
+using System.Collections;
+using UnityEngine.TestTools;
 
 public class ConfigManagerTests
 {
@@ -245,6 +248,12 @@ public class ConfigManagerTests
         _IConfigManagerCommunicator.ChangeProperty("testSettings.testString", randomString);
 
         return (randomInt, randomFloat, randomString);
+    }
+
+
+    private IEnumerator Wait(float time = 0.1f)
+    {
+        yield return new WaitForSeconds(time); // Wait until everything is assigned
     }
 }
 

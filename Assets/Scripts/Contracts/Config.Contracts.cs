@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 
 namespace Contracts
 {
@@ -23,5 +24,8 @@ namespace Contracts
 
         // Create a new configuration profile
         public void CreateNewConfigProfile(string profileName);
+
+        // Get the list of configuration file names
+        public List<string> GetConfigFileNames();
     }
 }
