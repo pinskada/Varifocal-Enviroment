@@ -23,10 +23,10 @@ public class IMUHandler : MonoBehaviour, IIMUHandler
     // Constants imported from ConfigManager
     public float betaMoving; // Madgwick filter beta gain when moving
     public float betaStill; // Madgwick filter beta gain when still
-    public float MinDt; // Minimum delta time for filter updates
-    public float MaxDt; // Maximum delta time for filter updates
     public float betaThreshold; // Threshold to switch between moving and still states
     public float minGyroMagnitude; // Threshold to skip updates when gyro is nearly zero
+    public float MinDt; // Minimum delta time for filter updates
+    public float MaxDt; // Maximum delta time for filter updates
     //*********************************************************************************************
     
 
@@ -63,6 +63,8 @@ public class IMUHandler : MonoBehaviour, IIMUHandler
 
         // Initialize the Madgwick filter with the specified sample frequency and beta values
         filter = new Madgwick(betaMoving, betaStill, betaThreshold, minGyroMagnitude);
+
+        Debug.Log("All components initialized.");
     }
 
 
@@ -105,11 +107,13 @@ public class IMUHandler : MonoBehaviour, IIMUHandler
         Vector3 gyro = imuData.Gyro * Mathf.Deg2Rad;
         Vector3 accel = imuData.Accel.normalized;
         Vector3 mag = imuData.Mag.normalized;
-        double currentTime = imuData.TimeStamp;
+        double tempTime = imuData.TimeStamp;
 
         // Drop bad packets early
-        if (!IsFinite(currentTime) || !IsFinite(gyro) || !IsFinite(accel) || !IsFinite(mag))
+        if (!IsFinite(tempTime) || !IsFinite(gyro) || !IsFinite(accel) || !IsFinite(mag))
             return;
+
+        double currentTime = tempTime;
 
         // First packet: initialize timeline and bail
         if (lastPacketTime == 0.0f)

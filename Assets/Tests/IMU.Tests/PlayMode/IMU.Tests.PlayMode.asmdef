@@ -1,13 +1,10 @@
 {
-	"name": "IMU.Tests",
+	"name": "IMU.Tests.PlayMode",
     "references": [
       "IMU",
       "Contracts"
     ],
     "optionalUnityReferences": [
       "TestAssemblies"
-    ],
-    "includePlatforms": [
-      "Editor"
     ]
 }
