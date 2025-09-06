@@ -22,12 +22,12 @@ public class DisplaySettings
 [System.Serializable]
 public class IMUSettings
 {
-    public float betaMoving = 0.005f; // Madgwick filter beta gain when moving [-]
-    public float betaStill = 0.1f; // Madgwick filter beta gain when still [-]
-    public float betaThreshold = 0.1f; // Threshold to switch between moving and still states [-]
-    public float MinDt = 0.001f; // Minimum delta time for filter updates [s]
-    public float MaxDt = 0.1f; // Maximum delta time for filter updates [s]
-    public float minGyroMagnitude = 0.01f;  // Threshold to skip updates when gyro is nearly zero [rad/s]
+    public float BetaMoving = 0.005f; // Madgwick filter beta gain when moving [-]
+    public float BetaStill = 0.1f; // Madgwick filter beta gain when still [-]
+    public float BetaThreshold = 0.1f; // Threshold to switch between moving and still states [-]
+    public float minDt = 0.001f; // Minimum delta time for filter updates [s]
+    public float maxDt = 0.1f; // Maximum delta time for filter updates [s]
+    public float MinGyroMagnitude = 0.01f;  // Threshold to skip updates when gyro is nearly zero [rad/s]
 
 }
 

@@ -22,11 +22,31 @@ public class IMUHandler : MonoBehaviour, IIMUHandler
     //*********************************************************************************************
     // Constants imported from ConfigManager
     public float betaMoving; // Madgwick filter beta gain when moving
+    public float BetaMoving
+    {
+        get => betaMoving;
+        set => ChangeFilterSettings(betaMoving, betaStill, betaThreshold, minGyroMagnitude);
+    }
     public float betaStill; // Madgwick filter beta gain when still
+    public float BetaStill
+    {
+        get => betaStill;
+        set => ChangeFilterSettings(betaMoving, betaStill, betaThreshold, minGyroMagnitude);
+    }
     public float betaThreshold; // Threshold to switch between moving and still states
+    public float BetaThreshold
+    {
+        get => betaThreshold;
+        set => ChangeFilterSettings(betaMoving, betaStill, betaThreshold, minGyroMagnitude);
+    }
     public float minGyroMagnitude; // Threshold to skip updates when gyro is nearly zero
-    public float MinDt; // Minimum delta time for filter updates
-    public float MaxDt; // Maximum delta time for filter updates
+    public float MinGyroMagnitude
+    {
+        get => minGyroMagnitude;
+        set => ChangeFilterSettings(betaMoving, betaStill, betaThreshold, minGyroMagnitude);
+    }
+    public float minDt; // Minimum delta time for filter updates
+    public float maxDt; // Maximum delta time for filter updates
     //*********************************************************************************************
     
 
@@ -127,7 +147,7 @@ public class IMUHandler : MonoBehaviour, IIMUHandler
 
         // Compute clamped dt
         double rawDt = currentTime - lastPacketTime;
-        deltaTime = Mathf.Clamp((float)rawDt, MinDt, MaxDt);
+        deltaTime = Mathf.Clamp((float)rawDt, minDt, maxDt);
         lastPacketTime = currentTime;
 
         filter.SetSamplePeriod((float)deltaTime); // Update the filter's sample period
@@ -168,6 +188,30 @@ public class IMUHandler : MonoBehaviour, IIMUHandler
             filter.Quaternion[3] = 1f;
 
             Debug.Log("Full reset: camera and filter set to default orientation.");
+        }
+    }
+
+
+    public void ChangeFilterSettings(float betaMoving, float betaStill, float betaThreshold, float minGyroMagnitude)
+    {
+        // Change the filter settings dynamically
+
+        this.betaMoving = betaMoving;
+        this.betaStill = betaStill;
+        this.betaThreshold = betaThreshold;
+        this.minGyroMagnitude = minGyroMagnitude;
+
+        if (filter != null)
+        {
+            filter.SetBetas(betaMoving, betaStill);
+            filter.SetBetaThreshold(betaThreshold);
+            filter.SetMinGyroMagnitude(minGyroMagnitude);
+
+            Debug.Log("Filter settings updated.");
+        }
+        else
+        {
+            Debug.LogWarning("Filter is not initialized. Cannot change settings.");
         }
     }
 

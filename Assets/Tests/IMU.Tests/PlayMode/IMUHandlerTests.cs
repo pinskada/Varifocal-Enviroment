@@ -109,7 +109,7 @@ public class IMUHandlerTests
         Quaternion notUpdatedquater2 = new Quaternion(q2[0], q2[1], q2[2], q2[3]);
 
         Assert.AreEqual(quaterBefore, notUpdatedquater2, "UpdateFilter did not return when TimeStamp = infinity.");
-        
+
 
         // Test for correct input arguments
         for (int i = 1; i <= 20; i++)
@@ -180,6 +180,32 @@ public class IMUHandlerTests
     }
 
 
+    [UnityTest]
+    public IEnumerator TestChangeFilterSettings()
+    {
+        TestGlobals testGlobals = new TestGlobals();
+
+        // Create a GameObject to attach the IMUHandler component
+        IMUHandler imuHandler = CreateIMUHandler();
+
+        PassDummyModules(imuHandler, testGlobals);
+
+        yield return null;
+
+        var filter = GetPrivateField<Madgwick>(imuHandler, "filter");
+
+        (float betaMoving, float betaStill, float betaThreshold, float minGyroMagnitude) = new MadgwickTests().GenerateRandomParam();
+
+        imuHandler.ChangeFilterSettings(betaMoving, betaStill, betaThreshold, minGyroMagnitude);
+
+        yield return null;
+
+        Assert.AreEqual(betaMoving, GetPrivateField<float>(filter, "betaMoving"), "Beta moving not set correctly in ChangeFilterSettings");
+        Assert.AreEqual(betaStill, GetPrivateField<float>(filter, "betaStill"), "Beta still not set correctly in ChangeFilterSettings");
+        Assert.AreEqual(betaThreshold, GetPrivateField<float>(filter, "betaThreshold"), "Beta threshold not set correctly in ChangeFilterSettings");
+        Assert.AreEqual(minGyroMagnitude, GetPrivateField<float>(filter, "minGyroMagnitude"), "Min gyro magnitude not set correctly in ChangeFilterSettings");
+    }
+
     public IMUHandler CreateIMUHandler()
     {
         // Create a dummy GameObject
@@ -225,11 +251,11 @@ public class DummyConfigManager : IConfigManagerConnector
 
         // Dummy implementation for testing
         imuHandler.betaMoving = 0.01f;
-        imuHandler.betaStill = 0.1f;
+        imuHandler.betaStill = 0.8f;
         imuHandler.betaThreshold = 0.5f;
-        imuHandler.minGyroMagnitude = 0.1f;
-        imuHandler.MinDt = 0.01f;
-        imuHandler.MaxDt = 0.1f;
+        imuHandler.minGyroMagnitude = 0.0001f;
+        imuHandler.minDt = 0.01f;
+        imuHandler.maxDt = 0.1f;
     }
 
     public VRMode GetVRType()

@@ -11,14 +11,16 @@ public class Madgwick
     private float beta; // Current beta value based on motion state
     private float betaMoving; // Smoother when moving fast
     private float betaStill; // More correction when still
-    private float minGyroMagnitude = 0.01f; // Threshold to skip updates when gyro is nearly zero
-    private float betaThreshold = 0.1f; // Threshold to switch between moving and still states
+    private float minGyroMagnitude; // Threshold to skip updates when gyro is nearly zero
+    private float betaThreshold; // Threshold to switch between moving and still states
     public float[] Quaternion { get; private set; }// Quaternion representing the orientation (x, y, z, w)
 
     public Madgwick(float betaMoving, float betaStill, float betaThreshold, float minGyroMagnitude)
     {
         // Set the beta values for moving and still states
         SetBetas(betaMoving, betaStill);
+        SetBetaThreshold(betaThreshold);
+        SetMinGyroMagnitude(minGyroMagnitude);
 
         // Initialize quaternion to identity
         Quaternion = new float[] { 0f, 0f, 0f, 1f };
@@ -220,6 +222,36 @@ public class Madgwick
         {
             this.betaMoving = betaMoving; // Beta for moving state
             this.betaStill = betaStill;   // Beta for still state
+        }
+    }
+
+
+    public void SetBetaThreshold(float betaThreshold)
+    {
+        // Validate beta threshold
+        if (!(betaThreshold > betaMoving && betaThreshold < betaStill))
+        {
+            Debug.LogError("Beta threshold must be between betaMoving and betaStill.");
+            return;
+        }
+        else
+        {
+            this.betaThreshold = betaThreshold; // Threshold to switch between moving and still states
+        }
+    }
+
+
+    public void SetMinGyroMagnitude(float minGyroMagnitude)
+    {
+        // Validate minimum gyro magnitude
+        if (minGyroMagnitude < 0f)
+        {
+            Debug.LogError("[Madgwick] Minimum gyro magnitude must be non-negative.");
+            return;
+        }
+        else
+        {
+            this.minGyroMagnitude = minGyroMagnitude; // Threshold to skip updates when gyro is nearly zero
         }
     }
 }
