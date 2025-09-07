@@ -65,9 +65,9 @@ public class IMUHandler : MonoBehaviour, IIMUHandler
     }
 
 
-    public void Start()
+    public IEnumerator Start()
     {
-        StartCoroutine(WaitForConnection()); // Wait for the orientation applier to be assigned
+        yield return StartCoroutine(WaitForConnection()); // Wait for the orientation applier to be assigned
     }
 
 
@@ -84,7 +84,7 @@ public class IMUHandler : MonoBehaviour, IIMUHandler
         // Initialize the Madgwick filter with the specified sample frequency and beta values
         filter = new Madgwick(betaMoving, betaStill, betaThreshold, minGyroMagnitude);
 
-        Debug.Log("All components initialized.");
+        Debug.Log("All components and settings initialized.");
     }
 
 

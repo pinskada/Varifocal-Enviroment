@@ -10,6 +10,19 @@ public class TestSettings
 
 
 [System.Serializable]
+public class TCPSettings
+{
+    public string ipAddress = "192.168.2.1";
+    public string raspberryPiIP = "192.168.2.2";
+    public string localIP = "127.0.0.1";
+    public string subnetMask = "255.255.255.0";
+    public string adapterName = "Ethernet";
+    public int port = 65432;
+    public int readBufferSize = 1024; // Size of the buffer for incoming data
+}
+
+
+[System.Serializable]
 public class DisplaySettings
 {
     public float camIPD = 63f;

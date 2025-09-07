@@ -4,24 +4,38 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Diagnostics;
+using System.Collections;
+using Contracts;
+using UnityEngine;
 
 public class TCP
 {
     // This class handles TCP connection either to the Raspberry Pi (RPI) by connecting
-    // to the RPI server as a client or creates a server for local connection.
+    // to the RPI server or local, both as a client.
     // For RPI connection, a static IP is set.
 
+    private IConfigManagerConnector _IConfigManager;
     private NetworkManager networkManager; // Reference to the NetworkManager script
-    private bool isTestbed;
-    private string raspberryPiIP = "192.168.2.2";
-    private string localIP = "127.0.0.1";
-    private int port = 65432;
+    private string moduleName = "TCPSettings"; // Name of the module for configuration
     private bool isConnected = false;
     private volatile bool isShuttingDown = false;
     private TcpClient client;
     private NetworkStream stream;
     private Thread receiveThread;
     private MemoryStream incomingStream = new MemoryStream();
+    private bool isTestbed;
+
+    //*********************************************************************************************
+    // Constants imported from ConfigManager
+    public string ipAddress; // Static IP for testbed
+    public string raspberryPiIP; // RPI IP for testbed
+    public string localIP; // Local IP for serial communication
+    public string subnetMask; // Subnet mask for static IP
+    public string adapterName; // Name of the network adapter to set static IP
+    public string netshFileName; // Path to netsh executable
+    public int port; // Port number for TCP connection
+    public int readBufferSize; // Size of the buffer for incoming data
+    //*********************************************************************************************
 
 
     public TCP(bool isTestbed = false, NetworkManager networkManager = null)
@@ -30,16 +44,38 @@ public class TCP
 
         this.isTestbed = isTestbed;
         this.networkManager = networkManager;
+    }
+
+
+    public void InjectModules(IConfigManagerConnector configManager)
+    {
+        // Inject the external modules interfaces into this handler
+
+        _IConfigManager = configManager;
+    }
+
+
+    public IEnumerator WaitForConnectionCoroutine()
+    {
+        while (_IConfigManager == null)
+        {
+            yield return null; // Wait until everything is assigned
+        }
+
+        _IConfigManager.BindModule(this, moduleName); // Bind this module to the config manager
+
+        UnityEngine.Debug.Log("All components and settings initialized.");
 
         if (isTestbed)
         {
-            SetStaticIP(); // Set static IP to communicate with the RPI on a local network.
-            Thread.Sleep(5000); // Wait for a few seconds to ensure the IP is set
+            ConfigureIPmode(true); // Set static IP to communicate with the RPI on a local network.
+            yield return new WaitForSeconds(5f); // Wait for a few seconds to ensure the IP is set
         }
 
         UnityEngine.Debug.Log("Attempting to connect to a server...");
         ConnectToServer(); // Connect to the RPI TCP server
     }
+
 
     public void Shutdown()
     {
@@ -47,53 +83,47 @@ public class TCP
 
         isShuttingDown = true; // Set the flag to true to prevent errors during shutdown
 
-        Disconnect(); // Disconnect from the server when the application quits
+        DisconnectFromServer(); // Disconnect from the server when the application quits
 
         if (isTestbed)
-            ResetToDHCP(); // Reset the IP to DHCP
+            ConfigureIPmode(false); // Reset the IP to DHCP
     }
 
-    private static void SetStaticIP()
+
+    private void ConfigureIPmode(bool setStatic)
     {
         // This method sets static IP to be able to communicate with the RPI on a local network.
         // IN ORDER TO WORK THESE SETTINGS MUST BE ENSURED: Edit -> Project Settings -> Player -> 
         // -> Configuration -> Scripting Backend: Mono; Api Compatibility Level: .NET Framework
 
-        // Adapter parameters
-        string adapterName = "Ethernet";
-        string ipAddress = "192.168.2.1";
-        string subnetMask = "255.255.255.0";
-        string gateway = "192.168.2.2";
 
-        // Arguments for netsh command
-        string args = $"interface ip set address name=\"{adapterName}\" static {ipAddress} {subnetMask} {gateway} 1";
+        // Validate inputs
+        if (string.IsNullOrWhiteSpace(adapterName) ||
+            string.IsNullOrWhiteSpace(ipAddress) || string.IsNullOrWhiteSpace(subnetMask))
+        {
+            UnityEngine.Debug.LogError("[TCP] ConfigureIPmode: missing adapter/IP/mask.");
+            return;
+        }
 
-        // Run the netsh command to set the static IP
-        RunNetsh(args, true);        
-    }
+        string args = setStatic
+            ? $"interface ipv4 set address name=\"{adapterName}\" source=static address={ipAddress} mask={subnetMask} gateway=none"
+            : $"interface ipv4 set address name=\"{adapterName}\" source=dhcp";
+        /* OLD VERSION if the new one does not work
+        if (setStatic)
+            args = $"interface ip set address name=\"{adapterName}\" static {ipAddress} {subnetMask} {gateway} 1";
+        else
+            args = $"interface ip set address name=\"{adapterName}\" source=dhcp";
+        */
 
-    private static void ResetToDHCP()
-    {
-        // This method sets resets the IP back to DHCP.
-        // IN ORDER TO WORK THESE SETTINGS MUST BE ENSURED: Edit -> Project Settings -> Player -> 
-        // -> Configuration -> Scripting Backend: Mono; Api Compatibility Level: .NET Framework
-
-        // Adapter parameters
-        string adapterName = "Ethernet";
-
-        // Arguments for netsh command
-        string args = $"interface ip set address name=\"{adapterName}\" source=dhcp";
-
-        // Run the netsh command to reset the IP to DHCP
-        RunNetsh(args, false);        
-    }
-
-    private static void RunNetsh(string args, bool setStatic)
-    {
         // Start the netsh process with elevated privileges
-        Process setStaticIProcess = new Process();
-        // Set the process start info
-        setStaticIProcess.StartInfo = new ProcessStartInfo
+        var setStaticIProcess = new ProcessStartInfo {
+            FileName = netshFileName,
+            Arguments = args,
+            UseShellExecute = false,     // fine since you already run as admin
+            CreateNoWindow = true
+        };
+
+        /* OLD VERSION if the new one does not work
         {
             FileName = @"C:\Windows\System32\netsh.exe", // Path to netsh executable
             Arguments = args, // Arguments for the command
@@ -103,25 +133,32 @@ public class TCP
             RedirectStandardError = true, // Redirect error to read it
             CreateNoWindow = true // Don't create a window
         };
+        */
 
         // Try to start the process
         try
         {
-            setStaticIProcess.Start();
-            setStaticIProcess.WaitForExit();
-            if (setStatic)
-                UnityEngine.Debug.Log("Static IP has been set successfully.");
-            else
-                UnityEngine.Debug.Log("IP has been reset to DHCP successfully.");
+            using (var p = Process.Start(setStaticIProcess))
+            {
+                bool exited = p.WaitForExit(15000);  // Timeout to avoid hangs
+
+                if (!exited)
+                {
+                    UnityEngine.Debug.LogError("Netsh did not exit within 15s. Args: " + args);
+                    return;
+                }
+                if (p.ExitCode != 0)
+                    UnityEngine.Debug.LogError($"Netsh failed (exit {p.ExitCode}). Args: {args}");
+                else
+                    UnityEngine.Debug.Log(setStatic ? "Static IP set." : "IP reset to DHCP.");
+                }
         }
         catch (Exception ex)
         {
-            if (setStatic)
-                UnityEngine.Debug.LogError("Failed to set static IP: " + ex.Message);
-            else
-                UnityEngine.Debug.LogError("Failed to reset IP back to DHCP: " + ex.Message);
+            UnityEngine.Debug.LogError("Netsh error: " + ex.Message);
         }
     }
+
 
     private void ConnectToServer()
     {
@@ -141,7 +178,7 @@ public class TCP
                 // Connect to the local IP address for serial communication
                 client.Connect(localIP, port);
             }
-            
+
             // Get the network stream for reading and writing data
             stream = client.GetStream();
             isConnected = true;
@@ -156,7 +193,10 @@ public class TCP
             receiveThread.IsBackground = true;
             receiveThread.Start();
 
-            networkManager.SendConfig(); // Send initial configuration to the RPI
+            if (networkManager != null)
+                networkManager.SendRPIConfig(); // Send initial configuration to the RPI
+            else
+                UnityEngine.Debug.LogError("NetworkManager reference is null, cannot send config to over TCP.");
         }
         catch (Exception e)
         {
@@ -164,9 +204,10 @@ public class TCP
         }
     }
 
-    private void Disconnect()
+
+    private void DisconnectFromServer()
     {
-        // This method disconnects from the RPI TCP server.
+        // This method disconnects from the TCP server.
 
         if (!isConnected) return;
         isConnected = false;
@@ -197,18 +238,23 @@ public class TCP
         UnityEngine.Debug.Log("Disconnected from RPI.");
     }
 
+
     public void SendViaTCP(string message)
     {
-        // This method sends a message to the RPI TCP server.
+        // This method sends a message to the TCP server.
 
         // Check if the client is connected and the stream is not null
-        if (!isConnected || stream == null) return;
+        if (!isConnected || stream == null)
+        {
+            UnityEngine.Debug.LogWarning("Can not send a message, not connected to server.");
+            return;
+        }
 
         try
         {
             // Convert the message to bytes and send it over the stream
             // Append a newline character to the message to indicate the end of the message
-            byte[] data = Encoding.UTF8.GetBytes(message + "\n");
+            byte[] data = Encoding.UTF8.GetBytes(message + "\\n"); // \n
             stream.Write(data, 0, data.Length);
             UnityEngine.Debug.Log("Sent: " + message);
         }
@@ -218,12 +264,13 @@ public class TCP
         }
     }
 
+
     private void ReceiveData()
     {
         // This method receives data from the RPI TCP server.
 
         // Buffer for incoming data
-        byte[] buffer = new byte[1024];
+        byte[] buffer = new byte[readBufferSize];
 
         try
         {
@@ -245,6 +292,8 @@ public class TCP
                 UnityEngine.Debug.LogError("Receive error: " + e.Message);
         }
     }
+
+
     private void HandleIncomingData(byte[] data, int length)
     {
         // This method handles incoming data from the RPI TCP server.
@@ -285,22 +334,7 @@ public class TCP
             byte[] payload = new byte[payloadLength];
             incomingStream.Read(payload, 0, payloadLength);
 
-            // Handle data based on packet type
-            switch (packetType)
-            {
-                case 'J': // JSON packet
-                    networkManager.HandleJson(payload);
-                    break;
-                case 'P': // Preview image packet
-                    networkManager.HandlePreviewImage(payload);
-                    break;
-                case 'E': // EyeTracker image packet
-                    networkManager.HandleEyeTrackerImage(payload);
-                    break;
-                default:
-                    UnityEngine.Debug.LogWarning($"Unknown packet type: {packetType}");
-                    break;
-            }
+            networkManager.RedirectMessage(packetType, payload);
         }
 
         // Clean up already processed bytes

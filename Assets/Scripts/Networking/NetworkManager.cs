@@ -24,6 +24,7 @@ public class NetworkManager : MonoBehaviour
 
         //StartCoroutine(FindGuiReferences());
         tcp = new TCP(isTestbed, this);
+        StartCoroutine(tcp.WaitForConnectionCoroutine());
         if (!isTestbed)
         {
             serial = new Serial(this);
@@ -44,65 +45,70 @@ public class NetworkManager : MonoBehaviour
         _IIMUHandler = imuHandler;
     }
 
-    /*
-        private IEnumerator FindGuiReferences()
+
+    public void RedirectMessage(int packetType, byte[] payload)
+    {
+        // This method redirects incoming messages to the appropriate handler based on the packet type.
+
+        // Handle data based on packet type
+        switch (packetType)
         {
-            // This method attempts to find the GuiRenderer and GuiHub references in the scene.
-
-            int linkAttempts = 0;
-            while (linkAttempts < 50)
-            {
-                yield return new WaitForSeconds(0.1f);
-
-                if (guiHub == null)
-                    guiHub = FindFirstObjectByType<GuiHub>();
-                else 
-                    break;
-
-                linkAttempts++;
-            }
+            case 'J': // JSON packet
+                HandleJson(payload);
+                break;
+            case 'P': // Preview image packet
+                HandlePreviewImage(payload);
+                break;
+            case 'E': // EyeTracker image packet
+                HandleEyeTrackerImage(payload);
+                break;
+            default:
+                Debug.LogWarning($"Unknown packet type: {packetType}");
+                break;
         }
-    */
+    }
+
+
     public void HandleJson(byte[] payload)
     {
         // This method handles the JSON payload received peripherals.
 
         string json = Encoding.UTF8.GetString(payload);
 
-        
-                try
-                {
-                    JObject message = JObject.Parse(json);
 
-                    string type = message["type"]?.ToString();
-                    switch (type)
+        try
+        {
+            JObject message = JObject.Parse(json);
+
+            string type = message["type"]?.ToString();
+            switch (type)
+            {
+
+                case "IMU":
+                    //UnityEngine.Debug.Log($"9DOF data recieved");
+
+                    if (_IIMUHandler != null)
                     {
-
-                        case "IMU":
-                            //UnityEngine.Debug.Log($"9DOF data recieved");
-
-                            if (_IIMUHandler != null)
-                            {
-                                IMUData imuData = message["data"].ToObject<IMUData>();
-                                _IIMUHandler.UpdateFilter(imuData);
-                            }
-                            else
-                            {
-                                Debug.LogWarning("IMUHandler is not assigned!");
-                            }
-                            break;
-                        case "GazeDistance":
-                        // Not yet implemented
-                        default:
-                            Debug.LogWarning($"Unknown message type: {type}");
-                            break;
+                        IMUData imuData = message["data"].ToObject<IMUData>();
+                        _IIMUHandler.UpdateFilter(imuData);
                     }
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError($"Failed to parse JSON: {ex.Message}");
-                }
-                
+                    else
+                    {
+                        Debug.LogWarning("IMUHandler is not assigned!");
+                    }
+                    break;
+                case "GazeDistance":
+                // Not yet implemented
+                default:
+                    Debug.LogWarning($"Unknown message type: {type}");
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Failed to parse JSON: {ex.Message}");
+        }
+
     }
 
     public void HandlePreviewImage(byte[] payload)
@@ -119,7 +125,7 @@ public class NetworkManager : MonoBehaviour
         // Not yet implemented.
     }
 
-    public void SendConfig()
+    public void SendRPIConfig()
     {
         // This method sends the configuration to the Raspberry Pi or other devices via guiHub->guiInterface.
         /*
