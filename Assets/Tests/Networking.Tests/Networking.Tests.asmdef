@@ -1,12 +1,10 @@
 {
 	"name": "Networking.Tests",
     "references": [
-      "Config"
+      "Networking",
+      "Contracts"
     ],
     "optionalUnityReferences": [
       "TestAssemblies"
-    ],
-    "includePlatforms": [
-      "Editor"
     ]
 }

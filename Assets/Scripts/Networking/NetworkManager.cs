@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 using System.Collections;
 using Contracts;
 using System.Threading;
+using System.Threading.Tasks;
 
 // This class handles communication between the Unity application and external devices like Raspberry Pi or ESP32 or local EyeTracker.
 // It can run in two modes: testbed - connects to a RPI as client or real - connects to the ESP32 via serial port and creates
@@ -30,11 +31,11 @@ public class NetworkManager : MonoBehaviour
 
     }
 
-    void OnApplicationQuit()
+    async Task OnApplicationQuit()
     {
         // This method kills tcp client and serial connection
 
-        tcp.Shutdown();
+        await tcp.Shutdown();
         if (serial != null)
             serial.Shutdown();
     }

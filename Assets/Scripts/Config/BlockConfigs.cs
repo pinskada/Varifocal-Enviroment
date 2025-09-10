@@ -19,7 +19,10 @@ public class TCPSettings
     public string adapterName = "Ethernet";
     public int port = 65432;
     public int readBufferSize = 1024; // Size of the buffer for incoming data
-    public int ipTimeout = 15; // Timeout in seconds for IP configuration
+    public int IPsetTimeout = 15000; // Timeout in miliseconds for IP configuration
+    public int readTimeout = 2000; // Timeout in milliseconds for blocking reads
+    public int maxPacketSize = 16777216; // Maximum packet size in bytes (16 MB)
+    public int maxSendRetries = 3; // Maximum number of send retries
 }
 
 

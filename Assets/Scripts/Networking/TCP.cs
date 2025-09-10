@@ -4,9 +4,10 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Diagnostics;
-using System.Collections;
+using System.Threading.Tasks;
 using Contracts;
 using UnityEngine;
+
 
 public class TCP
 {
@@ -14,16 +15,20 @@ public class TCP
     // to the RPI server or local, both as a client.
     // For RPI connection, a static IP is set.
 
-    private IConfigManagerConnector _IConfigManager;
+    private IConfigManagerConnector _IConfigManager; // Reference to the ConfigManager script
+    private IMainThreadQueue _IMainThreadQueue; // Reference to the MainThreadQueue script
     private NetworkManager networkManager; // Reference to the NetworkManager script
     private string moduleName = "TCPSettings"; // Name of the module for configuration
-    private bool isConnected = false;
-    private volatile bool isShuttingDown = false;
-    private TcpClient client;
-    private NetworkStream stream;
-    private Thread receiveThread;
-    private MemoryStream incomingStream = new MemoryStream();
-    private bool isTestbed;
+    private volatile bool isConnected = false; // Flag to indicate if the client is connected to the server
+    private volatile bool isShuttingDown = false; // Flag to indicate if the application is shutting down
+    private TcpClient client; // TcpClient for connecting to the server
+    private NetworkStream stream; // NetworkStream for reading and writing data
+    private Thread receiveThread; // Thread for receiving data from the server
+    private bool isTestbed; // Flag to indicate if this is a testbed environment
+    private byte[] incomingBuffer;
+    private int bufferOffset = 0;  // Start of unprocessed data
+    private int bufferCount = 0;   // How many valid bytes are in the buffer
+    private int sendRetryCount = 0; // Counter for send retries
 
     //*********************************************************************************************
     // Constants imported from ConfigManager
@@ -35,62 +40,72 @@ public class TCP
     public string netshFileName; // Path to netsh executable
     public int port; // Port number for TCP connection
     public int readBufferSize; // Size of the buffer for incoming data
+    public int IPsetTimeout; // Timeout in seconds for IP configuration
+    public int readTimeout; // Timeout in milliseconds for blocking reads
+    public int maxPacketSize; // Maximum packet size in bytes
+    public int maxSendRetries; // Maximum number of send retries
     //*********************************************************************************************
 
 
-    public TCP(bool isTestbed = false, NetworkManager networkManager = null)
+    public TCP(NetworkManager networkManager, IConfigManagerConnector configManager,
+        IMainThreadQueue MainThreadQueue, bool isTestbed = false)
     {
-        // This constructor is used to create a TCP instance for the test bed.
+        // This constructor is used to create a TCP instance.
+
 
         this.isTestbed = isTestbed;
         this.networkManager = networkManager;
-    }
-
-
-    public void InjectModules(IConfigManagerConnector configManager)
-    {
-        // Inject the external modules interfaces into this handler
-
         _IConfigManager = configManager;
-    }
+        _IMainThreadQueue = MainThreadQueue;
 
-
-    public IEnumerator WaitForConnectionCoroutine()
-    {
-        while (_IConfigManager == null)
-        {
-            yield return null; // Wait until everything is assigned
-        }
-
-        _IConfigManager.BindModule(this, moduleName); // Bind this module to the config manager
+        // Bind this module to the config manager and load settings
+        _IConfigManager.BindModule(this, moduleName);
 
         UnityEngine.Debug.Log("All components and settings initialized.");
-
-        if (isTestbed)
-        {
-            ConfigureIPmode(true); // Set static IP to communicate with the RPI on a local network.
-            yield return new WaitForSeconds(5f); // Wait for a few seconds to ensure the IP is set
-        }
-
-        UnityEngine.Debug.Log("Attempting to connect to a server...");
-        ConnectToServer(); // Connect to the RPI TCP server
     }
 
 
-    public void Shutdown()
+    public async Task Shutdown()
     {
         // This method cleans up the client resources when the application quits.
 
+
         isShuttingDown = true; // Set the flag to true to prevent errors during shutdown
 
-        DisconnectFromServer(); // Disconnect from the server when the application quits
+        await DisconnectFromServer(); // Disconnect from the server when the application quits
 
         if (isTestbed)
             ConfigureIPmode(false); // Reset the IP to DHCP
     }
 
 
-    private void ConfigureIPmode(bool setStatic)
+    public void StartTCP()
+    {
+        // This method sets static IP if in testbed mode and connects to the TCP server.
+
+
+        bool IPisSet = false;
+
+        // Set static IP if in testbed mode
+        if (isTestbed)
+        {
+            IPisSet = ConfigureIPmode(true); // Set static IP to communicate with the RPI on a local network.
+        }
+
+        if (!IPisSet && isTestbed)
+        {
+            UnityEngine.Debug.LogError("IP configuration failed, cannot connect to server.");
+            return; // Exit if IP configuration fails
+        }
+
+        incomingBuffer = new byte[readBufferSize * 4];
+
+        UnityEngine.Debug.Log("Attempting to connect to a server...");
+        ConnectToServer(); // Connect to the RPI TCP server
+    }
+
+
+    public bool ConfigureIPmode(bool setStatic)
     {
         // This method sets static IP to be able to communicate with the RPI on a local network.
         // IN ORDER TO WORK THESE SETTINGS MUST BE ENSURED: Edit -> Project Settings -> Player -> 
@@ -99,10 +114,11 @@ public class TCP
 
         // Validate inputs
         if (string.IsNullOrWhiteSpace(adapterName) ||
-            string.IsNullOrWhiteSpace(ipAddress) || string.IsNullOrWhiteSpace(subnetMask))
+            (setStatic && (string.IsNullOrWhiteSpace(ipAddress) || string.IsNullOrWhiteSpace(subnetMask))))
+
         {
             UnityEngine.Debug.LogError("[TCP] ConfigureIPmode: missing adapter/IP/mask.");
-            return;
+            return false;
         }
 
         string args = setStatic
@@ -115,14 +131,16 @@ public class TCP
             args = $"interface ip set address name=\"{adapterName}\" source=dhcp";
         */
 
+        var file = string.IsNullOrWhiteSpace(netshFileName) ? "netsh" : netshFileName;
+
         // Start the netsh process with elevated privileges
-        var setStaticIProcess = new ProcessStartInfo {
-            FileName = netshFileName,
+        var setStaticIProcess = new ProcessStartInfo
+        {
+            FileName = file,
             Arguments = args,
             UseShellExecute = false,     // fine since you already run as admin
             CreateNoWindow = true
         };
-
         /* OLD VERSION if the new one does not work
         {
             FileName = @"C:\Windows\System32\netsh.exe", // Path to netsh executable
@@ -140,34 +158,41 @@ public class TCP
         {
             using (var p = Process.Start(setStaticIProcess))
             {
-                bool exited = p.WaitForExit(15000);  // Timeout to avoid hangs
+                bool exited = p.WaitForExit(IPsetTimeout);  // Timeout to avoid hangs
 
                 if (!exited)
                 {
                     UnityEngine.Debug.LogError("Netsh did not exit within 15s. Args: " + args);
-                    return;
+                    return false;
                 }
                 if (p.ExitCode != 0)
+                {
                     UnityEngine.Debug.LogError($"Netsh failed (exit {p.ExitCode}). Args: {args}");
-                else
-                    UnityEngine.Debug.Log(setStatic ? "Static IP set." : "IP reset to DHCP.");
+                    return false;
                 }
+                else
+                {
+                    UnityEngine.Debug.Log(setStatic ? "Static IP set." : "IP reset to DHCP.");
+                    return true;
+                }
+            }
         }
         catch (Exception ex)
         {
             UnityEngine.Debug.LogError("Netsh error: " + ex.Message);
+            return false;
         }
     }
 
 
     private void ConnectToServer()
     {
-        // This method connects to either the RPI TCP server or local server.
+        // This method connects to either the RPI TCP server or localhost.
 
         try
         {
             // Create a new TcpClient and connect to the server
-            client = new TcpClient();
+            client = new TcpClient() { NoDelay = true };
             if (isTestbed)
             {
                 // Connect to the Raspberry Pi IP address
@@ -181,6 +206,9 @@ public class TCP
 
             // Get the network stream for reading and writing data
             stream = client.GetStream();
+
+            // Set timeout for blocking reads
+            stream.ReadTimeout = readTimeout;
             isConnected = true;
 
             if (isTestbed)
@@ -189,28 +217,30 @@ public class TCP
                 UnityEngine.Debug.Log("Connected to local server at " + localIP + ":" + port);
 
             // Start the receive thread to listen for incoming messages
-            receiveThread = new Thread(ReceiveData);
-            receiveThread.IsBackground = true;
+            receiveThread = new Thread(ReceiveData) { IsBackground = true, Name = "TCP.Receive" };
             receiveThread.Start();
 
             if (networkManager != null)
-                networkManager.SendRPIConfig(); // Send initial configuration to the RPI
+                // Send initial configuration to the RPI
+                _IMainThreadQueue.Enqueue(() => networkManager.SendTCPConfig());
             else
-                UnityEngine.Debug.LogError("NetworkManager reference is null, cannot send config to over TCP.");
+                UnityEngine.Debug.LogError("NetworkManager reference is null, cannot send config over TCP.");
         }
         catch (Exception e)
         {
-            UnityEngine.Debug.LogError("Connection failed: " + e.Message);
+            UnityEngine.Debug.LogError("Connecting to to TCP server failed: " + e.Message);
         }
     }
 
 
-    private void DisconnectFromServer()
+    private async Task DisconnectFromServer()
     {
         // This method disconnects from the TCP server.
 
         if (!isConnected) return;
         isConnected = false;
+
+        await Task.Delay(100); // Give some time for the receive thread to finish
 
         try
         {
@@ -228,14 +258,14 @@ public class TCP
 
         if (receiveThread != null && receiveThread.IsAlive)
         {
-            receiveThread.Join(500); // Allow thread to exit cleanly
+            await Task.Run(() => receiveThread.Join(500)); // Allow thread to exit cleanly
         }
 
         receiveThread = null;
         stream = null;
         client = null;
 
-        UnityEngine.Debug.Log("Disconnected from RPI.");
+        UnityEngine.Debug.Log("Disconnected from TCP.");
     }
 
 
@@ -254,20 +284,34 @@ public class TCP
         {
             // Convert the message to bytes and send it over the stream
             // Append a newline character to the message to indicate the end of the message
-            byte[] data = Encoding.UTF8.GetBytes(message + "\\n"); // \n
+            byte[] data = Encoding.UTF8.GetBytes(message + "\n"); // \n
             stream.Write(data, 0, data.Length);
             UnityEngine.Debug.Log("Sent: " + message);
         }
         catch (Exception e)
         {
             UnityEngine.Debug.LogError("Send failed: " + e.Message);
+            if (sendRetryCount > maxSendRetries)
+            {
+                sendRetryCount = 0;
+                UnityEngine.Debug.LogError("Multiple send failures, disconnecting.");
+                isConnected = false; // Assume connection is lost
+                return;
+            }
+            else
+            {
+                sendRetryCount++;
+                SendViaTCP(message); // Retry sending the message
+                UnityEngine.Debug.LogWarning($"Send retry {sendRetryCount}/3");
+            }
         }
     }
 
 
     private void ReceiveData()
     {
-        // This method receives data from the RPI TCP server.
+        // This method receives data from the TCP server.
+
 
         // Buffer for incoming data
         byte[] buffer = new byte[readBufferSize];
@@ -277,12 +321,23 @@ public class TCP
             // Keep listening for incoming messages until the connection is closed
             while (isConnected)
             {
-                // Read data from the stream into the buffer
-                int bytesRead = stream.Read(buffer, 0, buffer.Length);
-                if (bytesRead == 0) break;
+                try
+                {
+                    // Read data from the stream into the buffer
+                    int bytesRead = stream.Read(buffer, 0, buffer.Length);
+                    if (bytesRead == 0) break;
 
-                // Decode the incoming packet
-                HandleIncomingData(buffer, bytesRead);
+                    // Decode the incoming packet
+                    DecodeTCPData(buffer, bytesRead);
+                }
+                catch (IOException ex)
+                {
+                    // This happens when ReadTimeout is reached
+                    if (isShuttingDown)
+                        break; // Exit quietly during shutdown
+
+                    UnityEngine.Debug.LogWarning("TCP Read timeout: " + ex.Message);
+                }
             }
         }
         catch (Exception e)
@@ -294,61 +349,69 @@ public class TCP
     }
 
 
-    private void HandleIncomingData(byte[] data, int length)
+    private void DecodeTCPData(byte[] data, int length)
     {
-        // This method handles incoming data from the RPI TCP server.
+        // This method decodes incoming data from the TCP server read by ReceiveData().
 
-        // Write new incoming bytes
-        incomingStream.Seek(0, SeekOrigin.End);
-        incomingStream.Write(data, 0, length);
 
-        incomingStream.Position = 0; // Start reading from beginning of buffer
-
-        while (true)
+        // Append new data to buffer
+        if (bufferCount + length > incomingBuffer.Length)
         {
-            if (incomingStream.Length - incomingStream.Position < 4)
+            UnityEngine.Debug.LogError("[TCP] Incoming buffer overflow. Clearing buffer.");
+            bufferOffset = 0;
+            bufferCount = 0;
+            return;
+        }
+
+        Array.Copy(data, 0, incomingBuffer, bufferOffset + bufferCount, length);
+        bufferCount += length;
+
+
+        // Process packets
+        int readPos = bufferOffset;
+        while (bufferCount >= 4) // header = 1 type + 3 length
+        {
+            byte packetType = incomingBuffer[readPos];
+            int payloadLength = (incomingBuffer[readPos + 1] << 16) |
+                                (incomingBuffer[readPos + 2] << 8) |
+                                incomingBuffer[readPos + 3];
+
+            // Sanity check
+            if (payloadLength <= 0 || payloadLength > maxPacketSize)
             {
-                // Not enough bytes for header
-                //UnityEngine.Debug.Log("Not enough bytes for header, waiting for more data...");
+                UnityEngine.Debug.LogError($"Invalid payload length: {payloadLength}, clearing buffer.");
+                bufferOffset = 0;
+                bufferCount = 0;
+                return;
+            }
+
+            if (bufferCount < 4 + payloadLength)
+            {
+                // Not enough data yet → wait for next DecodeTCPData call
                 break;
             }
 
-            long packetStartPos = incomingStream.Position;
-
-            byte typeByte = (byte)incomingStream.ReadByte();
-            char packetType = (char)typeByte;
-
-            byte[] lengthBytes = new byte[3];
-            incomingStream.Read(lengthBytes, 0, 3);
-            int payloadLength = (lengthBytes[0] << 16) | (lengthBytes[1] << 8) | lengthBytes[2];
-
-            if (incomingStream.Length - incomingStream.Position < payloadLength)
-            {
-                // Not enough bytes for full payload
-                incomingStream.Position = packetStartPos; // rewind back, wait for more data
-                //UnityEngine.Debug.Log("Not enough bytes for full payload, waiting for more data...");
-                break;
-            }
-
-            // Read full payload
+            // Read payload
             byte[] payload = new byte[payloadLength];
-            incomingStream.Read(payload, 0, payloadLength);
+            Array.Copy(incomingBuffer, readPos + 4, payload, 0, payloadLength);
 
-            networkManager.RedirectMessage(packetType, payload);
+            // Dispatch
+            if (networkManager != null)
+                _IMainThreadQueue.Enqueue(() => networkManager.RedirectMessage((char)packetType, payload));
+            else
+                UnityEngine.Debug.LogError("NetworkManager reference is null, cannot redirect message.");
+
+            // Advance readPos
+            readPos += 4 + payloadLength;
+            bufferCount -= 4 + payloadLength;
         }
 
-        // Clean up already processed bytes
-        long leftoverBytes = incomingStream.Length - incomingStream.Position;
-        if (leftoverBytes > 0)
+        // Move leftover data to start of buffer
+        if (bufferCount > 0 && readPos > bufferOffset)
         {
-            byte[] leftover = new byte[leftoverBytes];
-            incomingStream.Read(leftover, 0, (int)leftoverBytes);
-            incomingStream.SetLength(0);
-            incomingStream.Write(leftover, 0, leftover.Length);
+            Array.Copy(incomingBuffer, readPos, incomingBuffer, 0, bufferCount);
         }
-        else
-        {
-            incomingStream.SetLength(0);
-        }
+
+        bufferOffset = 0;
     }
 }
