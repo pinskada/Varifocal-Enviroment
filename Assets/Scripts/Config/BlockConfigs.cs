@@ -19,6 +19,7 @@ public class TCPSettings
     public string adapterName = "Ethernet";
     public int port = 65432;
     public int readBufferSize = 1024; // Size of the buffer for incoming data
+    public int ipTimeout = 15; // Timeout in seconds for IP configuration
 }
 
 

@@ -6,6 +6,7 @@
     "Camera",
     "Contracts",
     "Config",
-    "Gui"
+    "Gui",
+    "ThreadingManager"
   ]
 }

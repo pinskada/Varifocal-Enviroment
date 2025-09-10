@@ -1,0 +1,6 @@
+{
+	"name": "ThreadingManager",
+	"references": [
+		"Contracts"
+	]
+}
