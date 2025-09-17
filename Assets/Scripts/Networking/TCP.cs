@@ -16,7 +16,7 @@ public class TCP
     // For RPI connection, a static IP is set.
 
     private IConfigManagerConnector _IConfigManager; // Reference to the ConfigManager script
-    private IMainThreadQueue _IMainThreadQueue; // Reference to the MainThreadQueue script
+    private CommRouter commRouter; // Reference to the CommRouter script
     private NetworkManager networkManager; // Reference to the NetworkManager script
     private string moduleName = "TCPSettings"; // Name of the module for configuration
     private volatile bool isConnected = false; // Flag to indicate if the client is connected to the server
@@ -47,8 +47,7 @@ public class TCP
     //*********************************************************************************************
 
 
-    public TCP(NetworkManager networkManager, IConfigManagerConnector configManager,
-        IMainThreadQueue MainThreadQueue, bool isTestbed = false)
+    public TCP(NetworkManager networkManager, IConfigManagerConnector configManager, bool isTestbed = false)
     {
         // This constructor is used to create a TCP instance.
 
@@ -56,12 +55,17 @@ public class TCP
         this.isTestbed = isTestbed;
         this.networkManager = networkManager;
         _IConfigManager = configManager;
-        _IMainThreadQueue = MainThreadQueue;
 
         // Bind this module to the config manager and load settings
         _IConfigManager.BindModule(this, moduleName);
 
         UnityEngine.Debug.Log("All components and settings initialized.");
+    }
+
+    public void InjectHardwareRouter(CommRouter router)
+    {
+        // This method injects the CommRouter instance into the TCP module.
+        commRouter = router;
     }
 
 
@@ -222,7 +226,7 @@ public class TCP
 
             if (networkManager != null)
                 // Send initial configuration to the RPI
-                _IMainThreadQueue.Enqueue(() => networkManager.SendTCPConfig());
+                commRouter.SendTCPConfig();
             else
                 UnityEngine.Debug.LogError("NetworkManager reference is null, cannot send config over TCP.");
         }
@@ -395,11 +399,31 @@ public class TCP
             byte[] payload = new byte[payloadLength];
             Array.Copy(incomingBuffer, readPos + 4, payload, 0, payloadLength);
 
+            MessageType msgType;
+
+            try
+            {
+                if (Enum.IsDefined(typeof(MessageType), (int)packetType))
+                {
+                    msgType = (MessageType)packetType;
+                }
+                else
+                {
+                    UnityEngine.Debug.LogWarning("MessageType " + packetType + " not found.");
+                    return;
+                }
+            }
+            catch (Exception e)
+            {
+                UnityEngine.Debug.LogError("MessageType parse error: " + e.Message);
+                return;
+            }
+
             // Dispatch
-            if (networkManager != null)
-                _IMainThreadQueue.Enqueue(() => networkManager.RedirectMessage((char)packetType, payload));
+            if (commRouter != null)
+                commRouter.HandleIncoming(TransportType.Tcp, msgType, payload);
             else
-                UnityEngine.Debug.LogError("NetworkManager reference is null, cannot redirect message.");
+                UnityEngine.Debug.LogError("CommRouter reference is null, cannot redirect message.");
 
             // Advance readPos
             readPos += 4 + payloadLength;

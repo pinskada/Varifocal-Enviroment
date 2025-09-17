@@ -5,7 +5,7 @@ using Contracts;
 
 public class MainThreadQueue : MonoBehaviour, IMainThreadQueue
 {
-    /* 
+    /*
     This class provides a thread-safe queue to schedule actions to be executed on the main Unity thread.
     */
 

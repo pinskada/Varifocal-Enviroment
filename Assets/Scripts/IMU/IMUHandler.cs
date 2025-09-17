@@ -48,7 +48,7 @@ public class IMUHandler : MonoBehaviour, IIMUHandler
     public float minDt; // Minimum delta time for filter updates
     public float maxDt; // Maximum delta time for filter updates
     //*********************************************************************************************
-    
+
 
     // Ensure that the sensor data is valid and finite
     static bool IsFinite(double x) => !(double.IsNaN(x) || double.IsInfinity(x));

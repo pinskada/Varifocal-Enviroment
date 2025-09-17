@@ -1,3 +1,16 @@
 using UnityEngine;
 
-namespace NetworkingContracts { }
+namespace Contracts
+{
+    public enum MessageType {
+        EyeImage,
+        IMU,
+        GazeDistance,
+        VarifocalControl
+    }
+
+    public enum TransportType {
+        Tcp,
+        Serial
+    }
+}

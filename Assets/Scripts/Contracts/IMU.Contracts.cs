@@ -25,7 +25,7 @@ namespace Contracts {
     {
         // Called each time a new IMU sample is available to process.
         void UpdateFilter(IMUData data);
-        
+
         // Reset the IMU’s orientation state.
         void ResetOrientation();
     }
