@@ -52,7 +52,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigMana
     public void Start()
     {
         // Load config
-       LoadConfig();
+        LoadConfig();
     }
 
 
@@ -235,7 +235,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigMana
         // Bind a handler to the required module and initilize handlers values.
         // 1. Compute the key path for each property in the module - key = moduleName + "." + X
         // 2. Writes the initial values in the handler - GetValue<T>(key) and SetValue(prop, value)
-        // 3. Subscribes to changes - 
+        // 3. Subscribes to changes -
         // - RegisterListener(string key, newValue => propInfo.SetValue(moduleInstance, newValue))
 
         // Get the handler instance by name
@@ -305,7 +305,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigMana
     private void RegisterListenerToProperty(string key, Action<object> handler)
     {
         // Register a listener for changes to a specific config key
-        // Adds the handler lambda function to a dictionary - 
+        // Adds the handler lambda function to a dictionary -
         //      - Dictionary<string, List<Action<object>>> _subscriptions;
 
         // If this is the first listener for this key, make a new list

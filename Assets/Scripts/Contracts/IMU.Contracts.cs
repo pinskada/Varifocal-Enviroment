@@ -1,8 +1,11 @@
 using UnityEngine;
+using System.Collections.Concurrent;
 
-namespace Contracts {
+namespace Contracts
+{
     // Data Transfer Object carrying raw IMU readings (gyro, accel, mag) and timing info.
-    public class IMUData {
+    public class IMUData
+    {
         // Gyroscope readings in radians/sec.
         public Vector3 Gyro { get; }
         // Accelerometer readings in g.
@@ -12,7 +15,8 @@ namespace Contracts {
         // Time since last sample in seconds (measured at the data source).
         public float TimeStamp { get; }
 
-        public IMUData(Vector3 gyro, Vector3 accel, Vector3 mag, float timeStamp) {
+        public IMUData(Vector3 gyro, Vector3 accel, Vector3 mag, float timeStamp)
+        {
             Gyro = gyro;
             Accel = accel;
             Mag = mag;
@@ -20,12 +24,15 @@ namespace Contracts {
         }
     }
 
+    // Container for the IMU data queue.
+    public static class IMUQueueContainer
+    {
+        public static readonly ConcurrentQueue<IMUData> IMUqueue = new ConcurrentQueue<IMUData>();
+    }
+
     // Contract for consuming data or controls by the IMUHandler.
     public interface IIMUHandler
     {
-        // Called each time a new IMU sample is available to process.
-        void UpdateFilter(IMUData data);
-
         // Reset the IMU’s orientation state.
         void ResetOrientation();
     }

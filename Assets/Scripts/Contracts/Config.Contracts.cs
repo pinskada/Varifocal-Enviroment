@@ -28,4 +28,10 @@ namespace Contracts
         // Get the list of configuration file names
         public List<string> GetConfigFileNames();
     }
+
+    public interface ModuleSettingsHandler
+    {
+        // Method to change settings based on updated configuration
+        public void ChangeModuleSettings();
+    }
 }

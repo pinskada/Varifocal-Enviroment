@@ -1,4 +1,6 @@
 using UnityEngine;
+using Contracts;
+
 
 public class Serial
 {
@@ -22,7 +24,7 @@ public class Serial
         commRouter = router;
     }
 
-    public void SendViaSerial(string message)
+    public void SendViaSerial(object message, MessageType type)
     {
         // Implement sending logic for the serial connection
         Debug.Log($"Sending via Serial: {message}");

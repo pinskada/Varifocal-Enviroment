@@ -4,10 +4,9 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using Contracts;
-using UnityEngine;
-
+using System.Collections.Generic;
+using UnityEditor.VersionControl;
 
 public class TCP
 {
@@ -15,6 +14,7 @@ public class TCP
     // to the RPI server or local, both as a client.
     // For RPI connection, a static IP is set.
 
+    public VRMode ActiveMode { get; private set; }
     private IConfigManagerConnector _IConfigManager; // Reference to the ConfigManager script
     private CommRouter commRouter; // Reference to the CommRouter script
     private NetworkManager networkManager; // Reference to the NetworkManager script
@@ -24,7 +24,6 @@ public class TCP
     private TcpClient client; // TcpClient for connecting to the server
     private NetworkStream stream; // NetworkStream for reading and writing data
     private Thread receiveThread; // Thread for receiving data from the server
-    private bool isTestbed; // Flag to indicate if this is a testbed environment
     private byte[] incomingBuffer;
     private int bufferOffset = 0;  // Start of unprocessed data
     private int bufferCount = 0;   // How many valid bytes are in the buffer
@@ -47,14 +46,14 @@ public class TCP
     //*********************************************************************************************
 
 
-    public TCP(NetworkManager networkManager, IConfigManagerConnector configManager, bool isTestbed = false)
+    public TCP(NetworkManager networkManager, IConfigManagerConnector configManager)
     {
         // This constructor is used to create a TCP instance.
 
 
-        this.isTestbed = isTestbed;
         this.networkManager = networkManager;
         _IConfigManager = configManager;
+        ActiveMode = _IConfigManager.GetVRType();
 
         // Bind this module to the config manager and load settings
         _IConfigManager.BindModule(this, moduleName);
@@ -69,16 +68,16 @@ public class TCP
     }
 
 
-    public async Task Shutdown()
+    public void Shutdown()
     {
         // This method cleans up the client resources when the application quits.
 
 
         isShuttingDown = true; // Set the flag to true to prevent errors during shutdown
 
-        await DisconnectFromServer(); // Disconnect from the server when the application quits
+        DisconnectFromServer(); // Disconnect from the server when the application quits
 
-        if (isTestbed)
+        if (ActiveMode == VRMode.Testbed)
             ConfigureIPmode(false); // Reset the IP to DHCP
     }
 
@@ -91,12 +90,12 @@ public class TCP
         bool IPisSet = false;
 
         // Set static IP if in testbed mode
-        if (isTestbed)
+        if (ActiveMode == VRMode.Testbed)
         {
             IPisSet = ConfigureIPmode(true); // Set static IP to communicate with the RPI on a local network.
         }
 
-        if (!IPisSet && isTestbed)
+        if (!IPisSet && ActiveMode == VRMode.Testbed)
         {
             UnityEngine.Debug.LogError("IP configuration failed, cannot connect to server.");
             return; // Exit if IP configuration fails
@@ -197,7 +196,7 @@ public class TCP
         {
             // Create a new TcpClient and connect to the server
             client = new TcpClient() { NoDelay = true };
-            if (isTestbed)
+            if (ActiveMode == VRMode.Testbed)
             {
                 // Connect to the Raspberry Pi IP address
                 client.Connect(raspberryPiIP, port);
@@ -215,18 +214,18 @@ public class TCP
             stream.ReadTimeout = readTimeout;
             isConnected = true;
 
-            if (isTestbed)
+            if (ActiveMode == VRMode.Testbed)
                 UnityEngine.Debug.Log("Connected to Raspberry Pi at " + raspberryPiIP + ":" + port);
             else
                 UnityEngine.Debug.Log("Connected to local server at " + localIP + ":" + port);
 
             // Start the receive thread to listen for incoming messages
-            receiveThread = new Thread(ReceiveData) { IsBackground = true, Name = "TCP.Receive" };
+            receiveThread = new Thread(ReceiveViaTCP) { IsBackground = true, Name = "TCP.Receive" };
             receiveThread.Start();
 
             if (networkManager != null)
                 // Send initial configuration to the RPI
-                commRouter.SendTCPConfig();
+                networkManager.SendTCPConfig();
             else
                 UnityEngine.Debug.LogError("NetworkManager reference is null, cannot send config over TCP.");
         }
@@ -237,14 +236,17 @@ public class TCP
     }
 
 
-    private async Task DisconnectFromServer()
+    private void DisconnectFromServer()
     {
         // This method disconnects from the TCP server.
 
         if (!isConnected) return;
         isConnected = false;
 
-        await Task.Delay(100); // Give some time for the receive thread to finish
+        if (receiveThread != null && receiveThread.IsAlive)
+        {
+            receiveThread.Join(500); // Allow thread to exit cleanly
+        }
 
         try
         {
@@ -260,11 +262,6 @@ public class TCP
         }
         catch (Exception e) { UnityEngine.Debug.LogWarning("Client close failed: " + e.Message); }
 
-        if (receiveThread != null && receiveThread.IsAlive)
-        {
-            await Task.Run(() => receiveThread.Join(500)); // Allow thread to exit cleanly
-        }
-
         receiveThread = null;
         stream = null;
         client = null;
@@ -273,7 +270,7 @@ public class TCP
     }
 
 
-    public void SendViaTCP(string message)
+    public void SendViaTCP(object message, MessageType messageType)
     {
         // This method sends a message to the TCP server.
 
@@ -287,8 +284,8 @@ public class TCP
         try
         {
             // Convert the message to bytes and send it over the stream
-            // Append a newline character to the message to indicate the end of the message
-            byte[] data = Encoding.UTF8.GetBytes(message + "\n"); // \n
+            byte[] byteMessage = message as byte[];
+            byte[] data = EncodeTCPStream(byteMessage, messageType);
             stream.Write(data, 0, data.Length);
             UnityEngine.Debug.Log("Sent: " + message);
         }
@@ -305,14 +302,34 @@ public class TCP
             else
             {
                 sendRetryCount++;
-                SendViaTCP(message); // Retry sending the message
+                SendViaTCP(message, messageType); // Retry sending the message
                 UnityEngine.Debug.LogWarning($"Send retry {sendRetryCount}/3");
             }
         }
     }
 
+    private byte[] EncodeTCPStream(byte[] message, MessageType messageType)
+    {
+        int payloadLength = message.Length;
+        byte packetType = (byte)(int)messageType;
 
-    private void ReceiveData()
+
+        // Create a header: 1 byte type + 3 bytes length
+        byte[] header = new byte[4];
+        header[0] = packetType;
+        header[1] = (byte)((payloadLength >> 16) & 0xFF);
+        header[2] = (byte)((payloadLength >> 8) & 0xFF);
+        header[3] = (byte)(payloadLength & 0xFF);
+
+        // Combine header and payload
+        byte[] payload = new byte[4 + payloadLength];
+        Buffer.BlockCopy(header, 0, payload, 0, 4);
+        Buffer.BlockCopy(message, 0, payload, 4, payloadLength);
+
+        return payload;
+    }
+
+    private void ReceiveViaTCP()
     {
         // This method receives data from the TCP server.
 
@@ -332,7 +349,7 @@ public class TCP
                     if (bytesRead == 0) break;
 
                     // Decode the incoming packet
-                    DecodeTCPData(buffer, bytesRead);
+                    DecodeTCPStream(buffer, bytesRead);
                 }
                 catch (IOException ex)
                 {
@@ -353,7 +370,7 @@ public class TCP
     }
 
 
-    private void DecodeTCPData(byte[] data, int length)
+    private void DecodeTCPStream(byte[] data, int length)
     {
         // This method decodes incoming data from the TCP server read by ReceiveData().
 
@@ -421,7 +438,7 @@ public class TCP
 
             // Dispatch
             if (commRouter != null)
-                commRouter.HandleIncoming(TransportType.Tcp, msgType, payload);
+                commRouter.RouteMessage(payload, msgType);
             else
                 UnityEngine.Debug.LogError("CommRouter reference is null, cannot redirect message.");
 

@@ -1,8 +1,11 @@
 using UnityEngine;
 using System.Collections;
 using Contracts;
+using System.Threading;
+using System;
+using System.Collections.Concurrent;
 
-public class IMUHandler : MonoBehaviour, IIMUHandler
+public class IMUHandler : MonoBehaviour, IIMUHandler, ModuleSettingsHandler
 {
     // This script handles the IMU data processing and applies the orientation to a target transform in Unity.
     // It uses the Madgwick filter for orientation estimation based on sensor data.
@@ -10,8 +13,11 @@ public class IMUHandler : MonoBehaviour, IIMUHandler
     string moduleName = "IMUHandler"; // Name of the module for configuration
     private IConfigManagerConnector _IConfigManager;
     private ICameraHub _ICameraHub; // Reference to the camera hub interface
+    private Thread updateThread; // Thread for receiving IMU data
     public Transform target; // Camera or object to apply the IMU orientation to
+    //private static readonly ConcurrentQueue<object> IMUqueue = new();
     public bool use9DOF = true; // Use 9DOF (gyro, accel, mag) or 6DOF (gyro, accel)
+    private bool isOnline = false; // Flag to control the receive thread
     private Madgwick filter; // Madgwick filter instance for orientation estimation
     private Quaternion initialRotation; // Initial rotation of the target transform to reset to
     private Quaternion q = Quaternion.identity; // Quaternion to hold the current orientation
@@ -85,38 +91,49 @@ public class IMUHandler : MonoBehaviour, IIMUHandler
         filter = new Madgwick(betaMoving, betaStill, betaThreshold, minGyroMagnitude);
 
         Debug.Log("All components and settings initialized.");
+
+        // Start the update thread to listen for incoming messages
+        isOnline = true;
+        updateThread = new Thread(CheckForData) { IsBackground = true, Name = "IMU.CheckForData" };
+        updateThread.Start();
+
+        Debug.Log("IMUHandler thread started.");
     }
 
 
-    void LateUpdate()
+    private void CheckForData()
     {
-        // Ensure the filter and config manager are initialized
-        if (filter == null || _IConfigManager == null || _ICameraHub == null) return;
+        // This method would handle any periodic updates needed in the thread.
+        // Currently, it does nothing but can be expanded if needed.
 
-        // Check for reset input
-        if (Input.GetKeyDown(KeyCode.R))
+        while (isOnline)
         {
-            ResetOrientation();
-            return;
-        }
+            while (IMUQueueContainer.IMUqueue.TryDequeue(out var stringIMUdata))
+            {
+                IMUData imuData = ConvertStringToIMUData(stringIMUdata);
+                UpdateFilter(imuData);
+            }
 
-        // Update the target rotation based on the filter's quaternion
-        q.x = filter.Quaternion[0];
-        q.y = filter.Quaternion[1];
-        q.z = filter.Quaternion[2];
-        q.w = filter.Quaternion[3];
 
-        // Apply the computed orientation to the target transform
-        if (_ICameraHub != null)
-            _ICameraHub.ApplyOrientation(ConvertSensorToUnity(q));
-        else
-        {
-            Debug.LogWarning("_ICameraHub is not assigned. Cannot apply rotation.");
+            Thread.Sleep(5); // Wait for 0.005 seconds
         }
     }
 
 
-    public void UpdateFilter(IMUData imuData)
+    public void OnDestroy()
+    {
+        if (!isOnline) return;
+        isOnline = false;
+
+        if (!updateThread.Join(100))
+        {
+            Debug.LogWarning("IMU.CheckForData thread did not terminate within timeout.");
+        }
+        updateThread = null;
+    }
+
+
+    private void UpdateFilter(IMUData imuData)
     {
         // Update the IMU filter with new sensor data
 
@@ -173,6 +190,34 @@ public class IMUHandler : MonoBehaviour, IIMUHandler
     }
 
 
+    private void LateUpdate()
+    {
+        // Ensure the filter and config manager are initialized
+        if (filter == null || _IConfigManager == null || _ICameraHub == null) return;
+
+        // Check for reset input
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            ResetOrientation();
+            return;
+        }
+
+        // Update the target rotation based on the filter's quaternion
+        q.x = filter.Quaternion[0];
+        q.y = filter.Quaternion[1];
+        q.z = filter.Quaternion[2];
+        q.w = filter.Quaternion[3];
+
+        // Apply the computed orientation to the target transform
+        if (_ICameraHub != null)
+            _ICameraHub.ApplyOrientation(ConvertSensorToUnity(q));
+        else
+        {
+            Debug.LogWarning("_ICameraHub is not assigned. Cannot apply rotation.");
+        }
+    }
+
+
     public void ResetOrientation()
     {
         // Make a full reset of the orientation inside the filter and therefore target transform
@@ -221,5 +266,28 @@ public class IMUHandler : MonoBehaviour, IIMUHandler
         // Convert sensor quaternion to Unity's coordinate system
 
         return new Quaternion(q.x, q.y, -q.z, -q.w);
+    }
+
+
+    // TODO: Implement IMU data conversion
+    private IMUData ConvertStringToIMUData(object stringIMUdata)
+    {
+        if (stringIMUdata == null || !(stringIMUdata is string))
+            Debug.LogWarning("Invalid IMU data format.");
+
+        // Convert the incoming action to IMUData and enqueue it for processing
+        // Placeholder implementation - replace with actual conversion logic
+        IMUData imuData = new IMUData(new Vector3(), new Vector3(), new Vector3(), 0f);
+
+        // Populate the IMUData fields from the action
+        return imuData;
+    }
+
+
+    public void ChangeModuleSettings()
+    {
+        // This method is called when configuration settings change.
+        // Currently, it does nothing but can be expanded if needed.
+        return;
     }
 }

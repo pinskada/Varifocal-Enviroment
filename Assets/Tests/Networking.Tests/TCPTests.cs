@@ -64,13 +64,12 @@ public class TCPTests
 
     public TCP CreateTCP(bool isTestbed = true)
     {
-        MainThreadQueue = new DummyMainThreadQueue();
         configManager = new DummyConfigManager();
         var go = new GameObject("TestNetworkManager");
         var netMgr = go.AddComponent<NetworkManager>();
         networkManager = netMgr;
 
-        tcp = new TCP(networkManager, configManager, MainThreadQueue, isTestbed);
+        tcp = new TCP(networkManager, configManager, isTestbed);
 
         return tcp;
     }
