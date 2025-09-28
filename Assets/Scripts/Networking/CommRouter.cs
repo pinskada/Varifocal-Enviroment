@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Contracts;
 using System.Collections;
+using Newtonsoft.Json;
 
 
 // Communication routing layer.
@@ -172,12 +173,13 @@ public class CommRouter : MonoBehaviour
     }
 
 
-    private object EncodeMessage(object payload, FormatType format)
+    private byte[] EncodeMessage(object payload, FormatType format)
     {
         switch (format)
         {
             case FormatType.JSON:
-                return JsonUtility.ToJson(payload);
+                string json = JsonConvert.SerializeObject(payload);
+                return System.Text.Encoding.UTF8.GetBytes(json);
             case FormatType.PNG:
                 if (payload is not Texture2D)
                 {

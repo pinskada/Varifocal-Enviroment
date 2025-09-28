@@ -431,7 +431,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigMana
         // Loops through the dictionary/list of handlers for the key
         // and calls each handler with the new value
 
-        var (_, fieldName) = SplitKey(key);
+        var (moduleName, fieldName) = SplitKey(key);
 
         // Look up all subscribers
         if (_subscriptions.TryGetValue(key, out var handlers))
@@ -441,7 +441,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigMana
             {
                 if (h is IModuleSettingsHandler settingsHandler)
                 {
-                    settingsHandler.SettingsChanged(fieldName);
+                    settingsHandler.SettingsChanged(moduleName, fieldName);
                 }
                 else
                 {

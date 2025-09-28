@@ -2,7 +2,6 @@ using Contracts;
 using System.Collections.Generic;
 using System;
 using UnityEngine;
-using Mono.Cecil.Cil;
 
 public static class RoutingTable
 {
@@ -61,30 +60,43 @@ public static class RoutingTable
         return localRoutingTable;
     }
 
-    public static Dictionary<string, string> CreateModuleRoutingTable()
+    public static List<RoutingEntry> CreateTCPModuleRoutingList()
     {
-        var moduleRoutingTable = new Dictionary<string, string>();
+        var tcpRoutingList = new List<RoutingEntry>();
 
         switch (Configuration.currentVersion)
         {
             case VRMode.Testbed:
-                moduleRoutingTable["camera"] = "TCP";
-                moduleRoutingTable["rightCrop"] = "TCP";
-                moduleRoutingTable["leftCrop"] = "TCP";
-                moduleRoutingTable["tracker"] = "TCP";
-                moduleRoutingTable["gaze"] = "TCP";
+                tcpRoutingList.Add(new RoutingEntry("camera", () => Settings.Camera));
+                tcpRoutingList.Add(new RoutingEntry("rightCrop", () => Settings.RightCrop));
+                tcpRoutingList.Add(new RoutingEntry("leftCrop", () => Settings.LeftCrop));
+                tcpRoutingList.Add(new RoutingEntry("tracker", () => Settings.Tracker));
+                tcpRoutingList.Add(new RoutingEntry("gaze", () => Settings.Gaze));
                 break;
 
             case VRMode.UserVR:
-                moduleRoutingTable["camera"] = "Serial";
-                moduleRoutingTable["rightCrop"] = "Serial";
-                moduleRoutingTable["leftCrop"] = "Serial";
-                moduleRoutingTable["tracker"] = "TCP";
-                moduleRoutingTable["gaze"] = "Serial";
+                tcpRoutingList.Add(new RoutingEntry("tracker", () => Settings.Tracker));
                 break;
         }
 
-        return moduleRoutingTable;
+        return tcpRoutingList;
+    }
+
+    public static List<RoutingEntry> CreateSerialModuleRoutingList()
+    {
+        var serialRoutingList = new List<RoutingEntry>();
+
+        switch (Configuration.currentVersion)
+        {
+            case VRMode.UserVR:
+                serialRoutingList.Add(new RoutingEntry("camera", () => Settings.Camera));
+                serialRoutingList.Add(new RoutingEntry("rightCrop", () => Settings.RightCrop));
+                serialRoutingList.Add(new RoutingEntry("leftCrop", () => Settings.LeftCrop));
+                serialRoutingList.Add(new RoutingEntry("gaze", () => Settings.Gaze));
+                break;
+        }
+
+        return serialRoutingList;
     }
 
     private static void HandleIMUData(object payload)
@@ -101,5 +113,20 @@ public static class RoutingTable
             return;
         }
         IMUQueueContainer.IMUqueue.Enqueue(imuData);
+    }
+}
+
+public class RoutingEntry
+{
+    // Name is optional (for logging/debugging)
+    public string Name { get; }
+
+    // Accessor to the actual settings object (from StaticWrapper)
+    public Func<object> GetSettings { get; }
+
+    public RoutingEntry(string name, Func<object> getter)
+    {
+        Name = name;
+        GetSettings = getter;
     }
 }

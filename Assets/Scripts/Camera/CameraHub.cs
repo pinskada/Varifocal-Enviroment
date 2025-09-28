@@ -36,7 +36,7 @@ public class CameraHub : MonoBehaviour, ICameraHub, IModuleSettingsHandler
         SetScreenHeight(screenHeight);
     }
 
-    public void SettingsChanged(string moduleName)
+    public void SettingsChanged(string moduleName, string fieldName)
     {
         // Handle settings changes if needed.
         // This method can be expanded to react to specific module settings changes.

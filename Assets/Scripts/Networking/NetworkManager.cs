@@ -1,10 +1,8 @@
-using System;
-using System.Text;
 using UnityEngine;
-using Newtonsoft.Json.Linq;
-using System.Collections;
 using Contracts;
 using System.Threading;
+using System.Collections.Generic;
+using System.Reflection;
 
 // This class handles communication between the Unity application and external devices like Raspberry Pi or ESP32 or local EyeTracker.
 // It can run in two modes: testbed - connects to a RPI as client or real - connects to the ESP32 via serial port and creates
@@ -14,13 +12,43 @@ public class NetworkManager : MonoBehaviour, IModuleSettingsHandler
 {
     private TCP tcp; // Reference to the TCP script
     private Serial serial; // Reference to the Serial script
-    private IIMUHandler _IIMUHandler; // Reference to the IMUHandler script
-    private IMainThreadQueue _IMainThreadQueue; // Reference to the MainThreadQueue script
-    private IConfigManagerConnector _IConfigManager; // Reference to the ConfigManager script
+    private CommRouter commRouter; // Reference to the CommRouter script
+    private List<RoutingEntry> tcpRoutingList = RoutingTable.CreateTCPModuleRoutingList();
+    private List<RoutingEntry> serialRoutingList = RoutingTable.CreateSerialModuleRoutingList();
 
-    public void SettingsChanged(string moduleName)
+    public void SettingsChanged(string moduleName, string fieldName)
     {
+        // Sends a config message using commrouter to the appropriate module when a setting changes.
 
+        // First check TCP list
+        var entry = tcpRoutingList.Find(e => e.Name == moduleName);
+        if (entry != null)
+        {
+            var settingsBlock = entry.GetSettings();
+            var field = settingsBlock.GetType().GetField(fieldName, BindingFlags.Public | BindingFlags.Instance);
+            if (field != null)
+            {
+                var payload = BuildConfigMessage(settingsBlock, moduleName, field);
+                commRouter.RouteMessage(payload, MessageType.tcpConfig);
+                return;
+            }
+        }
+
+        // Then check Serial list
+        entry = serialRoutingList.Find(e => e.Name == moduleName);
+        if (entry != null)
+        {
+            var settingsBlock = entry.GetSettings();
+            var field = settingsBlock.GetType().GetField(fieldName, BindingFlags.Public | BindingFlags.Instance);
+            if (field != null)
+            {
+                var payload = BuildConfigMessage(settingsBlock, moduleName, field);
+                serial.SendViaSerial(payload, MessageType.espConfig);
+                return;
+            }
+        }
+
+        Debug.LogWarning($"[NetworkManager] Could not find {moduleName}.{fieldName} in routing lists.");
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -74,13 +102,51 @@ public class NetworkManager : MonoBehaviour, IModuleSettingsHandler
 
     public void SendTCPConfig()
     {
-        // Placeholder for sending TCP configuration.
-        return;
+        foreach (var entry in tcpRoutingList)
+        {
+            var settingsBlock = entry.GetSettings();
+            if (settingsBlock == null) continue;
+
+            var type = settingsBlock.GetType();
+
+            // Fields
+            foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.Instance))
+            {
+                var payload = BuildConfigMessage(settingsBlock, entry.Name, field);
+
+                commRouter.RouteMessage(payload, MessageType.tcpConfig);
+            }
+        }
     }
 
     public void SendSerialConfig()
     {
-        // Placeholder for sending Serial configuration.
-        return;
+        foreach (var entry in serialRoutingList)
+        {
+            var settingsBlock = entry.GetSettings();
+            if (settingsBlock == null) continue;
+
+            var type = settingsBlock.GetType();
+
+            // Fields
+            foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.Instance))
+            {
+                var jsonMessage = BuildConfigMessage(settingsBlock, entry.Name, field);
+
+                serial.SendViaSerial(jsonMessage, MessageType.espConfig);
+            }
+        }
+    }
+
+    private Dictionary<string, object> BuildConfigMessage(object settingsBlock, string moduleName, FieldInfo field)
+    {
+        var value = field.GetValue(settingsBlock);
+
+        var payload = new Dictionary<string, object>
+        {
+            { $"{moduleName}.{field.Name}", value }
+        };
+
+        return payload;
     }
 }

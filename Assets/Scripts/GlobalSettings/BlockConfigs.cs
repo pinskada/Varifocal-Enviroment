@@ -15,6 +15,7 @@ public class TCPSettings
     public string localIP = "127.0.0.1";
     public string subnetMask = "255.255.255.0";
     public string adapterName = "Ethernet";
+    public string netshFileName;
     public int port = 65432;
     public int readBufferSize = 1024; // Size of the buffer for incoming data
     public int IPsetTimeout = 15000; // Timeout in miliseconds for IP configuration

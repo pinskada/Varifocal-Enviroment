@@ -12,7 +12,7 @@ public class Serial : IModuleSettingsHandler
         this.networkManager = networkManager;
     }
 
-    public void SettingsChanged(string moduleName)
+    public void SettingsChanged(string moduleName, string fieldName)
     {
         // This method is called when settings are changed in the ConfigManager.
         // You can implement any necessary actions to handle the updated settings here.

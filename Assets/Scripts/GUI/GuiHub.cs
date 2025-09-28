@@ -15,7 +15,7 @@ public class GuiHub : MonoBehaviour, IGUIHub, IModuleSettingsHandler
 
     }
 
-    public void SettingsChanged(string moduleName)
+    public void SettingsChanged(string moduleName, string fieldName)
     {
         // Implementation for handling settings changes in the GUI
     }

@@ -106,19 +106,20 @@ public class DummyConfigManager : IConfigManagerConnector
             Debug.LogError("Handler is not of type TCP");
             return;
         }
-
-        // Dummy implementation for testing
-        tcp.ipAddress = "192.168.2.1";
-        tcp.raspberryPiIP = "192.168.2.2";
-        tcp.localIP = "127.0.0.1";
-        tcp.subnetMask = "255.255.255.0";
-        tcp.adapterName = "Ethernet";
-        tcp.port = 65432;
-        tcp.readBufferSize = 1024; // Size of the buffer for incoming data
-        tcp.IPsetTimeout = 15000; // Timeout in miliseconds for IP configuration
-        tcp.readTimeout = 2000; // Timeout in milliseconds for blocking reads
-        tcp.maxPacketSize = 16777216; // Maximum packet size in bytes (16 MB)
-        tcp.maxSendRetries = 3; // Maximum number of send retries
+        /*
+                // Dummy implementation for testing
+                tcp.ipAddress = "192.168.2.1";
+                tcp.raspberryPiIP = "192.168.2.2";
+                tcp.localIP = "127.0.0.1";
+                tcp.subnetMask = "255.255.255.0";
+                tcp.adapterName = "Ethernet";
+                tcp.port = 65432;
+                tcp.readBufferSize = 1024; // Size of the buffer for incoming data
+                tcp.IPsetTimeout = 15000; // Timeout in miliseconds for IP configuration
+                tcp.readTimeout = 2000; // Timeout in milliseconds for blocking reads
+                tcp.maxPacketSize = 16777216; // Maximum packet size in bytes (16 MB)
+                tcp.maxSendRetries = 3; // Maximum number of send retries
+        */
     }
 
     public VRMode GetVRType()

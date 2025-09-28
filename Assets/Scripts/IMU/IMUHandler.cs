@@ -284,7 +284,7 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
     }
 
 
-    public void SettingsChanged(string moduleName)
+    public void SettingsChanged(string moduleName, string fieldName)
     {
         // This method is called when configuration settings change.
         // Currently, it does nothing but can be expanded if needed.

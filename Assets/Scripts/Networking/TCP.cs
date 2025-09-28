@@ -1,19 +1,16 @@
 using System;
 using System.IO;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Diagnostics;
 using Contracts;
-using System.Collections.Generic;
-using UnityEditor.VersionControl;
+
 
 public class TCP : IModuleSettingsHandler
 {
     // This class handles TCP connection either to the Raspberry Pi (RPI) by connecting
     // to the RPI server or local, both as a client.
     // For RPI connection, a static IP is set.
-    private IConfigManagerConnector _IConfigManager; // Reference to the ConfigManager script
     private CommRouter commRouter; // Reference to the CommRouter script
     private NetworkManager networkManager; // Reference to the NetworkManager script
     private volatile bool isConnected = false; // Flag to indicate if the client is connected to the server
@@ -25,22 +22,6 @@ public class TCP : IModuleSettingsHandler
     private int bufferOffset = 0;  // Start of unprocessed data
     private int bufferCount = 0;   // How many valid bytes are in the buffer
     private int sendRetryCount = 0; // Counter for send retries
-
-    //*********************************************************************************************
-    // Constants imported from ConfigManager
-    public string ipAddress; // Static IP for testbed
-    public string raspberryPiIP; // RPI IP for testbed
-    public string localIP; // Local IP for serial communication
-    public string subnetMask; // Subnet mask for static IP
-    public string adapterName; // Name of the network adapter to set static IP
-    public string netshFileName; // Path to netsh executable
-    public int port; // Port number for TCP connection
-    public int readBufferSize; // Size of the buffer for incoming data
-    public int IPsetTimeout; // Timeout in seconds for IP configuration
-    public int readTimeout; // Timeout in milliseconds for blocking reads
-    public int maxPacketSize; // Maximum packet size in bytes
-    public int maxSendRetries; // Maximum number of send retries
-    //*********************************************************************************************
 
 
     public TCP(NetworkManager networkManager)
@@ -54,7 +35,7 @@ public class TCP : IModuleSettingsHandler
         UnityEngine.Debug.Log("All components and settings initialized.");
     }
 
-    public void SettingsChanged(string moduleName)
+    public void SettingsChanged(string moduleName, string fieldName)
     {
         // This method is called when settings are changed in the ConfigManager.
         // You can implement any necessary actions to handle the updated settings here.
@@ -100,7 +81,7 @@ public class TCP : IModuleSettingsHandler
             return; // Exit if IP configuration fails
         }
 
-        incomingBuffer = new byte[readBufferSize * 4];
+        incomingBuffer = new byte[Settings.TCP.readBufferSize * 4];
 
         UnityEngine.Debug.Log("Attempting to connect to a server...");
         ConnectToServer(); // Connect to the RPI TCP server
@@ -115,8 +96,8 @@ public class TCP : IModuleSettingsHandler
 
 
         // Validate inputs
-        if (string.IsNullOrWhiteSpace(adapterName) ||
-            (setStatic && (string.IsNullOrWhiteSpace(ipAddress) || string.IsNullOrWhiteSpace(subnetMask))))
+        if (string.IsNullOrWhiteSpace(Settings.TCP.adapterName) ||
+            (setStatic && (string.IsNullOrWhiteSpace(Settings.TCP.ipAddress) || string.IsNullOrWhiteSpace(Settings.TCP.subnetMask))))
 
         {
             UnityEngine.Debug.LogError("[TCP] ConfigureIPmode: missing adapter/IP/mask.");
@@ -124,8 +105,8 @@ public class TCP : IModuleSettingsHandler
         }
 
         string args = setStatic
-            ? $"interface ipv4 set address name=\"{adapterName}\" source=static address={ipAddress} mask={subnetMask} gateway=none"
-            : $"interface ipv4 set address name=\"{adapterName}\" source=dhcp";
+            ? $"interface ipv4 set address name=\"{Settings.TCP.adapterName}\" source=static address={Settings.TCP.ipAddress} mask={Settings.TCP.subnetMask} gateway=none"
+            : $"interface ipv4 set address name=\"{Settings.TCP.adapterName}\" source=dhcp";
         /* OLD VERSION if the new one does not work
         if (setStatic)
             args = $"interface ip set address name=\"{adapterName}\" static {ipAddress} {subnetMask} {gateway} 1";
@@ -133,7 +114,7 @@ public class TCP : IModuleSettingsHandler
             args = $"interface ip set address name=\"{adapterName}\" source=dhcp";
         */
 
-        var file = string.IsNullOrWhiteSpace(netshFileName) ? "netsh" : netshFileName;
+        var file = string.IsNullOrWhiteSpace(Settings.TCP.netshFileName) ? "netsh" : Settings.TCP.netshFileName;
 
         // Start the netsh process with elevated privileges
         var setStaticIProcess = new ProcessStartInfo
@@ -160,7 +141,7 @@ public class TCP : IModuleSettingsHandler
         {
             using (var p = Process.Start(setStaticIProcess))
             {
-                bool exited = p.WaitForExit(IPsetTimeout);  // Timeout to avoid hangs
+                bool exited = p.WaitForExit(Settings.TCP.IPsetTimeout);  // Timeout to avoid hangs
 
                 if (!exited)
                 {
@@ -198,25 +179,25 @@ public class TCP : IModuleSettingsHandler
             if (Configuration.currentVersion == VRMode.Testbed)
             {
                 // Connect to the Raspberry Pi IP address
-                client.Connect(raspberryPiIP, port);
+                client.Connect(Settings.TCP.raspberryPiIP, Settings.TCP.port);
             }
             else
             {
                 // Connect to the local IP address for serial communication
-                client.Connect(localIP, port);
+                client.Connect(Settings.TCP.localIP, Settings.TCP.port);
             }
 
             // Get the network stream for reading and writing data
             stream = client.GetStream();
 
             // Set timeout for blocking reads
-            stream.ReadTimeout = readTimeout;
+            stream.ReadTimeout = Settings.TCP.readTimeout;
             isConnected = true;
 
             if (Configuration.currentVersion == VRMode.Testbed)
-                UnityEngine.Debug.Log("Connected to Raspberry Pi at " + raspberryPiIP + ":" + port);
+                UnityEngine.Debug.Log("Connected to Raspberry Pi at " + Settings.TCP.raspberryPiIP + ":" + Settings.TCP.port);
             else
-                UnityEngine.Debug.Log("Connected to local server at " + localIP + ":" + port);
+                UnityEngine.Debug.Log("Connected to local server at " + Settings.TCP.localIP + ":" + Settings.TCP.port);
 
             // Start the receive thread to listen for incoming messages
             receiveThread = new Thread(ReceiveViaTCP) { IsBackground = true, Name = "TCP.Receive" };
@@ -291,7 +272,7 @@ public class TCP : IModuleSettingsHandler
         catch (Exception e)
         {
             UnityEngine.Debug.LogError("Send failed: " + e.Message);
-            if (sendRetryCount > maxSendRetries)
+            if (sendRetryCount > Settings.TCP.maxSendRetries)
             {
                 sendRetryCount = 0;
                 UnityEngine.Debug.LogError("Multiple send failures, disconnecting.");
@@ -334,7 +315,7 @@ public class TCP : IModuleSettingsHandler
 
 
         // Buffer for incoming data
-        byte[] buffer = new byte[readBufferSize];
+        byte[] buffer = new byte[Settings.TCP.readBufferSize];
 
         try
         {
@@ -397,7 +378,7 @@ public class TCP : IModuleSettingsHandler
                                 incomingBuffer[readPos + 3];
 
             // Sanity check
-            if (payloadLength <= 0 || payloadLength > maxPacketSize)
+            if (payloadLength <= 0 || payloadLength > Settings.TCP.maxPacketSize)
             {
                 UnityEngine.Debug.LogError($"Invalid payload length: {payloadLength}, clearing buffer.");
                 bufferOffset = 0;

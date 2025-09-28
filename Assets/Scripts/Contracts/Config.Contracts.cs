@@ -41,6 +41,6 @@ namespace Contracts
     public interface IModuleSettingsHandler
     {
         // Method to change settings based on updated configuration
-        public void SettingsChanged(string moduleName);
+        public void SettingsChanged(string moduleName, string fieldName);
     }
 }
