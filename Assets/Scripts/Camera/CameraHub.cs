@@ -3,7 +3,7 @@ using Contracts;
 
 // Manages the camera setup for a VR application, including setting up the left and right eye frustrums and managing IPD.
 
-public class CameraHub : MonoBehaviour, ICameraHub
+public class CameraHub : MonoBehaviour, ICameraHub, IModuleSettingsHandler
 {
     [SerializeField] private CameraFrustrum leftEyeFrustrum; // Reference to the left eye camera frustrum.
     [SerializeField] private CameraFrustrum rightEyeFrustrum; // Reference to the right eye camera frustrum.
@@ -35,6 +35,13 @@ public class CameraHub : MonoBehaviour, ICameraHub
         SetScreenWidth(screenWidth);
         SetScreenHeight(screenHeight);
     }
+
+    public void SettingsChanged(string moduleName)
+    {
+        // Handle settings changes if needed.
+        // This method can be expanded to react to specific module settings changes.
+    }
+
 
     public void ApplyOrientation(Quaternion worldRotation)
     {

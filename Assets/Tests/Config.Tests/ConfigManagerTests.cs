@@ -220,15 +220,15 @@ public class ConfigManagerTests
 
         if (mode == VRMode.Testbed)
         {
-            actualInt = JsonUtility.FromJson<TestbedConfig>(json).testSettings.testInt;
-            actualFloat = JsonUtility.FromJson<TestbedConfig>(json).testSettings.testFloat;
-            actualString = JsonUtility.FromJson<TestbedConfig>(json).testSettings.testString;
+            actualInt = JsonUtility.FromJson<TestbedConfig>(json).test.testInt;
+            actualFloat = JsonUtility.FromJson<TestbedConfig>(json).test.testFloat;
+            actualString = JsonUtility.FromJson<TestbedConfig>(json).test.testString;
         }
         else
         {
-            actualInt = JsonUtility.FromJson<UserVRConfig>(json).testSettings.testInt;
-            actualFloat = JsonUtility.FromJson<UserVRConfig>(json).testSettings.testFloat;
-            actualString = JsonUtility.FromJson<UserVRConfig>(json).testSettings.testString;
+            actualInt = JsonUtility.FromJson<UserVRConfig>(json).test.testInt;
+            actualFloat = JsonUtility.FromJson<UserVRConfig>(json).test.testFloat;
+            actualString = JsonUtility.FromJson<UserVRConfig>(json).test.testString;
         }
 
         return (actualInt, actualFloat, actualString);
@@ -269,6 +269,6 @@ public class DummyConfigProvider : MonoBehaviour
     public void bindThisModule(IConfigManagerConnector _IConfigManagerConnector)
     {
         // Bind this handler to the module
-        _IConfigManagerConnector.BindModule(this, moduleName);
+        //_IConfigManagerConnector.BindModule(this, moduleName);
     }
 }

@@ -8,17 +8,14 @@ using Contracts;
 using System.Collections.Generic;
 using UnityEditor.VersionControl;
 
-public class TCP
+public class TCP : IModuleSettingsHandler
 {
     // This class handles TCP connection either to the Raspberry Pi (RPI) by connecting
     // to the RPI server or local, both as a client.
     // For RPI connection, a static IP is set.
-
-    public VRMode ActiveMode { get; private set; }
     private IConfigManagerConnector _IConfigManager; // Reference to the ConfigManager script
     private CommRouter commRouter; // Reference to the CommRouter script
     private NetworkManager networkManager; // Reference to the NetworkManager script
-    private string moduleName = "TCPSettings"; // Name of the module for configuration
     private volatile bool isConnected = false; // Flag to indicate if the client is connected to the server
     private volatile bool isShuttingDown = false; // Flag to indicate if the application is shutting down
     private TcpClient client; // TcpClient for connecting to the server
@@ -46,19 +43,21 @@ public class TCP
     //*********************************************************************************************
 
 
-    public TCP(NetworkManager networkManager, IConfigManagerConnector configManager)
+    public TCP(NetworkManager networkManager)
     {
         // This constructor is used to create a TCP instance.
 
 
         this.networkManager = networkManager;
-        _IConfigManager = configManager;
-        ActiveMode = _IConfigManager.GetVRType();
 
-        // Bind this module to the config manager and load settings
-        _IConfigManager.BindModule(this, moduleName);
 
         UnityEngine.Debug.Log("All components and settings initialized.");
+    }
+
+    public void SettingsChanged(string moduleName)
+    {
+        // This method is called when settings are changed in the ConfigManager.
+        // You can implement any necessary actions to handle the updated settings here.
     }
 
     public void InjectHardwareRouter(CommRouter router)
@@ -77,7 +76,7 @@ public class TCP
 
         DisconnectFromServer(); // Disconnect from the server when the application quits
 
-        if (ActiveMode == VRMode.Testbed)
+        if (Configuration.currentVersion == VRMode.Testbed)
             ConfigureIPmode(false); // Reset the IP to DHCP
     }
 
@@ -90,12 +89,12 @@ public class TCP
         bool IPisSet = false;
 
         // Set static IP if in testbed mode
-        if (ActiveMode == VRMode.Testbed)
+        if (Configuration.currentVersion == VRMode.Testbed)
         {
             IPisSet = ConfigureIPmode(true); // Set static IP to communicate with the RPI on a local network.
         }
 
-        if (!IPisSet && ActiveMode == VRMode.Testbed)
+        if (!IPisSet && Configuration.currentVersion == VRMode.Testbed)
         {
             UnityEngine.Debug.LogError("IP configuration failed, cannot connect to server.");
             return; // Exit if IP configuration fails
@@ -196,7 +195,7 @@ public class TCP
         {
             // Create a new TcpClient and connect to the server
             client = new TcpClient() { NoDelay = true };
-            if (ActiveMode == VRMode.Testbed)
+            if (Configuration.currentVersion == VRMode.Testbed)
             {
                 // Connect to the Raspberry Pi IP address
                 client.Connect(raspberryPiIP, port);
@@ -214,7 +213,7 @@ public class TCP
             stream.ReadTimeout = readTimeout;
             isConnected = true;
 
-            if (ActiveMode == VRMode.Testbed)
+            if (Configuration.currentVersion == VRMode.Testbed)
                 UnityEngine.Debug.Log("Connected to Raspberry Pi at " + raspberryPiIP + ":" + port);
             else
                 UnityEngine.Debug.Log("Connected to local server at " + localIP + ":" + port);

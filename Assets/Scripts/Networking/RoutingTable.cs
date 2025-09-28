@@ -2,16 +2,17 @@ using Contracts;
 using System.Collections.Generic;
 using System;
 using UnityEngine;
+using Mono.Cecil.Cil;
 
 public static class RoutingTable
 {
     // Defines hardcoded routing profiles for each mode.
 
-    public static Dictionary<MessageType, (TransportSource, TransportTarget, FormatType)> CreateRoutingTable(VRMode ActiveMode)
+    public static Dictionary<MessageType, (TransportSource, TransportTarget, FormatType)> CreateRoutingTable()
     {
         var routingTable = new Dictionary<MessageType, (TransportSource, TransportTarget, FormatType)>();
         // Initialize the routing table based on the active VR mode.
-        switch (ActiveMode)
+        switch (Configuration.currentVersion)
         {
             case VRMode.Testbed:
                 routingTable[MessageType.imu] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
@@ -40,7 +41,7 @@ public static class RoutingTable
                 break;
 
             default:
-                Debug.LogError($"CommRouter: Unsupported VRMode {ActiveMode}");
+                Debug.LogError($"CommRouter: Unsupported VRMode {Configuration.currentVersion}");
                 break;
         }
 
@@ -60,9 +61,36 @@ public static class RoutingTable
         return localRoutingTable;
     }
 
+    public static Dictionary<string, string> CreateModuleRoutingTable()
+    {
+        var moduleRoutingTable = new Dictionary<string, string>();
+
+        switch (Configuration.currentVersion)
+        {
+            case VRMode.Testbed:
+                moduleRoutingTable["camera"] = "TCP";
+                moduleRoutingTable["rightCrop"] = "TCP";
+                moduleRoutingTable["leftCrop"] = "TCP";
+                moduleRoutingTable["tracker"] = "TCP";
+                moduleRoutingTable["gaze"] = "TCP";
+                break;
+
+            case VRMode.UserVR:
+                moduleRoutingTable["camera"] = "Serial";
+                moduleRoutingTable["rightCrop"] = "Serial";
+                moduleRoutingTable["leftCrop"] = "Serial";
+                moduleRoutingTable["tracker"] = "TCP";
+                moduleRoutingTable["gaze"] = "Serial";
+                break;
+        }
+
+        return moduleRoutingTable;
+    }
+
     private static void HandleIMUData(object payload)
     {
         IMUData imuData;
+
         try
         {
             imuData = JsonUtility.FromJson<IMUData>(payload.ToString());

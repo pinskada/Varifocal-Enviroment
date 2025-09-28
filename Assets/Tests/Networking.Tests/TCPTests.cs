@@ -69,7 +69,7 @@ public class TCPTests
         var netMgr = go.AddComponent<NetworkManager>();
         networkManager = netMgr;
 
-        tcp = new TCP(networkManager, configManager, isTestbed);
+        tcp = new TCP(networkManager);
 
         return tcp;
     }
@@ -97,7 +97,7 @@ public class TCPTests
 public class DummyConfigManager : IConfigManagerConnector
 {
 
-    public void BindModule(object handler, string moduleName)
+    public void BindModule(IModuleSettingsHandler handler, string moduleName)
     {
         // Cast to the actual type
         TCP tcp = handler as TCP;
@@ -141,5 +141,5 @@ public class DummyMainThreadQueue : IMainThreadQueue
 public class FakeNetworkManager : NetworkManager
 {
     public new void SendTCPConfig() { return; }
-    public new void RedirectMessage(int packetType, byte[] payload) { return; }
+    //public new void RedirectMessage(int packetType, byte[] payload) { return; }
 }

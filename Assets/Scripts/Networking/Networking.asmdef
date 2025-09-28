@@ -1,6 +1,7 @@
 {
   "name": "Networking",
   "references": [
-    "Contracts"
+    "Contracts",
+    "GlobalSettings"
   ]
 }

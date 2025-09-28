@@ -5,7 +5,7 @@ using System.Threading;
 using System;
 using System.Collections.Concurrent;
 
-public class IMUHandler : MonoBehaviour, IIMUHandler, ModuleSettingsHandler
+public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
 {
     // This script handles the IMU data processing and applies the orientation to a target transform in Unity.
     // It uses the Madgwick filter for orientation estimation based on sensor data.
@@ -284,7 +284,7 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, ModuleSettingsHandler
     }
 
 
-    public void ChangeModuleSettings()
+    public void SettingsChanged(string moduleName)
     {
         // This method is called when configuration settings change.
         // Currently, it does nothing but can be expanded if needed.

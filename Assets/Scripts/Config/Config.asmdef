@@ -1,6 +1,7 @@
 {
     "name": "Config",
     "references": [
-        "Contracts"
+        "Contracts",
+        "GlobalSettings"
     ]
 }

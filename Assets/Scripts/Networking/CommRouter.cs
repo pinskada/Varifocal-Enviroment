@@ -9,7 +9,6 @@ using System.Collections;
 // Routes messages to the correct transport based on the active VRMode.
 public class CommRouter : MonoBehaviour
 {
-    public VRMode ActiveMode { get; private set; }
     private Dictionary<MessageType, (TransportSource, TransportTarget, FormatType)> routingTable;
     private Dictionary<MessageType, Action<object>> localRoutingTable;
     private TCP tcpModule;
@@ -37,8 +36,6 @@ public class CommRouter : MonoBehaviour
             yield return new WaitForSeconds(0.1f);
         }
 
-        ActiveMode = _IConfigManager.GetVRType();
-
         if (tcpModule != null)
         {
             tcpModule.InjectHardwareRouter(this);
@@ -49,9 +46,9 @@ public class CommRouter : MonoBehaviour
             serialModule.InjectHardwareRouter(this);
         }
 
-        routingTable = RoutingTable.CreateRoutingTable(ActiveMode);
+        routingTable = RoutingTable.CreateRoutingTable();
         localRoutingTable = RoutingTable.CreateLocalRoutingTable();
-        Debug.Log($"CommRouter initialized in {ActiveMode} mode.");
+        Debug.Log($"CommRouter initialized.");
     }
 
 
@@ -137,7 +134,7 @@ public class CommRouter : MonoBehaviour
 
         if (!routingTable.TryGetValue(messageType, out var route))
         {
-            Debug.LogError($"CommRouter: No route defined for {messageType} in {ActiveMode} mode.");
+            Debug.LogError($"CommRouter: No route defined for {messageType} in {Configuration.currentVersion} mode.");
             return (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON, false);
         }
 

@@ -2,7 +2,7 @@ using UnityEngine;
 using Contracts;
 using System.Collections.Generic;
 
-public class GuiHub : MonoBehaviour, IGUIHub
+public class GuiHub : MonoBehaviour, IGUIHub, IModuleSettingsHandler
 {
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -13,6 +13,11 @@ public class GuiHub : MonoBehaviour, IGUIHub
     void Update()
     {
 
+    }
+
+    public void SettingsChanged(string moduleName)
+    {
+        // Implementation for handling settings changes in the GUI
     }
 
     public void pushConfigList(List<string> configFileNames)

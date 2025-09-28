@@ -9,7 +9,7 @@ using System.Reflection;
 /// MonoBehaviour-based manager that loads config at startup
 /// and dispatches settings when components signal readiness.
 /// Attach this to a GameObject in your initial scene.
-public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigManagerCommunicator
+public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigManagerCommunicator, IConfigProvider<BaseConfig>
 {
     // Singleton instance
     public static ConfigManager Instance { get; private set; }
@@ -20,9 +20,10 @@ public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigMana
     public VRMode Mode => mode;
 
     // Configurations for different VR modes
+    public BaseConfig Config { get; private set; }
     public TestbedConfig TestbedConfig { get; private set; }
     public UserVRConfig UserVRConfig { get; private set; }
-    internal object Config;
+    //internal object Config;
     private string configPath;
     private string configSubfolder = "Configs";
     private string headsetSubFolder;
@@ -32,8 +33,9 @@ public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigMana
     // Dictionary to hold listeners for config changes
     // 1. Arg. - string: config key (e.g., "TestbedConfig.FieldName")
     // 2. Arg. - list of handlers: List<Action<object>> for that key points to a lambda function
-    private Dictionary<string, List<Action<object>>> _subscriptions
-    = new Dictionary<string, List<Action<object>>>();
+    private Dictionary<string, List<IModuleSettingsHandler>> _subscriptions
+    = new Dictionary<string, List<IModuleSettingsHandler>>();
+
 
 
     public void Awake()
@@ -71,13 +73,20 @@ public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigMana
          */
 
         // Initialize the default config based on the selected mode
-        if (mode == VRMode.Testbed)
-            Config = new TestbedConfig();
-        else
-            Config = new UserVRConfig();
-
-        // Set the config subfolder based on the mode
-        headsetSubFolder = (mode == VRMode.Testbed) ? "Testbed" : "UserVR";
+        switch (mode)
+        {
+            case VRMode.Testbed:
+                Config = new TestbedConfig();
+                headsetSubFolder = "Testbed";
+                break;
+            case VRMode.UserVR:
+                Config = new UserVRConfig();
+                headsetSubFolder = "UserVR";
+                break;
+            default:
+                Debug.LogError($"Unsupported VR mode: {mode}");
+                return;
+        }
 
         // Combine the persistent data path with the subfolders
         configFolder = Path.Combine(Application.persistentDataPath, configSubfolder, headsetSubFolder);
@@ -230,7 +239,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigMana
     }
 
 
-    public void BindModule(object handler, string moduleName)
+    public void BindModule(IModuleSettingsHandler handler, string moduleName)
     {
         // Bind a handler to the required module and initilize handlers values.
         // 1. Compute the key path for each property in the module - key = moduleName + "." + X
@@ -238,31 +247,22 @@ public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigMana
         // 3. Subscribes to changes -
         // - RegisterListener(string key, newValue => propInfo.SetValue(moduleInstance, newValue))
 
-        // Get the handler instance by name
-        var handlerType = handler.GetType();
 
         // Returns a dictionary of key-value pairs.
         var initialPropsValuesDict = GetPropValueDictFromModule(moduleName);
 
         // Iterate through the keys and values
-        foreach (var (key, initValue) in initialPropsValuesDict)
+        foreach (var (key, _) in initialPropsValuesDict)
         {
-            // Split the key into module name and property name
-            var (_, fieldName) = SplitKey(key);
-
             // Try to get the property info by key
             try
             {
-                var singleField = handlerType.GetField(fieldName);
-
-                singleField.SetValue(handler, initValue);
-
                 // Register a listener for changes to this key
-                RegisterListenerToProperty(key, newValue => singleField.SetValue(handler, newValue));
+                RegisterListenerToProperty(key, handler);
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Failed to bind property '{fieldName}' in module '{moduleName}': {ex.Message}");
+                Debug.LogError($"Failed to bind '{moduleName}': {ex.Message}");
             }
         }
     }
@@ -302,7 +302,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigMana
     }
 
 
-    private void RegisterListenerToProperty(string key, Action<object> handler)
+    private void RegisterListenerToProperty(string key, IModuleSettingsHandler handler)
     {
         // Register a listener for changes to a specific config key
         // Adds the handler lambda function to a dictionary -
@@ -311,7 +311,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigMana
         // If this is the first listener for this key, make a new list
         if (!_subscriptions.TryGetValue(key, out var list))
         {
-            list = new List<Action<object>>();
+            list = new List<IModuleSettingsHandler>();
             _subscriptions[key] = list;
         }
 
@@ -336,7 +336,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigMana
 
         SetFieldByKeyPath(key, newValue);
         SaveConfig();
-        Broadcast(key, newValue);
+        Broadcast(key);
     }
 
 
@@ -425,20 +425,29 @@ public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigMana
     }
 
 
-    private void Broadcast(string key, object newValue)
+    private void Broadcast(string key)
     {
         // Invoke all registered handlers for that key
         // Loops through the dictionary/list of handlers for the key
         // and calls each handler with the new value
 
-        // Example:
+        var (_, fieldName) = SplitKey(key);
 
         // Look up all subscribers
         if (_subscriptions.TryGetValue(key, out var handlers))
         {
             // Call each one, handing it the new value
             foreach (var h in handlers)
-                h(newValue);
+            {
+                if (h is IModuleSettingsHandler settingsHandler)
+                {
+                    settingsHandler.SettingsChanged(fieldName);
+                }
+                else
+                {
+                    Debug.Log($"Handler {h.GetType().Name} does not implement SettingsChanged, skipping.");
+                }
+            }
         }
         else
         {

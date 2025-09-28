@@ -2,7 +2,11 @@ using System.Collections.Generic;
 
 namespace Contracts
 {
-    public enum VRMode { Testbed, UserVR }
+    public enum VRMode
+    {
+        Testbed,
+        UserVR
+    }
 
     // Contract for managing configuration settings.
     public interface IConfigManagerConnector
@@ -11,7 +15,12 @@ namespace Contracts
         public VRMode GetVRType();
 
         // Bind a handler to a specific module
-        public void BindModule(object handler, string moduleName);
+        public void BindModule(IModuleSettingsHandler handler, string moduleName);
+    }
+
+    public interface IConfigProvider<BaseConfig>
+    {
+        BaseConfig Config { get; }
     }
 
     public interface IConfigManagerCommunicator
@@ -29,9 +38,9 @@ namespace Contracts
         public List<string> GetConfigFileNames();
     }
 
-    public interface ModuleSettingsHandler
+    public interface IModuleSettingsHandler
     {
         // Method to change settings based on updated configuration
-        public void ChangeModuleSettings();
+        public void SettingsChanged(string moduleName);
     }
 }

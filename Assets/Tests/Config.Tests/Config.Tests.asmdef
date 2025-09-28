@@ -2,7 +2,8 @@
     "name": "Config.Tests",
     "references": [
       "Config",
-      "Contracts"
+      "Contracts",
+      "GlobalSettings"
     ],
     "optionalUnityReferences": [
       "TestAssemblies"
@@ -11,4 +12,3 @@
       "Editor"
     ]
   }
-  
