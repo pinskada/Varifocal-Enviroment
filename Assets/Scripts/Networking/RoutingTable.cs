@@ -5,12 +5,16 @@ using UnityEngine;
 
 public static class RoutingTable
 {
-    // Defines hardcoded routing profiles for each mode.
+    // Defines hardcoded routing profiles.
 
-    public static Dictionary<MessageType, (TransportSource, TransportTarget, FormatType)> CreateRoutingTable()
+    public static Dictionary<MessageType, (TransportSource, TransportTarget, FormatType)> CreateGlobalRoutingTable()
     {
+        // Create the global routing table based on the current VRMode.
+        // It is a table of how to route each message type across possible transports.
+        // Each entry maps a MessageType to a tuple of (TransportSource, TransportTarget, FormatType).
+
         var routingTable = new Dictionary<MessageType, (TransportSource, TransportTarget, FormatType)>();
-        // Initialize the routing table based on the active VR mode.
+
         switch (Configuration.currentVersion)
         {
             case VRMode.Testbed:
@@ -49,6 +53,9 @@ public static class RoutingTable
 
     public static Dictionary<MessageType, Action<object>> CreateLocalRoutingTable()
     {
+        // Create the local routing table.
+        // It is a table of how to handle each message type within Unity.
+
         var localRoutingTable = new Dictionary<MessageType, Action<object>>();
 
         localRoutingTable[MessageType.imu] = (payload) => HandleIMUData(payload);
@@ -62,6 +69,9 @@ public static class RoutingTable
 
     public static List<RoutingEntry> CreateTCPModuleRoutingList()
     {
+        // Create the list of routing entries for the TCP module based on the current VRMode.
+        // Each entry contains a name (for logging) and a getter function to access the relevant settings object.
+
         var tcpRoutingList = new List<RoutingEntry>();
 
         switch (Configuration.currentVersion)
@@ -84,6 +94,9 @@ public static class RoutingTable
 
     public static List<RoutingEntry> CreateSerialModuleRoutingList()
     {
+        // Create the list of routing entries for the Serial module based on the current VRMode.
+        // Each entry contains a name (for logging) and a getter function to access the relevant settings object.
+
         var serialRoutingList = new List<RoutingEntry>();
 
         switch (Configuration.currentVersion)
@@ -101,6 +114,8 @@ public static class RoutingTable
 
     private static void HandleIMUData(object payload)
     {
+        // Parse and enqueue IMU data.
+
         IMUData imuData;
 
         try
@@ -118,6 +133,8 @@ public static class RoutingTable
 
 public class RoutingEntry
 {
+    // Creates a routing entry with a name and a getter function for getting settings.
+
     // Name is optional (for logging/debugging)
     public string Name { get; }
 

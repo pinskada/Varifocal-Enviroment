@@ -2,40 +2,30 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Contracts;
-using System.Collections;
 using Newtonsoft.Json;
 
 
-// Communication routing layer.
-// Routes messages to the correct transport based on the active VRMode.
 public class CommRouter : MonoBehaviour
 {
-    private Dictionary<MessageType, (TransportSource, TransportTarget, FormatType)> routingTable;
-    private Dictionary<MessageType, Action<object>> localRoutingTable;
+    // Communication routing layer.
+    // Routes messages to the correct transport based on the active VRMode.
+    // Handles encoding/decoding of messages as needed.
+    // Uses a routing table to determine how to route each message type.
+
     private TCP tcpModule;
     private Serial serialModule;
-    private IMainThreadQueue _IMainThreadQueue; // Reference to the MainThreadQueue script
-    private IConfigManagerConnector _IConfigManager; // Reference to the ConfigManager script
+    private Dictionary<MessageType, (TransportSource, TransportTarget, FormatType)> globalRoutingTable
+    = RoutingTable.CreateGlobalRoutingTable();
+    private Dictionary<MessageType, Action<object>> localRoutingTable
+    = RoutingTable.CreateLocalRoutingTable();
 
 
-    // Initialize the CommRouter after ConfigManager provides mode.
     public void Initialize(TCP tcp, Serial serial)
     {
+        // Initialize the CommRouter after ConfigManager provides mode.
+
         tcpModule = tcp;
         serialModule = serial;
-
-        StartCoroutine(WaitForConnectionCoroutine());
-    }
-
-
-    private IEnumerator WaitForConnectionCoroutine()
-    {
-        // This coroutine waits until all dependencies are injected before connecting peripherals.
-
-        while (_IMainThreadQueue == null || _IConfigManager == null)
-        {
-            yield return new WaitForSeconds(0.1f);
-        }
 
         if (tcpModule != null)
         {
@@ -47,38 +37,30 @@ public class CommRouter : MonoBehaviour
             serialModule.InjectHardwareRouter(this);
         }
 
-        routingTable = RoutingTable.CreateRoutingTable();
-        localRoutingTable = RoutingTable.CreateLocalRoutingTable();
         Debug.Log($"CommRouter initialized.");
-    }
-
-
-    public void InjectModules(IMainThreadQueue MainThreadQueue, IConfigManagerConnector configManager)
-    {
-        // This method injects dependencies into the HardwareRouter.
-
-        _IMainThreadQueue = MainThreadQueue;
-        _IConfigManager = configManager;
     }
 
 
     public void RouteMessage(object payload, MessageType type)
     {
+        // Main routing function.
+        // Determines transport source/target, encoding/decoding needs, and routes message.
+
+        // Decompose routing table entry
         (
             TransportSource transportSource,
             TransportTarget transportTarget,
             FormatType formatType,
             bool isExistingRoute
         ) = DecomposeRoutingTable(type);
-
         if (!isExistingRoute) return;
 
+        // Determine if encoding/decoding is needed
         (EncodingType encodeType, bool isValidRoute) = EncodeDecodeLogic(transportSource, transportTarget);
-
         if (!isValidRoute) return;
 
+        // Perform encoding/decoding as needed
         object message;
-
         switch (encodeType)
         {
             case EncodingType.Encode:
@@ -98,6 +80,7 @@ public class CommRouter : MonoBehaviour
                 return;
         }
 
+        // Route message to the appropriate transport
         switch (transportTarget)
         {
             case TransportTarget.Tcp:
@@ -117,7 +100,10 @@ public class CommRouter : MonoBehaviour
 
     private void RouteInUnity(object payload, MessageType messageType)
     {
-        // Placeholder for routing messages within Unity.
+        // Route message to local Unity handlers
+
+        // Invoke the appropriate local handler based on message type
+        // Actions are defined in the localRoutingTable
         if (localRoutingTable.TryGetValue(messageType, out var action))
         {
             action.Invoke(payload);
@@ -131,9 +117,9 @@ public class CommRouter : MonoBehaviour
 
     private (TransportSource, TransportTarget, FormatType, bool isExistingRoute) DecomposeRoutingTable(MessageType messageType)
     {
-        // Placeholder for actual decomposition logic.
+        // Look up the routing table entry for the given message type
 
-        if (!routingTable.TryGetValue(messageType, out var route))
+        if (!globalRoutingTable.TryGetValue(messageType, out var route))
         {
             Debug.LogError($"CommRouter: No route defined for {messageType} in {Configuration.currentVersion} mode.");
             return (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON, false);
@@ -147,6 +133,7 @@ public class CommRouter : MonoBehaviour
 
     private (EncodingType, bool isValidRoute) EncodeDecodeLogic(TransportSource transportSource, TransportTarget transportTarget)
     {
+        // Determine if encoding/decoding is needed based on transport source/target
 
         if ((int)transportSource == (int)transportTarget)
         {
@@ -175,6 +162,8 @@ public class CommRouter : MonoBehaviour
 
     private byte[] EncodeMessage(object payload, FormatType format)
     {
+        // Encode the payload based on the specified format
+
         switch (format)
         {
             case FormatType.JSON:
@@ -205,6 +194,8 @@ public class CommRouter : MonoBehaviour
 
     private object DecodeMessage(object payload, FormatType format)
     {
+        // Decode the payload based on the specified format
+
         switch (format)
         {
             case FormatType.JSON:

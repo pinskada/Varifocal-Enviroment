@@ -4,17 +4,55 @@ using System.Threading;
 using System.Collections.Generic;
 using System.Reflection;
 
-// This class handles communication between the Unity application and external devices like Raspberry Pi or ESP32 or local EyeTracker.
-// It can run in two modes: testbed - connects to a RPI as client or real - connects to the ESP32 via serial port and creates
-// a local TCP server for the EyeTracker.
 
 public class NetworkManager : MonoBehaviour, IModuleSettingsHandler
 {
+    // Manages network communication via TCP and Serial based on VRMode.
+    // Initializes and provides access to TCP and Serial modules.
+    // Routes configuration changes to the appropriate module via CommRouter.
+
+
     private TCP tcp; // Reference to the TCP script
     private Serial serial; // Reference to the Serial script
-    private CommRouter commRouter; // Reference to the CommRouter script
+    [SerializeField] private CommRouter commRouter; // Reference to the CommRouter script
     private List<RoutingEntry> tcpRoutingList = RoutingTable.CreateTCPModuleRoutingList();
     private List<RoutingEntry> serialRoutingList = RoutingTable.CreateSerialModuleRoutingList();
+
+
+    void Awake()
+    {
+        // Initializes TCP client or server and serial port based on the setup and
+        // injects them into CommRouter.
+
+        tcp = new TCP(this);
+
+        if (Configuration.currentVersion == VRMode.UserVR)
+        {
+            serial = new Serial(this);
+        }
+
+        commRouter.Initialize(tcp, serial);
+    }
+
+
+    void Start()
+    {
+        // Activates TCP client or server and serial port based on the setup.
+
+        if (tcp != null)
+        {
+            new Thread(tcp.StartTCP) { IsBackground = true, Name = "TCP.Startup" }.Start();
+        }
+        if (serial != null)
+        {
+            // Placeholder for starting serial communication if needed.
+        }
+    }
+
+
+    // Returns the instances of TCP and Serial for Bootstrapper to bind them to ConfigManager.
+    public (TCP, Serial) GetCommunicatorInstance() => (tcp, serial);
+
 
     public void SettingsChanged(string moduleName, string fieldName)
     {
@@ -51,57 +89,28 @@ public class NetworkManager : MonoBehaviour, IModuleSettingsHandler
         Debug.LogWarning($"[NetworkManager] Could not find {moduleName}.{fieldName} in routing lists.");
     }
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Awake()
-    {
-        // Initializes TCP client or server and serial port based on the setup.
-        ConnectPeripherals();
-    }
 
-    void Start()
+    private Dictionary<string, object> BuildConfigMessage(object settingsBlock, string moduleName, FieldInfo field)
     {
-        // Placeholder for any initialization that needs to occur after Awake.
-        if (tcp != null)
+        // Constructs a config message payload for a specific field in a settings block.
+        // Returns a dictionary with the format { "ModuleName.FieldName": value }.
+
+        var value = field.GetValue(settingsBlock);
+
+        var payload = new Dictionary<string, object>
         {
-            new Thread(tcp.StartTCP) { IsBackground = true, Name = "TCP.Startup" }.Start();
-        }
-        if (serial != null)
-        {
-            // Placeholder for starting serial communication if needed.
-        }
-    }
+            { $"{moduleName}.{field.Name}", value }
+        };
 
-    private void OnApplicationQuit()
-    {
-        // This method kills tcp client and serial connection
-
-        tcp.Shutdown();
-        if (serial != null)
-            serial.Shutdown();
-    }
-
-
-    private void ConnectPeripherals()
-    {
-        // This method connects peripherals after all dependencies are injected.
-
-
-        tcp = new TCP(this);
-
-        if (Configuration.currentVersion == VRMode.UserVR)
-        {
-            serial = new Serial(this);
-        }
-    }
-
-    public (TCP, Serial) GetCommunicatorInstance()
-    {
-        return (tcp, serial);
+        return payload;
     }
 
 
     public void SendTCPConfig()
     {
+        // Sends the current TCP configuration to the connected device.
+        // Iterates through all routing entries for TCP and sends each setting from each module.
+
         foreach (var entry in tcpRoutingList)
         {
             var settingsBlock = entry.GetSettings();
@@ -119,8 +128,12 @@ public class NetworkManager : MonoBehaviour, IModuleSettingsHandler
         }
     }
 
+
     public void SendSerialConfig()
     {
+        // Sends the current Serial configuration to the connected device.
+        // Iterates through all routing entries for Serial and sends each setting from each module.
+
         foreach (var entry in serialRoutingList)
         {
             var settingsBlock = entry.GetSettings();
@@ -138,15 +151,11 @@ public class NetworkManager : MonoBehaviour, IModuleSettingsHandler
         }
     }
 
-    private Dictionary<string, object> BuildConfigMessage(object settingsBlock, string moduleName, FieldInfo field)
+
+    private void OnApplicationQuit()
     {
-        var value = field.GetValue(settingsBlock);
-
-        var payload = new Dictionary<string, object>
-        {
-            { $"{moduleName}.{field.Name}", value }
-        };
-
-        return payload;
+        // This method kills tcp client and serial connection
+        if (tcp != null) tcp.Shutdown();
+        if (serial != null) serial.Shutdown();
     }
 }
