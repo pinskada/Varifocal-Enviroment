@@ -67,7 +67,7 @@ public class NetworkManager : MonoBehaviour, IModuleSettingsHandler
             if (field != null)
             {
                 var payload = BuildConfigMessage(settingsBlock, moduleName, field);
-                commRouter.RouteMessage(payload, MessageType.tcpConfig);
+                RouteQueueContainer.routeQueue.Enqueue((payload, MessageType.tcpConfig));
                 return;
             }
         }
@@ -81,7 +81,7 @@ public class NetworkManager : MonoBehaviour, IModuleSettingsHandler
             if (field != null)
             {
                 var payload = BuildConfigMessage(settingsBlock, moduleName, field);
-                serial.SendViaSerial(payload, MessageType.espConfig);
+                RouteQueueContainer.routeQueue.Enqueue((payload, MessageType.espConfig));
                 return;
             }
         }
@@ -123,7 +123,7 @@ public class NetworkManager : MonoBehaviour, IModuleSettingsHandler
             {
                 var payload = BuildConfigMessage(settingsBlock, entry.Name, field);
 
-                commRouter.RouteMessage(payload, MessageType.tcpConfig);
+                RouteQueueContainer.routeQueue.Enqueue((payload, MessageType.tcpConfig));
             }
         }
     }

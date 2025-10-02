@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Contracts;
 using Newtonsoft.Json;
+using System.Threading;
 
 
 public class CommRouter : MonoBehaviour
@@ -18,7 +19,15 @@ public class CommRouter : MonoBehaviour
     = RoutingTable.CreateGlobalRoutingTable();
     private Dictionary<MessageType, Action<object>> localRoutingTable
     = RoutingTable.CreateLocalRoutingTable();
+    private Thread routingThread; // Thread for receiving data from the server
+    private bool isRunning = false;
 
+    void Start()
+    {
+        isRunning = true;
+        routingThread = new Thread(DequeueMessage) { IsBackground = true, Name = "CommRouter.Route" };
+        routingThread.Start();
+    }
 
     public void Initialize(TCP tcp, Serial serial)
     {
@@ -41,7 +50,33 @@ public class CommRouter : MonoBehaviour
     }
 
 
-    public void RouteMessage(object payload, MessageType type)
+    private void OnApplicationQuit()
+    {
+        // Clean up the routing thread on application exit.
+
+        isRunning = false;
+        routingThread?.Join(1000); // Wait for the thread to finish
+    }
+
+    private void DequeueMessage()
+    {
+        // Dequeue a message from the route queue.
+        // This function is called in the routing thread.
+        while (isRunning)
+        {
+            if (RouteQueueContainer.routeQueue.TryDequeue(out var item))
+            {
+                var (payload, type) = item;
+                RouteMessage(payload, type);
+            }
+            else
+            {
+                Thread.Sleep(1); // Avoid busy-waiting
+            }
+        }
+    }
+
+    private void RouteMessage(object payload, MessageType type)
     {
         // Main routing function.
         // Determines transport source/target, encoding/decoding needs, and routes message.
@@ -196,43 +231,19 @@ public class CommRouter : MonoBehaviour
     {
         // Decode the payload based on the specified format
 
+        var bytePayload = payload as byte[];
+
         switch (format)
         {
             case FormatType.JSON:
-                return (string)payload;
-
+                string json = System.Text.Encoding.UTF8.GetString(bytePayload);
+                return System.Text.Encoding.UTF8.GetBytes(json);
             case FormatType.PNG:
-                if (payload is not byte[])
-                {
-                    Debug.LogError("CommRouter: Payload is not a byte array for PNG decoding.");
-                    return null;
-                }
-                var pngData = (byte[])payload;
-                var pngTexture = new Texture2D(2, 2);
-                if (!pngTexture.LoadImage(pngData))
-                {
-                    Debug.LogError("CommRouter: Failed to decode PNG image.");
-                    return null;
-                }
-                return pngTexture;
-
             case FormatType.JPEG:
-                if (payload is not byte[])
-                {
-                    Debug.LogError("CommRouter: Payload is not a byte array for JPEG decoding.");
-                    return null;
-                }
-                var jpegData = (byte[])payload;
-                var jpegTexture = new Texture2D(2, 2);
-                if (!jpegTexture.LoadImage(jpegData))
-                {
-                    Debug.LogError("CommRouter: Failed to decode JPEG image.");
-                    return null;
-                }
-                return jpegTexture;
-
+                var images = ImageDecoder.Decode(bytePayload);
+                return images;
             default:
-                Debug.LogError("CommRouter: Unsupported format type for decoding.");
+                Debug.LogError("CommRouter: Unsupported format type for encoding.");
                 return null;
         }
     }

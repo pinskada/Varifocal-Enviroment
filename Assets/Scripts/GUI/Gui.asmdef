@@ -1,6 +1,7 @@
 {
-	"name": "Gui",
-	"references": [
-    "Contracts"
+  "name": "Gui",
+  "references": [
+    "Contracts",
+    "StbImage"
   ]
 }

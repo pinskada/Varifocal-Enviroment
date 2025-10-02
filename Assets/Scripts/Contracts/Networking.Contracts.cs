@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Concurrent;
 
 namespace Contracts
 {
@@ -44,5 +45,10 @@ namespace Contracts
         Encode,
         Decode,
         None
+    }
+    public static class RouteQueueContainer
+    {
+        public static readonly ConcurrentQueue<(object payload, MessageType messageType)> routeQueue =
+            new ConcurrentQueue<(object payload, MessageType messageType)>();
     }
 }

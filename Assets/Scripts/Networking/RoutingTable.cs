@@ -2,6 +2,7 @@ using Contracts;
 using System.Collections.Generic;
 using System;
 using UnityEngine;
+using System.Linq.Expressions;
 
 public static class RoutingTable
 {
@@ -61,8 +62,8 @@ public static class RoutingTable
         localRoutingTable[MessageType.imu] = (payload) => HandleIMUData(payload);
         localRoutingTable[MessageType.tcpLogg] = (payload) => Debug.Log($"TCP Log: {payload}");
         localRoutingTable[MessageType.espLogg] = (payload) => Debug.Log($"ESP Log: {payload}");
-        localRoutingTable[MessageType.trackerPreview] = (texture2D) => GUIQueueContainer.GUIqueue.Enqueue((Texture2D)texture2D);
-        localRoutingTable[MessageType.eyePreview] = (texture2D) => GUIQueueContainer.GUIqueue.Enqueue((Texture2D)texture2D);
+        localRoutingTable[MessageType.trackerPreview] = (payload) => HandlePreviewImage(payload);
+        localRoutingTable[MessageType.eyePreview] = (payload) => HandlePreviewImage(payload);
 
         return localRoutingTable;
     }
@@ -128,6 +129,37 @@ public static class RoutingTable
             return;
         }
         IMUQueueContainer.IMUqueue.Enqueue(imuData);
+    }
+
+    private static void HandlePreviewImage(object payload)
+    {
+        // Handle preview image data.
+        // This function can be expanded to process the image as needed.
+        var images = payload as List<ImageDecoder.EyeImage>;
+        if (images == null)
+        {
+            Debug.LogError("HandlePreviewImage: Payload is not a list of EyeData.");
+            return;
+        }
+
+        foreach (var eye in images)
+        {
+            try
+            {
+                Texture2D eyeTex = new Texture2D(eye.Width, eye.Height);
+                eyeTex.LoadImage(eye.Data);
+                if (eye.EyeId == 0)
+                    GUIQueueContainer.eyePreviewQueue.Enqueue((eyeTex, eye.Width, eye.Height, EyeSide.Left));
+                else if (eye.EyeId == 1)
+                    GUIQueueContainer.eyePreviewQueue.Enqueue((eyeTex, eye.Width, eye.Height, EyeSide.Right));
+                else
+                    Debug.LogError($"HandlePreviewImage: Unknown EyeId {eye.EyeId}.");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"HandlePreviewImage: Failed to load image for eye {eye.EyeId}: {ex.Message}");
+            }
+        }
     }
 }
 

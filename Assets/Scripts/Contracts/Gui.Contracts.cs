@@ -5,6 +5,12 @@ using UnityEngine;
 
 namespace Contracts
 {
+    public enum EyeSide
+    {
+        Left,
+        Right,
+    }
+
     public interface IGUIHub
     {
         // Sends a list of configuration file names to the GUI for display
@@ -13,6 +19,7 @@ namespace Contracts
 
     public static class GUIQueueContainer
     {
-        public static readonly ConcurrentQueue<Texture2D> GUIqueue = new ConcurrentQueue<Texture2D>();
+        public static readonly ConcurrentQueue<(Texture2D rawData, int width, int height, EyeSide eyeSide)> eyePreviewQueue =
+        new ConcurrentQueue<(Texture2D, int, int, EyeSide)>();
     }
 }
