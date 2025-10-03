@@ -51,7 +51,7 @@ public class IMUHandlerTests
 {
 
     private ICameraHub _ICameraHub;
-    private IConfigManagerConnector _IConfigManager;
+    private IConfigManagerCommunicator _IConfigManager;
 
     [UnityTest]
     public IEnumerator TestInit()
@@ -228,15 +228,15 @@ public class IMUHandlerTests
     public void PassDummyModules(IMUHandler imuHandler, TestGlobals testGlobals)
     {
         _ICameraHub = new DummyCameraHub(testGlobals);
-        _IConfigManager = new DummyConfigManager();
+        _IConfigManager = null; //new DummyConfigManager();
 
         imuHandler.InjectModules(_ICameraHub, _IConfigManager);
     }
 
 }
 
-
-public class DummyConfigManager : IConfigManagerConnector
+/*
+public class DummyConfigManager : IConfigManagerCommunicator
 {
 
     public void BindModule(IModuleSettingsHandler handler, string moduleName)
@@ -264,7 +264,7 @@ public class DummyConfigManager : IConfigManagerConnector
     }
 }
 
-
+*/
 public class DummyCameraHub : ICameraHub
 {
     TestGlobals testGlobals;

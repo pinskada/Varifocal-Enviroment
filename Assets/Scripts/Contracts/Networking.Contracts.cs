@@ -1,4 +1,3 @@
-using UnityEngine;
 using System.Collections.Concurrent;
 
 namespace Contracts
@@ -8,6 +7,7 @@ namespace Contracts
         imu,
         unityControl,
         gazeDistance,
+        generalConfig,
         tcpLogg,
         tcpConfig,
         tcpControl,

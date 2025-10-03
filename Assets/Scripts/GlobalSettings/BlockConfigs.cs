@@ -1,4 +1,5 @@
 // Block-level data models for settings
+using System.Collections.Generic;
 using Contracts;
 
 public static class Configuration
@@ -45,12 +46,12 @@ public class DisplaySettings
 [System.Serializable]
 public class IMUSettings
 {
-    public float BetaMoving = 0.005f; // Madgwick filter beta gain when moving [-]
-    public float BetaStill = 0.1f; // Madgwick filter beta gain when still [-]
-    public float BetaThreshold = 0.1f; // Threshold to switch between moving and still states [-]
     public float minDt = 0.001f; // Minimum delta time for filter updates [s]
     public float maxDt = 0.1f; // Maximum delta time for filter updates [s]
-    public float MinGyroMagnitude = 0.01f;  // Threshold to skip updates when gyro is nearly zero [rad/s]
+    public float betaMoving = 0.005f; // Madgwick filter beta gain when moving [-]
+    public float betaStill = 0.1f; // Madgwick filter beta gain when still [-]
+    public float betaThreshold = 0.1f; // Threshold to switch between moving and still states [-]
+    public float minGyroMagnitude = 0.01f;  // Threshold to skip updates when gyro is nearly zero [rad/s]
 
 }
 
@@ -71,19 +72,34 @@ public class CameraSettings
 [System.Serializable]
 public class CropSettings
 {
-    public float left = 0f;
-    public float right = 0.5f;
-    public float top = 0f;
-    public float bottom = 1f;
+    public List<List<float>> cropRegionLeft = new List<List<float>>
+    {
+        new List<float> { 0f, 1f },  // top, bottom
+        new List<float> { 0f, 0.5f }   // left, right
+    };
+
+    public List<List<float>> cropRegionRight = new List<List<float>>
+    {
+        new List<float> { 0f, 1f },  // top, bottom
+        new List<float> { 0.5f, 1f }   // left, right
+    };
+
 }
 
 
 [System.Serializable]
 public class TrackerSettings
 {
-    public int minRadius = 5;
-    public int maxRadius = 20;
-    public int searchStep = 10;
+    public int leftThreshold = 128;
+    public int leftBlurSize = 5;
+    public int leftMinRadius = 5;
+    public int leftMaxRadius = 20;
+    public int leftSearchStep = 10;
+    public int rightThreshold = 128;
+    public int rightBlurSize = 5;
+    public int rightMinRadius = 5;
+    public int rightMaxRadius = 20;
+    public int rightSearchStep = 10;
 }
 
 

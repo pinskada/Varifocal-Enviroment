@@ -11,7 +11,7 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
     // It uses the Madgwick filter for orientation estimation based on sensor data.
 
     string moduleName = "IMUHandler"; // Name of the module for configuration
-    private IConfigManagerConnector _IConfigManager;
+    private IConfigManagerCommunicator _IConfigManager;
     private ICameraHub _ICameraHub; // Reference to the camera hub interface
     private Thread updateThread; // Thread for receiving IMU data
     public Transform target; // Camera or object to apply the IMU orientation to
@@ -62,7 +62,7 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
     static bool IsFinite(Quaternion q) => IsFinite(q.x) && IsFinite(q.y) && IsFinite(q.z) && IsFinite(q.w);
 
 
-    public void InjectModules(ICameraHub cameraHub, IConfigManagerConnector configManager)
+    public void InjectModules(ICameraHub cameraHub, IConfigManagerCommunicator configManager)
     {
         // Inject the external modules interfaces into this handler
 

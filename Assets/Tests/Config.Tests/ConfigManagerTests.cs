@@ -10,7 +10,7 @@ using UnityEngine.TestTools;
 public class ConfigManagerTests
 {
     private IConfigManagerCommunicator _IConfigManagerCommunicator;
-    private IConfigManagerConnector _IConfigManagerConnector;
+    private IConfigManagerCommunicator _IConfigManagerConnector;
 
 
     [Test]
@@ -266,7 +266,7 @@ public class DummyConfigProvider : MonoBehaviour
     public float testFloat;
     public string testString;
 
-    public void bindThisModule(IConfigManagerConnector _IConfigManagerConnector)
+    public void bindThisModule(IConfigManagerCommunicator _IConfigManagerConnector)
     {
         // Bind this handler to the module
         //_IConfigManagerConnector.BindModule(this, moduleName);

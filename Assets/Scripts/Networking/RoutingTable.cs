@@ -79,8 +79,7 @@ public static class RoutingTable
         {
             case VRMode.Testbed:
                 tcpRoutingList.Add(new RoutingEntry("camera", () => Settings.Camera));
-                tcpRoutingList.Add(new RoutingEntry("rightCrop", () => Settings.RightCrop));
-                tcpRoutingList.Add(new RoutingEntry("leftCrop", () => Settings.LeftCrop));
+                tcpRoutingList.Add(new RoutingEntry("cameraCrop", () => Settings.CameraCrop));
                 tcpRoutingList.Add(new RoutingEntry("tracker", () => Settings.Tracker));
                 tcpRoutingList.Add(new RoutingEntry("gaze", () => Settings.Gaze));
                 break;
@@ -102,10 +101,11 @@ public static class RoutingTable
 
         switch (Configuration.currentVersion)
         {
+            case VRMode.Testbed: // Serial not used in Testbed mode
+                break;
             case VRMode.UserVR:
                 serialRoutingList.Add(new RoutingEntry("camera", () => Settings.Camera));
-                serialRoutingList.Add(new RoutingEntry("rightCrop", () => Settings.RightCrop));
-                serialRoutingList.Add(new RoutingEntry("leftCrop", () => Settings.LeftCrop));
+                serialRoutingList.Add(new RoutingEntry("cameraCrop", () => Settings.CameraCrop));
                 serialRoutingList.Add(new RoutingEntry("gaze", () => Settings.Gaze));
                 break;
         }

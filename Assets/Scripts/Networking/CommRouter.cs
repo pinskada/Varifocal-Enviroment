@@ -4,6 +4,7 @@ using UnityEngine;
 using Contracts;
 using Newtonsoft.Json;
 using System.Threading;
+using System.Linq;
 
 
 public class CommRouter : MonoBehaviour
@@ -89,6 +90,7 @@ public class CommRouter : MonoBehaviour
             bool isExistingRoute
         ) = DecomposeRoutingTable(type);
         if (!isExistingRoute) return;
+
 
         // Determine if encoding/decoding is needed
         (EncodingType encodeType, bool isValidRoute) = EncodeDecodeLogic(transportSource, transportTarget);

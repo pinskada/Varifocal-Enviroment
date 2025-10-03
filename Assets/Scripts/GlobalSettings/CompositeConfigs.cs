@@ -11,8 +11,7 @@ public abstract class BaseConfig
     public CameraSettings camera = new CameraSettings();
     public DisplaySettings display = new DisplaySettings();
     public IMUSettings imu = new IMUSettings();
-    public CropSettings leftCrop = new CropSettings();
-    public CropSettings rightCrop = new CropSettings();
+    public CropSettings cameraCrop = new CropSettings();
 }
 
 // Testbed VR configuration (inherits all from BaseConfig).

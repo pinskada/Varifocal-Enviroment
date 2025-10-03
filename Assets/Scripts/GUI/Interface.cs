@@ -1,20 +1,54 @@
 using UnityEngine;
 using Contracts;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 public class GuiInterface : MonoBehaviour
 {
-    public GuiHub guiHub;
+    [SerializeField] private List<GameObject> panels = new List<GameObject>();
+    private IConfigManagerCommunicator _IConfigManager;
+
+    private void Awake()
+    {
+        // Find all InputFields in the scene and wire them
+        foreach (var input in FindObjectsByType<InputField>(FindObjectsSortMode.None))
+        {
+            input.onEndEdit.AddListener(value => OnFieldEdited(input, value));
+        }
+    }
+
+
+    public void OnModeChanged(int Index)
+    {
+        // GUI mode set based on dropdown index
+
+        if (Index < 0 || Index >= panels.Count)
+        {
+            Debug.LogWarning($"[GUI] Invalid panel index: {Index}");
+            return;
+        }
+
+        foreach (var panel in panels)
+            panel.SetActive(false);
+
+        panels[Index].SetActive(true);
+    }
 
 
     // Called by input fields
-    public void OnFieldEdited(string value)
+    public void OnFieldEdited(InputField input, string value)
     {
-        var field = UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject?.GetComponent<UIField>();
+        var field = input.GetComponent<UIField>();
         if (field == null) return;
 
         string module = field.moduleName;
         string name = field.fieldName;
+
+        if (string.IsNullOrEmpty(module) || string.IsNullOrEmpty(name))
+        {
+            Debug.LogWarning("[GUI] Missing module or field name");
+            return;
+        }
 
         SendConfig(module, name, value);
     }
@@ -35,14 +69,11 @@ public class GuiInterface : MonoBehaviour
 
     private void SendConfig(string moduleName, string fieldName, string value)
     {
-        var payload = new Dictionary<string, object>
-        {
-            { $"{moduleName}.{fieldName}", value }
-        };
+        var key = $"{moduleName}.{fieldName}";
 
         Debug.Log($"[GUI] {moduleName}.{fieldName} = {value}");
 
         // Example: generic backend call
-        RouteQueueContainer.routeQueue.Enqueue((payload, MessageType.espConfig));
+        ConfigQueueContainer.configQueue.Enqueue((key, value));
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace Contracts
 {
@@ -8,15 +9,6 @@ namespace Contracts
         UserVR
     }
 
-    // Contract for managing configuration settings.
-    public interface IConfigManagerConnector
-    {
-        // Get current VR mode
-        public VRMode GetVRType();
-
-        // Bind a handler to a specific module
-        public void BindModule(IModuleSettingsHandler handler, string moduleName);
-    }
 
     public interface IConfigProvider<BaseConfig>
     {
@@ -25,6 +17,11 @@ namespace Contracts
 
     public interface IConfigManagerCommunicator
     {
+        // Get current VR mode
+        public VRMode GetVRType();
+
+        // Bind a handler to a specific module
+        public void BindModule(IModuleSettingsHandler handler, string moduleName);
         // Apply the settings
         public void ChangeProperty<T>(string key, T newValue);
 
@@ -42,5 +39,11 @@ namespace Contracts
     {
         // Method to change settings based on updated configuration
         public void SettingsChanged(string moduleName, string fieldName);
+    }
+
+    public static class ConfigQueueContainer
+    {
+        public static readonly ConcurrentQueue<(string key, object newValue)> configQueue =
+            new ConcurrentQueue<(string key, object newValue)>();
     }
 }

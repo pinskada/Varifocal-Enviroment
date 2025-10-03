@@ -78,7 +78,7 @@ public class VRSceneManager : MonoBehaviour
 
     public void NextScene()
     {
-        // Loads the next scene in the list, or returns to the previous 
+        // Loads the next scene in the list, or returns to the previous
         // scene before calibration if currently in the calibration scene
 
         if (currentVRScene == "CalibScene")
@@ -93,7 +93,7 @@ public class VRSceneManager : MonoBehaviour
 
     public void PreviousScene()
     {
-        // Loads the previous scene in the list, or returns to the previous 
+        // Loads the previous scene in the list, or returns to the previous
         // scene before calibration if currently in the calibration scene
 
         if (currentVRScene == "CalibScene")

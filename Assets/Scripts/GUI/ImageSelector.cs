@@ -12,7 +12,20 @@ public class ImageSelector : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
     private Vector2 endMousePos;
     private bool isSelecting = false;
     private bool isCroped = false; // Flag to check if the image is cropped
-
+    private string leftCropConfigKey = "cameraCrop.cropRegionLeft";
+    private string rightCropConfigKey = "cameraCrop.cropRegionRight";
+    private List<List<float>> leftResetCrop = new List<List<float>>
+    {
+        new List<float> { 0f, 1f },
+        new List<float> { 0f, 0.5f }
+    };
+    private List<List<float>> rightResetCrop = new List<List<float>>
+    {
+        new List<float> { 0f, 1f },
+        new List<float> { 0.5f, 1f }
+    };
+    private string currentCropConfigKey => eyeSide == EyeSide.Left ? leftCropConfigKey : rightCropConfigKey;
+    private List<List<float>> currentResetCrop => eyeSide == EyeSide.Left ? leftResetCrop : rightResetCrop;
     // Normalized coordinates (0-1) of the selected area (min/max)
 
 
@@ -109,51 +122,22 @@ public class ImageSelector : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
         else
             Debug.LogError($"Wrong side assigned to ImageSelector: {eyeSide}");
 
-        sendCrop(normalizedCoordinates);
+        EnqueueCrop(normalizedCoordinates);
         isCroped = true;
-    }
-
-
-    // Optional: Helper to get crop area in relative format
-    private void sendCrop(List<List<float>> normalizedCoordinates)
-    {
-        if (eyeSide == EyeSide.Left)
-            Debug.Log("Sending crop for left eye");
-        //guiHub.SendConfig("tracker_config crop_left", normalizedCoordinates);
-        else if (eyeSide == EyeSide.Right)
-            Debug.Log("Sending crop for right eye");
-        //guiHub.SendConfig("tracker_config crop_right", normalizedCoordinates);
-        else
-            Debug.LogError($"Wrong side assigned to ImageSelector: {eyeSide}");
     }
 
 
     public void resetScale()
     {
-        List<List<float>> normalizedCoordinates;
-        if (eyeSide == EyeSide.Left)
-        {
-            normalizedCoordinates = new List<List<float>>
-            {
-                new List<float>() {0f, 1f},
-                new List<float>() {0f, 0.5f}
-            };
-        }
-        else if (eyeSide == EyeSide.Right)
-        {
-            normalizedCoordinates = new List<List<float>>
-            {
-                new List<float>() {0f, 1f},
-                new List<float>() {0.5f, 1f}
-            };
-        }
-        else
-        {
-            Debug.LogError($"Wrong side assigned to ImageSelector: {eyeSide}");
-            return;
-        }
+        EnqueueCrop(currentResetCrop);
+        Debug.Log($"Resetting crop to {eyeSide} image");
         isCroped = false;
-        sendCrop(normalizedCoordinates);
+    }
+
+
+    private void EnqueueCrop(List<List<float>> coordinates)
+    {
+        ConfigQueueContainer.configQueue.Enqueue((currentCropConfigKey, coordinates));
     }
 
 

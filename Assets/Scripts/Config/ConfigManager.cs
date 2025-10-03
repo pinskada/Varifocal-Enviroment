@@ -4,12 +4,12 @@ using UnityEngine;
 using Contracts;
 using System.Collections.Generic;
 using System.Reflection;
-
+using System.Threading;
 
 /// MonoBehaviour-based manager that loads config at startup
 /// and dispatches settings when components signal readiness.
 /// Attach this to a GameObject in your initial scene.
-public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigManagerCommunicator, IConfigProvider<BaseConfig>
+public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigProvider<BaseConfig>
 {
     // Singleton instance
     public static ConfigManager Instance { get; private set; }
@@ -21,14 +21,12 @@ public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigMana
 
     // Configurations for different VR modes
     public BaseConfig Config { get; private set; }
-    public TestbedConfig TestbedConfig { get; private set; }
-    public UserVRConfig UserVRConfig { get; private set; }
-    //internal object Config;
     private string configPath;
     private string configSubfolder = "Configs";
     private string headsetSubFolder;
     private string configFolder;
     private List<string> configFileNames;
+    private Thread configThread;
 
     // Dictionary to hold listeners for config changes
     // 1. Arg. - string: config key (e.g., "TestbedConfig.FieldName")
@@ -55,8 +53,28 @@ public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigMana
     {
         // Load config
         LoadConfig();
+
+        // Start the receive thread to listen for incoming messages
+        configThread = new Thread(DequeueConfig) { IsBackground = true, Name = "ConfigRouter" };
+        configThread.Start();
     }
 
+
+    private void DequeueConfig()
+    {
+        // Dequeue the config if present
+        if (ConfigQueueContainer.configQueue.TryDequeue(out var newConfig))
+        {
+            var (key, newValue) = newConfig;
+            if (key == null || newValue == null)
+            {
+                Debug.LogError("ConfigManager: Received null config key or data.");
+                return;
+            }
+
+            ChangeProperty(key, newValue);
+        }
+    }
 
     public void OnDestroy()
     {
@@ -192,7 +210,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerConnector, IConfigMana
     }
 
 
-    public void ListFileNames(string folderPath)
+    private void ListFileNames(string folderPath)
     {
         // Creates a list of file names in the specified folder.
         var result = new List<string>();

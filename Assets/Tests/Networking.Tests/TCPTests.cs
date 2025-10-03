@@ -11,7 +11,7 @@ using System.Threading;
 public class TCPTests
 {
     NetworkManager networkManager;
-    IConfigManagerConnector configManager;
+    IConfigManagerCommunicator configManager;
     IMainThreadQueue MainThreadQueue;
 
     TCP tcp;
@@ -23,7 +23,7 @@ public class TCPTests
         tcp = CreateTCP(true);
 
         MainThreadQueue = GetPrivateField<DummyMainThreadQueue>(tcp, "_IMainThreadQueue");
-        configManager = GetPrivateField<DummyConfigManager>(tcp, "_IConfigManager");
+        configManager = null; //GetPrivateField<DummyConfigManager>(tcp, "_IConfigManager");
         networkManager = GetPrivateField<NetworkManager>(tcp, "networkManager");
 
         bool isTestbed = GetPrivateField<bool>(tcp, "isTestbed");
@@ -64,7 +64,7 @@ public class TCPTests
 
     public TCP CreateTCP(bool isTestbed = true)
     {
-        configManager = new DummyConfigManager();
+        configManager = null; //new DummyConfigManager();
         var go = new GameObject("TestNetworkManager");
         var netMgr = go.AddComponent<NetworkManager>();
         networkManager = netMgr;
@@ -93,8 +93,8 @@ public class TCPTests
     }
 }
 
-
-public class DummyConfigManager : IConfigManagerConnector
+/*
+public class DummyConfigManager : IConfigManagerCommunicator
 {
 
     public void BindModule(IModuleSettingsHandler handler, string moduleName)
@@ -106,7 +106,7 @@ public class DummyConfigManager : IConfigManagerConnector
             Debug.LogError("Handler is not of type TCP");
             return;
         }
-        /*
+        
                 // Dummy implementation for testing
                 tcp.ipAddress = "192.168.2.1";
                 tcp.raspberryPiIP = "192.168.2.2";
@@ -119,7 +119,7 @@ public class DummyConfigManager : IConfigManagerConnector
                 tcp.readTimeout = 2000; // Timeout in milliseconds for blocking reads
                 tcp.maxPacketSize = 16777216; // Maximum packet size in bytes (16 MB)
                 tcp.maxSendRetries = 3; // Maximum number of send retries
-        */
+        
     }
 
     public VRMode GetVRType()
@@ -127,7 +127,7 @@ public class DummyConfigManager : IConfigManagerConnector
         return VRMode.Testbed; // Dummy return value for testing
     }
 }
-
+*/
 
 public class DummyMainThreadQueue : IMainThreadQueue
 {
