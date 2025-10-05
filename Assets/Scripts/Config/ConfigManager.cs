@@ -27,6 +27,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
     private string configFolder;
     private List<string> configFileNames;
     private Thread configThread;
+    private bool threadIsRunning = false;
 
     // Dictionary to hold listeners for config changes
     // 1. Arg. - string: config key (e.g., "TestbedConfig.FieldName")
@@ -46,15 +47,16 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
         }
         Instance = this;
         DontDestroyOnLoad(gameObject);
+
+        // Load config
+        LoadConfig();
     }
 
 
     public void Start()
     {
-        // Load config
-        LoadConfig();
-
         // Start the receive thread to listen for incoming messages
+        threadIsRunning = true;
         configThread = new Thread(DequeueConfig) { IsBackground = true, Name = "ConfigRouter" };
         configThread.Start();
     }
@@ -62,22 +64,26 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
 
     private void DequeueConfig()
     {
-        // Dequeue the config if present
-        if (ConfigQueueContainer.configQueue.TryDequeue(out var newConfig))
+        while (threadIsRunning)
         {
-            var (key, newValue) = newConfig;
-            if (key == null || newValue == null)
+            // Dequeue the config if present
+            if (ConfigQueueContainer.configQueue.TryDequeue(out var newConfig))
             {
-                Debug.LogError("ConfigManager: Received null config key or data.");
-                return;
-            }
+                var (key, newValue) = newConfig;
+                if (key == null || newValue == null)
+                {
+                    Debug.LogError("ConfigManager: Received null config key or data.");
+                    return;
+                }
 
-            ChangeProperty(key, newValue);
+                ChangeProperty(key, newValue);
+            }
         }
     }
 
     public void OnDestroy()
     {
+        threadIsRunning = false;
         SaveConfig();
         UnregisterAllListeners();
     }

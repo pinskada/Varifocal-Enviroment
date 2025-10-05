@@ -22,8 +22,6 @@ namespace Contracts
 
         // Bind a handler to a specific module
         public void BindModule(IModuleSettingsHandler handler, string moduleName);
-        // Apply the settings
-        public void ChangeProperty<T>(string key, T newValue);
 
         // Change current configuration profile
         public void ChangeCurrentProfile(string profileName);

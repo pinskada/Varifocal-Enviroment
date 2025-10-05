@@ -3,6 +3,7 @@
   "references": [
     "Contracts",
     "StbImage",
-    "GlobalSettings"
+    "GlobalSettings",
+    "TMPro"
   ]
 }

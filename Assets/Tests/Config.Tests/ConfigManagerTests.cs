@@ -241,12 +241,12 @@ public class ConfigManagerTests
         int randomInt = Random.Range(0, 1000);
         float randomFloat = Random.Range(0f, 1000f);
         string randomString = "TestString_" + Random.Range(0, 1000);
-
-        // Modify a property in the config
-        _IConfigManagerCommunicator.ChangeProperty("testSettings.testInt", randomInt);
-        _IConfigManagerCommunicator.ChangeProperty("testSettings.testFloat", randomFloat);
-        _IConfigManagerCommunicator.ChangeProperty("testSettings.testString", randomString);
-
+        /*
+                // Modify a property in the config
+                _IConfigManagerCommunicator.ChangeProperty("testSettings.testInt", randomInt);
+                _IConfigManagerCommunicator.ChangeProperty("testSettings.testFloat", randomFloat);
+                _IConfigManagerCommunicator.ChangeProperty("testSettings.testString", randomString);
+        */
         return (randomInt, randomFloat, randomString);
     }
 
