@@ -11,10 +11,11 @@ public class GuiInterface : MonoBehaviour
 {
     [SerializeField] private List<GameObject> panels = new List<GameObject>();
     [SerializeField] private TMP_Dropdown configSettingsDropdown;
-    private IConfigManagerCommunicator _IConfigManager;
+    [SerializeField] private UICreateProfile createProfileHandler;
+    public IConfigManagerCommunicator _IConfigManager;
+    public ISceneManagement _VRSceneManager;
 
-
-    public void InjectModules(IConfigManagerCommunicator _IConfigManager)
+    public void InjectModules(IConfigManagerCommunicator _IConfigManager, ISceneManagement _VRSceneManager)
     {
         this._IConfigManager = _IConfigManager;
     }
@@ -142,6 +143,36 @@ public class GuiInterface : MonoBehaviour
     }
 
 
+    public void OnSceneChanged(int Index)
+    {
+        // Scene set based on dropdown index
+
+        switch (Index)
+        {
+            case 0:
+                _VRSceneManager.LoadCalibScene();
+                break;
+            case 1:
+                _VRSceneManager.PreviousScene();
+                break;
+            case 2:
+                _VRSceneManager.NextScene();
+                break;
+            default:
+                Debug.LogWarning($"[GUI] Invalid scene index: {Index}");
+                break;
+        }
+    }
+
+
+    public void OnModeChanged(int Index)
+    {
+        // RPI mode set based on dropdown index
+        // TODO
+
+    }
+
+
     public void OnConfigProfileChanged(int Index)
     {
         // Change config profile based on dropdown index
@@ -154,7 +185,7 @@ public class GuiInterface : MonoBehaviour
 
         if (Index == configList.Count)
         {
-            PromptForNewConfigProfile();
+            createProfileHandler.PromptUserForProfileName(OnProfileNameEntered);
             return;
         }
 
@@ -167,17 +198,19 @@ public class GuiInterface : MonoBehaviour
     }
 
 
-    private void PromptForNewConfigProfile()
+    private void OnProfileNameEntered(string newProfileName)
     {
-        Debug.Log("[GUI] Adding new profile...");
-        // TODO: Add a small input popup here
-        string newProfileName = "NewProfile_" + DateTime.Now.ToString("HHmmss");
+        if (string.IsNullOrEmpty(newProfileName))
+        {
+            Debug.Log("[GUI] New profile creation cancelled or invalid name");
+            return;
+        }
+
         _IConfigManager.CreateNewConfigProfile(newProfileName);
-        PopulateSettingsConfigDropdown();
     }
 
 
-    public void OnModeChanged(int Index)
+    public void OnPanelChanged(int Index)
     {
         // GUI mode set based on dropdown index
 

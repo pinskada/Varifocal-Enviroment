@@ -2,10 +2,11 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
+using Contracts;
 
 // This script manages the VR scene transitions and maintains the state of the current scene
 
-public class VRSceneManager : MonoBehaviour
+public class VRSceneManager : MonoBehaviour, ISceneManagement
 {
     public static VRSceneManager Instance;
     private string currentVRScene;
@@ -68,7 +69,7 @@ public class VRSceneManager : MonoBehaviour
         }
     }
 
-    public void GoToCalibration()
+    public void LoadCalibScene()
     {
         // Switches to the calibration scene and stores the previous scene
 

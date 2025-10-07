@@ -4,14 +4,14 @@ using Contracts;
 [DisallowMultipleComponent]
 public class Bootstrapper : MonoBehaviour
 {
-    public MainThreadQueue mainThreadQueue; // manages threading and main thread queue
     public NetworkManager networkManager; // receives raw IMU JSON and produces IMUData
     public IMUHandler imuHandler; // filters IMUData and computes orientation
     public CameraHub cameraHub; // applies orientation to camera frustrums
     public ConfigManager configManager; // configuration manager for runtime parameters
-    public GuiHub guiHub; // GUI manager for displaying information
+    public GuiInterface guiInterface; // GUI manager for displaying information
     public TCP tcp;
     public Serial serial; // Serial communication module (for UserVR mode)
+    public VRSceneManager VRSceneManager; // Manages VR scene transitions
 
     void Awake()
     {
@@ -27,7 +27,6 @@ public class Bootstrapper : MonoBehaviour
         Settings.Provider = configManager;
 
         // Local modules
-        configManager.BindModule(guiHub, "GuiHub");
         configManager.BindModule(imuHandler, "IMUHandler");
         configManager.BindModule(cameraHub, "Display");
 
@@ -50,8 +49,9 @@ public class Bootstrapper : MonoBehaviour
         configManager.BindModule(networkManager, "RightCrop");
 
 
-        // Wire IMUHandler → OrientationApplier (apply filtered orientation)
-        // Wire IMUHandler → ConfigManager (for runtime parameters)
+
         imuHandler.InjectModules(cameraHub, configManager);
+
+        guiInterface.InjectModules(configManager, VRSceneManager);
     }
 }
