@@ -27,7 +27,7 @@ namespace Contracts
     // Container for the IMU data queue.
     public static class IMUQueueContainer
     {
-        public static readonly ConcurrentQueue<IMUData> IMUqueue = new ConcurrentQueue<IMUData>();
+        public static readonly BlockingCollection<IMUData> IMUqueue = new BlockingCollection<IMUData>();
     }
 
     // Contract for consuming data or controls by the IMUHandler.

@@ -27,7 +27,6 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
     private string configFolder;
     private List<string> configFileNames;
     private Thread configThread;
-    private bool threadIsRunning = false;
 
     // Dictionary to hold listeners for config changes
     // 1. Arg. - string: config key (e.g., "TestbedConfig.FieldName")
@@ -56,7 +55,6 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
     public void Start()
     {
         // Start the receive thread to listen for incoming messages
-        threadIsRunning = true;
         configThread = new Thread(DequeueConfig) { IsBackground = true, Name = "ConfigRouter" };
         configThread.Start();
     }
@@ -64,26 +62,24 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
 
     private void DequeueConfig()
     {
-        while (threadIsRunning)
+        // Dequeue the config if present
+        foreach (var newConfig in ConfigQueueContainer.configQueue.GetConsumingEnumerable())
         {
-            // Dequeue the config if present
-            if (ConfigQueueContainer.configQueue.TryDequeue(out var newConfig))
+            var (key, newValue) = newConfig;
+            if (key == null || newValue == null)
             {
-                var (key, newValue) = newConfig;
-                if (key == null || newValue == null)
-                {
-                    Debug.LogError("ConfigManager: Received null config key or data.");
-                    return;
-                }
-
-                ChangeProperty(key, newValue);
+                Debug.LogError("ConfigManager: Received null config key or data.");
+                return;
             }
+
+            ChangeProperty(key, newValue);
         }
     }
 
-    public void OnDestroy()
+    public void OnApplicationQuit()
     {
-        threadIsRunning = false;
+        ConfigQueueContainer.configQueue.CompleteAdding();
+        configThread?.Join(1000); // Wait for the thread to finish
         SaveConfig();
         UnregisterAllListeners();
     }

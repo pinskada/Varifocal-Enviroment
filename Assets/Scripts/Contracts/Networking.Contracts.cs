@@ -48,7 +48,7 @@ namespace Contracts
     }
     public static class RouteQueueContainer
     {
-        public static readonly ConcurrentQueue<(object payload, MessageType messageType)> routeQueue =
-            new ConcurrentQueue<(object payload, MessageType messageType)>();
+        public static readonly BlockingCollection<(object payload, MessageType messageType)> routeQueue =
+            new BlockingCollection<(object payload, MessageType messageType)>();
     }
 }

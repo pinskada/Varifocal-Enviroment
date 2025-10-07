@@ -17,7 +17,6 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
     public Transform target; // Camera or object to apply the IMU orientation to
     //private static readonly ConcurrentQueue<object> IMUqueue = new();
     public bool use9DOF = true; // Use 9DOF (gyro, accel, mag) or 6DOF (gyro, accel)
-    private bool isOnline = false; // Flag to control the receive thread
     private Madgwick filter; // Madgwick filter instance for orientation estimation
     private Quaternion initialRotation; // Initial rotation of the target transform to reset to
     private Quaternion q = Quaternion.identity; // Quaternion to hold the current orientation
@@ -93,7 +92,6 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
         Debug.Log("All components and settings initialized.");
 
         // Start the update thread to listen for incoming messages
-        isOnline = true;
         updateThread = new Thread(CheckForData) { IsBackground = true, Name = "IMU.CheckForData" };
         updateThread.Start();
 
@@ -104,32 +102,18 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
     private void CheckForData()
     {
         // This method would handle any periodic updates needed in the thread.
-        // Currently, it does nothing but can be expanded if needed.
 
-        while (isOnline)
+        foreach (var imuData in IMUQueueContainer.IMUqueue.GetConsumingEnumerable())
         {
-            while (IMUQueueContainer.IMUqueue.TryDequeue(out var stringIMUdata))
-            {
-                IMUData imuData = ConvertStringToIMUData(stringIMUdata);
-                UpdateFilter(imuData);
-            }
-
-
-            Thread.Sleep(5); // Wait for 0.005 seconds
+            UpdateFilter(imuData);
         }
     }
 
 
-    public void OnDestroy()
+    public void OnApplicationQuit()
     {
-        if (!isOnline) return;
-        isOnline = false;
-
-        if (!updateThread.Join(100))
-        {
-            Debug.LogWarning("IMU.CheckForData thread did not terminate within timeout.");
-        }
-        updateThread = null;
+        IMUQueueContainer.IMUqueue.CompleteAdding();
+        updateThread.Join(1000);
     }
 
 
@@ -266,21 +250,6 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
         // Convert sensor quaternion to Unity's coordinate system
 
         return new Quaternion(q.x, q.y, -q.z, -q.w);
-    }
-
-
-    // TODO: Implement IMU data conversion
-    private IMUData ConvertStringToIMUData(object stringIMUdata)
-    {
-        if (stringIMUdata == null || !(stringIMUdata is string))
-            Debug.LogWarning("Invalid IMU data format.");
-
-        // Convert the incoming action to IMUData and enqueue it for processing
-        // Placeholder implementation - replace with actual conversion logic
-        IMUData imuData = new IMUData(new Vector3(), new Vector3(), new Vector3(), 0f);
-
-        // Populate the IMUData fields from the action
-        return imuData;
     }
 
 

@@ -21,11 +21,9 @@ public class CommRouter : MonoBehaviour
     private Dictionary<MessageType, Action<object>> localRoutingTable
     = RoutingTable.CreateLocalRoutingTable();
     private Thread routingThread; // Thread for receiving data from the server
-    private bool isRunning = false;
 
     void Start()
     {
-        isRunning = true;
         routingThread = new Thread(DequeueMessage) { IsBackground = true, Name = "CommRouter.Route" };
         routingThread.Start();
     }
@@ -55,7 +53,7 @@ public class CommRouter : MonoBehaviour
     {
         // Clean up the routing thread on application exit.
 
-        isRunning = false;
+        RouteQueueContainer.routeQueue.CompleteAdding();
         routingThread?.Join(1000); // Wait for the thread to finish
     }
 
@@ -63,17 +61,10 @@ public class CommRouter : MonoBehaviour
     {
         // Dequeue a message from the route queue.
         // This function is called in the routing thread.
-        while (isRunning)
+        foreach (var item in RouteQueueContainer.routeQueue.GetConsumingEnumerable())
         {
-            if (RouteQueueContainer.routeQueue.TryDequeue(out var item))
-            {
-                var (payload, type) = item;
-                RouteMessage(payload, type);
-            }
-            else
-            {
-                Thread.Sleep(1); // Avoid busy-waiting
-            }
+            var (payload, type) = item;
+            RouteMessage(payload, type);
         }
     }
 

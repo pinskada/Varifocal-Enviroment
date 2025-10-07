@@ -25,6 +25,7 @@ public class GuiInterface : MonoBehaviour
         if (!Application.isPlaying) return;
 
         SetVersionText();
+        ConnectEditFields();
         PopulateEditFields();
         PopulateSettingsConfigDropdown();
 
@@ -43,12 +44,19 @@ public class GuiInterface : MonoBehaviour
     }
 
 
-    private void PopulateEditFields()
+    private void ConnectEditFields()
     {
         foreach (var input in FindObjectsByType<InputField>(FindObjectsSortMode.None))
         {
             input.onEndEdit.AddListener(value => OnFieldEdited(input, value));
+        }
+    }
 
+
+    private void PopulateEditFields()
+    {
+        foreach (var input in FindObjectsByType<InputField>(FindObjectsSortMode.None))
+        {
             var field = input.GetComponent<UIField>();
 
             if (field == null)
@@ -93,8 +101,9 @@ public class GuiInterface : MonoBehaviour
         if (configList == null || configList.Count == 0) return;
 
         configSettingsDropdown.AddOptions(configList);
-        configSettingsDropdown.options.Add(new Dropdown.OptionData("+ New Profile"));
+        configSettingsDropdown.options.Add(new TMP_Dropdown.OptionData("+ New Profile"));
     }
+
 
     private object GetSettingValue(string moduleName, string fieldName)
     {
@@ -151,7 +160,10 @@ public class GuiInterface : MonoBehaviour
 
         var selectedProfile = configList[Index];
         Debug.Log($"[GUI] Changing to config profile: {selectedProfile}");
+
         _IConfigManager.ChangeCurrentProfile(selectedProfile);
+
+        PopulateEditFields();
     }
 
 
@@ -221,6 +233,6 @@ public class GuiInterface : MonoBehaviour
         Debug.Log($"[GUI] {moduleName}.{fieldName} = {value}");
 
         // Example: generic backend call
-        ConfigQueueContainer.configQueue.Enqueue((key, value));
+        ConfigQueueContainer.configQueue.Add((key, value));
     }
 }

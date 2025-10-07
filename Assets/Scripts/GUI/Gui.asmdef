@@ -4,6 +4,6 @@
     "Contracts",
     "StbImage",
     "GlobalSettings",
-    "TMPro"
+    "Unity.TextMeshPro"
   ]
 }

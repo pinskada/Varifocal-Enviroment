@@ -137,7 +137,7 @@ public class ImageSelector : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
 
     private void EnqueueCrop(List<List<float>> coordinates)
     {
-        ConfigQueueContainer.configQueue.Enqueue((currentCropConfigKey, coordinates));
+        ConfigQueueContainer.configQueue.Add((currentCropConfigKey, coordinates));
     }
 
 

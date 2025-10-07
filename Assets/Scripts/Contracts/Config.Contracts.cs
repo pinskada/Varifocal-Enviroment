@@ -41,7 +41,7 @@ namespace Contracts
 
     public static class ConfigQueueContainer
     {
-        public static readonly ConcurrentQueue<(string key, object newValue)> configQueue =
-            new ConcurrentQueue<(string key, object newValue)>();
+        public static readonly BlockingCollection<(string key, object newValue)> configQueue =
+            new BlockingCollection<(string key, object newValue)>();
     }
 }

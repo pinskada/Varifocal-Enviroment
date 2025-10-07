@@ -418,7 +418,7 @@ public class TCP : IModuleSettingsHandler
 
             // Dispatch
             if (commRouter != null)
-                RouteQueueContainer.routeQueue.Enqueue((payload, msgType));
+                RouteQueueContainer.routeQueue.Add((payload, msgType));
             else
                 UnityEngine.Debug.LogError("CommRouter reference is null, cannot redirect message.");
 

@@ -128,7 +128,7 @@ public static class RoutingTable
             Debug.LogError($"Failed to parse IMU data: {ex.Message}");
             return;
         }
-        IMUQueueContainer.IMUqueue.Enqueue(imuData);
+        IMUQueueContainer.IMUqueue.Add(imuData);
     }
 
     private static void HandlePreviewImage(object payload)
