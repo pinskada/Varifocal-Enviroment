@@ -1,98 +1,157 @@
 using UnityEngine;
+using Contracts;
 
 // Applies an asymmetric projection matrix to a stereo camera to account for physical display size.
 
 [RequireComponent(typeof(Camera))]
-public class CameraFrustrum : MonoBehaviour
+public class CameraFrustrum : MonoBehaviour, IModuleSettingsHandler
 {
-    [SerializeField] private bool isLeftEye = true; // Determines if this camera is for the left eye (true) or right eye (false).
-    private float screenWidth; // Width of the screen in meters.
-    private float screenHeight; // Height of the screen in meters.
-    private float eyeToScreenDistance; // Distance from the eye to the screen in meters.
-    private float ipd; // Interpupillary distance in meters.
-    private Camera eyeCamera; // Reference to the Camera component.
+    [SerializeField] private EyeSide eyeSide; // Determines if this camera is for the left eye (true) or right eye (false).
+    private Camera cameraComponent; // Reference to the Camera component.
 
-    private float near; // Near clipping plane distance.
-    private float far; // Far clipping plane distance.
-    private float left; // Left boundary of the frustum.
-    private float right; // Right boundary of the frustum.
-    private float bottom; // Bottom boundary of the frustum.
-    private float top; // Top boundary of the frustum.
-
-    Matrix4x4 proj; // Projection matrix for the camera.
 
     void Start()
     {
-        eyeCamera = GetComponent<Camera>();
-        eyeCamera.stereoTargetEye = StereoTargetEyeMask.None;
+        GetComponents();
+        CheckDisplayParam();
+        CheckCameraParam();
+
+        //cameraComponent.stereoTargetEye = StereoTargetEyeMask.None;
+
+        SetCameraPositions();
+        CreateFrustrum();
     }
 
-    void CreateFrustum()
+
+    private void SetCameraPositions()
+    {
+        // Sets the positions of the left and right eye cameras based on the Interpupillary Distance (IPD).
+
+
+        // Calculate the half Interpupillary Distance (IPD) for camera positioning.
+        float halfIPD = Settings.Display.ipd / 2f;
+
+        Vector3 relativeCamPosition;
+
+        // Offset each camera on the X-axis by half the IPD
+        if (eyeSide == EyeSide.Left)
+        {
+            relativeCamPosition = new Vector3(-halfIPD, 0f, 0f);
+        }
+        else
+        {
+            relativeCamPosition = new Vector3(halfIPD, 0f, 0f);
+        }
+
+        transform.localPosition = relativeCamPosition;
+    }
+
+
+    private void CreateFrustrum()
     {
         // Calculates and applies the custom projection matrix for this eye camera.
 
-        if (eyeCamera == null)
+
+        // Reassing parameters for easier use
+        var near = Settings.Display.nearClipPlane;
+        var far = Settings.Display.farClipPlane;
+        var eyeToScreen = Settings.Display.eyeToScreenDist;
+        var height = Settings.Display.screenHeight;
+        var width = Settings.Display.screenWidth;
+        var ipd = Settings.Display.ipd;
+
+        // Set near and far clip plane
+        cameraComponent.nearClipPlane = near;
+        cameraComponent.farClipPlane = far;
+
+        // Convert screen space to projection space
+        float halfWidth = width / 2f;
+        float halfIPD = (ipd / 1000f) / 2f;
+        float eyeOffset;
+
+        if (eyeSide == EyeSide.Left)
+            eyeOffset = -halfIPD;
+        else
+            eyeOffset = halfIPD;
+
+
+        // Calculate shift in view frustum due to eye offset
+        var left = ((-halfWidth - eyeOffset) * near) / eyeToScreen;
+        var right = ((halfWidth - eyeOffset) * near) / eyeToScreen;
+        var bottom = (-height / 2f) * near / eyeToScreen;
+        var top = (height / 2f) * near / eyeToScreen;
+
+        // Create the asymmetric projection matrix
+        var proj = Matrix4x4.Frustum(left, right, bottom, top, near, far);
+        cameraComponent.projectionMatrix = proj;
+    }
+
+
+    private void GetComponents()
+    {
+        if (eyeSide == EyeSide.None)
         {
-            // Return early if the Camera component is not found.
-            Debug.LogError("CameraFrustrum: Camera component not found.");
+            Debug.LogError($"Eyeside not assigned.");
             return;
         }
 
-        if (screenWidth <= 0 || screenHeight <= 0 || eyeToScreenDistance <= 0 || ipd <= 0)
+        if (GetComponent<Camera>() == null)
+        {
+            Debug.LogError($"Camera component for {eyeSide} camera not assigned.");
+            return;
+        }
+        else
+            cameraComponent = GetComponent<Camera>();
+    }
+
+
+    private void CheckDisplayParam()
+    {
+        if (
+            Settings.Display.screenWidth <= 0 ||
+            Settings.Display.screenHeight <= 0 ||
+            Settings.Display.eyeToScreenDist <= 0 ||
+            Settings.Display.ipd <= 0
+        )
         {
             // Validate parameters to ensure they are set to positive values.
             Debug.LogError("CameraFrustrum: Invalid parameters. Ensure all dimensions are initialized and set to positive values.");
-            return;
         }
-        
-        near = eyeCamera.nearClipPlane;
-        far = eyeCamera.farClipPlane;
-
-        // Convert screen space to projection space
-        float halfWidth = screenWidth / 2f;
-        float halfIPD = (ipd / 1000f) / 2f;
-        float eyeOffset = isLeftEye ? -halfIPD : halfIPD;
-
-        // Calculate shift in view frustum due to eye offset
-        left = ((-halfWidth - eyeOffset) * near) / eyeToScreenDistance;
-        right = ((halfWidth - eyeOffset) * near) / eyeToScreenDistance;
-        bottom = (-screenHeight / 2f) * near / eyeToScreenDistance;
-        top = (screenHeight / 2f) * near / eyeToScreenDistance;
-
-        // Create the asymmetric projection matrix
-        proj = Matrix4x4.Frustum(left, right, bottom, top, near, far);
-        eyeCamera.projectionMatrix = proj;
     }
 
-    public void setEyeToScreenDistance(float distance)
-    {
-        // Sets the distance from the eye to the screen and updates the frustum.
 
-        eyeToScreenDistance = distance;
-        CreateFrustum();
+    private void CheckCameraParam()
+    {
+        if (Settings.Display.ipd <= 0 || Settings.Display.ipd > 120)
+        {
+            Debug.LogError($"Invalid IPD: {Settings.Display.ipd}");
+        }
+
+        if (Settings.Display.nearClipPlane <= 0)
+        {
+            // Validate the near clipping plane to ensure it is set to a positive value.
+            Debug.LogError("Near clip plane must be set to a positive value.");
+        }
+
+        if (Settings.Display.nearClipPlane >= Settings.Display.farClipPlane)
+        {
+            // Ensure the near clip plane is less than the far clip plane.
+            Debug.LogError("Near clip plane must be less than the far clip plane.");
+        }
     }
 
-    public void setScreenWidth(float width)
+
+    public void SettingsChanged(string moduleName, string fieldName)
     {
-        // Sets the screen width and updates the frustum.
+        CheckDisplayParam();
+        CheckCameraParam();
 
-        screenWidth = width;
-        CreateFrustum();
-    }
+        if (fieldName == "nearClipPlane")
+            cameraComponent.farClipPlane = Settings.Display.nearClipPlane;
 
-    public void setScreenHeight(float height)
-    {
-        // Sets the screen height and updates the frustum.
+        if (fieldName == "farClipPlane")
+            cameraComponent.farClipPlane = Settings.Display.farClipPlane;
 
-        screenHeight = height;
-        CreateFrustum();
-    }
-
-    public void setIPD(float ipd)
-    {
-        // Sets the interpupillary distance and updates the frustum.
-
-        this.ipd = ipd;
-        CreateFrustum();
+        CreateFrustrum();
     }
 }

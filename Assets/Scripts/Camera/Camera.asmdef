@@ -1,6 +1,7 @@
 {
     "name": "Camera",
     "references": [
-      "Contracts"
+      "Contracts",
+      "GlobalSettings"
   ]
 }

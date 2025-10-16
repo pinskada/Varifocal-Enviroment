@@ -3,7 +3,6 @@ using Contracts;
 using System;
 using System.Collections.Generic;
 using UnityEngine.UI;
-using UnityEngine.UIElements;
 using TMPro;
 
 
@@ -12,12 +11,14 @@ public class GuiInterface : MonoBehaviour
     [SerializeField] private List<GameObject> panels = new List<GameObject>();
     [SerializeField] private TMP_Dropdown configSettingsDropdown;
     [SerializeField] private UICreateProfile createProfileHandler;
+
     public IConfigManagerCommunicator _IConfigManager;
     public ISceneManagement _VRSceneManager;
 
     public void InjectModules(IConfigManagerCommunicator _IConfigManager, ISceneManagement _VRSceneManager)
     {
         this._IConfigManager = _IConfigManager;
+        this._VRSceneManager = _VRSceneManager;
     }
 
 
@@ -29,7 +30,6 @@ public class GuiInterface : MonoBehaviour
         ConnectEditFields();
         PopulateEditFields();
         PopulateSettingsConfigDropdown();
-
     }
 
 
@@ -227,7 +227,6 @@ public class GuiInterface : MonoBehaviour
     }
 
 
-    // Called by input fields
     public void OnFieldEdited(InputField input, string value)
     {
         var field = input.GetComponent<UIField>();
@@ -246,7 +245,6 @@ public class GuiInterface : MonoBehaviour
     }
 
 
-    // Called by buttons
     public void OnButtonPressed()
     {
         var field = UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject?.GetComponent<UIField>();

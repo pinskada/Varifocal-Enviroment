@@ -7,6 +7,7 @@ namespace Contracts
 {
     public enum EyeSide
     {
+        None,
         Left,
         Right,
     }

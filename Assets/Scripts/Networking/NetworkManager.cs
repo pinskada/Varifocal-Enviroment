@@ -30,15 +30,14 @@ public class NetworkManager : MonoBehaviour, IModuleSettingsHandler
         {
             serial = new Serial(this);
         }
-
-        commRouter.Initialize(tcp, serial);
     }
 
 
     void Start()
     {
-        // Activates TCP client or server and serial port based on the setup.
+        commRouter.Initialize(tcp, serial);
 
+        // Activates TCP client or server and serial port based on the setup.
         if (tcp != null)
         {
             new Thread(tcp.StartTCP) { IsBackground = true, Name = "TCP.Startup" }.Start();
@@ -47,6 +46,13 @@ public class NetworkManager : MonoBehaviour, IModuleSettingsHandler
         {
             // Placeholder for starting serial communication if needed.
         }
+    }
+
+
+    public void InjectModules(CommRouter commRouter)
+    {
+        // Injects the CommRouter instance into NetworkManager.
+        this.commRouter = commRouter;
     }
 
 

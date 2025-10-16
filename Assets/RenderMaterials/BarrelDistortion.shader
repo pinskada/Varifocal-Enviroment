@@ -1,8 +1,8 @@
 Shader "Custom/BarrelDistortion"
 {
-    // This is a custom made shader for supressing barell distortion 
-    // caused by used lenses. The lenses used are from early version 
-    // of Samsung Gear VR and are perfectly spherical. This results 
+    // This is a custom made shader for supressing barell distortion
+    // caused by used lenses. The lenses used are from early version
+    // of Samsung Gear VR and are perfectly spherical. This results
     // in a relatively simple inverse pre-distorion using barrel stretch.
 
 

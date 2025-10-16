@@ -50,8 +50,8 @@ public class TestGlobals
 public class IMUHandlerTests
 {
 
-    private ICameraHub _ICameraHub;
-    private IConfigManagerCommunicator _IConfigManager;
+    private ICameraAligner _ICameraAligner;
+    //private IConfigManagerCommunicator _IConfigManager;
 
     [UnityTest]
     public IEnumerator TestInit()
@@ -196,7 +196,7 @@ public class IMUHandlerTests
 
         (float betaMoving, float betaStill, float betaThreshold, float minGyroMagnitude) = new MadgwickTests().GenerateRandomParam();
 
-        imuHandler.ChangeFilterSettings(betaMoving, betaStill, betaThreshold, minGyroMagnitude);
+        //imuHandler.ChangeFilterSettings(betaMoving, betaStill, betaThreshold, minGyroMagnitude);
 
         yield return null;
 
@@ -227,10 +227,10 @@ public class IMUHandlerTests
 
     public void PassDummyModules(IMUHandler imuHandler, TestGlobals testGlobals)
     {
-        _ICameraHub = new DummyCameraHub(testGlobals);
-        _IConfigManager = null; //new DummyConfigManager();
+        _ICameraAligner = new DummyCameraAligner(testGlobals);
+        //_IConfigManager = null; //new DummyConfigManager();
 
-        imuHandler.InjectModules(_ICameraHub, _IConfigManager);
+        //imuHandler.InjectModules(_ICameraHub, _IConfigManager);
     }
 
 }
@@ -265,11 +265,11 @@ public class DummyConfigManager : IConfigManagerCommunicator
 }
 
 */
-public class DummyCameraHub : ICameraHub
+public class DummyCameraAligner : ICameraAligner
 {
     TestGlobals testGlobals;
 
-    public DummyCameraHub(TestGlobals globals)
+    public DummyCameraAligner(TestGlobals globals)
     {
         testGlobals = globals;
     }

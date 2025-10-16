@@ -36,10 +36,12 @@ public class SerialSettings
 [System.Serializable]
 public class DisplaySettings
 {
-    public float camIPD = 63f;
-    public float dispWidth = 120f;
-    public float dispHeight = 68f;
-    public float eyeToScreen = 50f;
+    public float ipd = 63f;
+    public float screenWidth = 120f;
+    public float screenHeight = 68f;
+    public float eyeToScreenDist = 50f;
+    public float nearClipPlane = 0.01f;
+    public float farClipPlane = 1000f;
 }
 
 
@@ -50,7 +52,7 @@ public class IMUSettings
     public float maxDt = 0.1f; // Maximum delta time for filter updates [s]
     public float betaMoving = 0.005f; // Madgwick filter beta gain when moving [-]
     public float betaStill = 0.1f; // Madgwick filter beta gain when still [-]
-    public float betaThreshold = 0.1f; // Threshold to switch between moving and still states [-]
+    public float betaThreshold = 0.05f; // Threshold to switch between moving and still states [-]
     public float minGyroMagnitude = 0.01f;  // Threshold to skip updates when gyro is nearly zero [rad/s]
 
 }

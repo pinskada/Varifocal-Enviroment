@@ -1,6 +1,7 @@
 {
   "name": "IMU",
   "references": [
-    "Contracts"
+    "Contracts",
+    "GlobalSettings"
   ]
 }

@@ -20,9 +20,6 @@ namespace Contracts
         // Get current VR mode
         public VRMode GetVRType();
 
-        // Bind a handler to a specific module
-        public void BindModule(IModuleSettingsHandler handler, string moduleName);
-
         // Change current configuration profile
         public void ChangeCurrentProfile(string profileName);
 

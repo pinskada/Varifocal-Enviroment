@@ -45,7 +45,6 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
             return;
         }
         Instance = this;
-        DontDestroyOnLoad(gameObject);
 
         // Load config
         LoadConfig();

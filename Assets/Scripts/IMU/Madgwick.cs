@@ -1,52 +1,33 @@
 using System;
 using Mathf = UnityEngine.Mathf;
 using UnityEngine;
+using Contracts;
 
-public class Madgwick
+public class Madgwick : IModuleSettingsHandler
 {
     // This script implements the Madgwick filter for orientation estimation based on IMU data.
     // It supports both 9DOF (gyro, accelerometer, magnetometer) and 6DOF (gyro, accelerometer) modes.
 
     public float samplePeriod; // Time between updates in seconds
     private float beta; // Current beta value based on motion state
-    private float betaMoving; // Smoother when moving fast
-    private float betaStill; // More correction when still
-    private float minGyroMagnitude; // Threshold to skip updates when gyro is nearly zero
-    private float betaThreshold; // Threshold to switch between moving and still states
     public float[] Quaternion { get; private set; }// Quaternion representing the orientation (x, y, z, w)
 
-    public Madgwick(float betaMoving, float betaStill, float betaThreshold, float minGyroMagnitude)
+
+    public Madgwick()
     {
         // Set the beta values for moving and still states
-        SetBetas(betaMoving, betaStill);
-        SetBetaThreshold(betaThreshold);
-        SetMinGyroMagnitude(minGyroMagnitude);
+        CheckBetas();
+        CheckBetaThreshold();
+        CheckMinGyroMagnitude();
 
         // Initialize quaternion to identity
         Quaternion = new float[] { 0f, 0f, 0f, 1f };
     }
 
+
     public void Update9DOF(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz)
     {
-
-        // Calculate gyro magnitude (radians/sec)
-        float gyroMag = Mathf.Sqrt(gx * gx + gy * gy + gz * gz);
-
-        if (gyroMag < minGyroMagnitude)
-        {
-            // If gyro is nearly zero, we can skip the update
-            return;
-        }
-
-        // Dynamic Beta Adjustment based on motion
-        if (gyroMag > betaThreshold) // If rotation speed is above 0.1 rad/s (~6 deg/s)
-        {
-            beta = betaMoving; // Moving: trust gyro more, low beta
-        }
-        else
-        {
-            beta = betaStill; // Still: correct towards accel/mag, higher beta
-        }
+        SetBetas(gx, gy, gz);
 
         // Quaternion components
         float q1 = Quaternion[3], q2 = Quaternion[0], q3 = Quaternion[1], q4 = Quaternion[2];
@@ -135,11 +116,13 @@ public class Madgwick
         Quaternion[0] = q2 * norm;
         Quaternion[1] = q3 * norm;
         Quaternion[2] = q4 * norm;
-
     }
+
 
     public void Update6DOF(float gx, float gy, float gz, float ax, float ay, float az)
     {
+        SetBetas(gx, gy, gz);
+
         float q1 = Quaternion[3], q2 = Quaternion[0], q3 = Quaternion[1], q4 = Quaternion[2];
         float norm;
         float s1, s2, s3, s4;
@@ -210,48 +193,82 @@ public class Madgwick
             this.samplePeriod = samplePeriod; // Initial time between updates in seconds
         }
     }
-    public void SetBetas(float betaMoving, float betaStill)
+
+
+    private void SetBetas(float gx, float gy, float gz)
+    {
+        // Calculate gyro magnitude (radians/sec)
+        float gyroMag = Mathf.Sqrt(gx * gx + gy * gy + gz * gz);
+
+        if (gyroMag < Settings.IMU.minGyroMagnitude)
+        {
+            // If gyro is nearly zero, we can skip the update
+            return;
+        }
+
+        // Dynamic Beta Adjustment based on motion
+        if (gyroMag > Settings.IMU.betaThreshold) // If rotation speed is above 0.1 rad/s (~6 deg/s)
+        {
+            beta = Settings.IMU.betaMoving; // Moving: trust gyro more, low beta
+        }
+        else
+        {
+            beta = Settings.IMU.betaStill; // Still: correct towards accel/mag, higher beta
+        }
+    }
+
+
+    public void CheckBetas()
     {
         // Validate beta values
-        if (betaMoving <= 0f || betaStill <= 0f || betaMoving >= 1f || betaStill >= 1f || betaMoving > betaStill)
+        if (
+            Settings.IMU.betaMoving <= 0f ||
+            Settings.IMU.betaStill <= 0f ||
+            Settings.IMU.betaMoving >= 1f ||
+            Settings.IMU.betaStill >= 1f ||
+            Settings.IMU.betaMoving > Settings.IMU.betaStill
+        )
         {
             Debug.LogError("[Madgwick] Beta values must be greater than zero and betaMoving must be less than betaStill.");
             return;
         }
-        else
-        {
-            this.betaMoving = betaMoving; // Beta for moving state
-            this.betaStill = betaStill;   // Beta for still state
-        }
     }
 
 
-    public void SetBetaThreshold(float betaThreshold)
+    public void CheckBetaThreshold()
     {
         // Validate beta threshold
-        if (!(betaThreshold > betaMoving && betaThreshold < betaStill))
+        if (
+            Settings.IMU.betaThreshold < Settings.IMU.betaMoving ||
+            Settings.IMU.betaThreshold > Settings.IMU.betaStill
+        )
         {
-            Debug.LogError("Beta threshold must be between betaMoving and betaStill.");
+            Debug.LogError($"Beta threshold must be between betaMoving and betaStill, but is currently {Settings.IMU.betaThreshold}.");
             return;
-        }
-        else
-        {
-            this.betaThreshold = betaThreshold; // Threshold to switch between moving and still states
         }
     }
 
 
-    public void SetMinGyroMagnitude(float minGyroMagnitude)
+    public void CheckMinGyroMagnitude()
     {
         // Validate minimum gyro magnitude
-        if (minGyroMagnitude < 0f)
+        if (Settings.IMU.minGyroMagnitude < 0f)
         {
             Debug.LogError("[Madgwick] Minimum gyro magnitude must be non-negative.");
             return;
         }
-        else
-        {
-            this.minGyroMagnitude = minGyroMagnitude; // Threshold to skip updates when gyro is nearly zero
-        }
+    }
+
+
+    public void SettingsChanged(string moduleName, string fieldName)
+    {
+        // This method is called when configuration settings change.
+        // Currently, it does nothing but can be expanded if needed.
+
+        if (fieldName == "betaMoving" || fieldName == "betaStill") CheckBetas();
+        if (fieldName == "betThreshold") CheckBetaThreshold();
+        if (fieldName == "minGyroMagnitude") CheckMinGyroMagnitude();
+
+        return;
     }
 }

@@ -1,27 +1,32 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
+using Contracts;
 
 // Position and align the camerarig to a specific anchor GameObject in the scene.
 
-public class CameraAligner : MonoBehaviour
+public class CameraAligner : MonoBehaviour, ICameraAligner
 {
     [SerializeField] private string anchorName = "CameraTarget"; // Name of the anchor GameObject to align the camera to.
+
 
     private void OnEnable()
     {
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
+
     private void OnDisable()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
+
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         StartCoroutine(AlignToAnchorNextFrame());
     }
+
 
     private IEnumerator AlignToAnchorNextFrame()
     {
@@ -40,5 +45,17 @@ public class CameraAligner : MonoBehaviour
         {
             Debug.LogWarning($"No anchor '{anchorName}' found in scene.");
         }
+    }
+
+
+    public void ApplyOrientation(Quaternion worldRotation)
+    {
+        transform.rotation = worldRotation;
+    }
+
+
+    public Quaternion GetCurrentOrientation()
+    {
+        return transform.rotation;
     }
 }

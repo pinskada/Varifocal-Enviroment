@@ -16,19 +16,11 @@ public class VRSceneManager : MonoBehaviour, ISceneManagement
 
     void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
+        // Set game objects in the core scene to not be destroyed when loading new scenes
+        DontDestroyOnLoad(gameObject);
 
-            // Set game objects in the core scene to not be destroyed when loading new scenes
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
-
-        LoadInitialScenes();
+        Debug.Log("VRSceneManager initialized.");
+        StartCoroutine(LoadInitialScenes());
     }
 
     private IEnumerator LoadInitialScenes()
@@ -36,9 +28,9 @@ public class VRSceneManager : MonoBehaviour, ISceneManagement
         // Loads the initial scenes in the correct order
 
         // Load GUI
-        yield return null;
+        //yield return null;
+        Debug.Log("UI_EditorScene loaded.");
         SceneManager.LoadScene("UI_EditorScene", LoadSceneMode.Additive);
-
         // Load initial VR scene (SampleScene)
         yield return null;
         SwitchVRScene("SampleScene");

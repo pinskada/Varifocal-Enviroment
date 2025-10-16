@@ -52,10 +52,10 @@ public class MadgwickTests
 
         float samplePeriod = Random.Range(0.001f, 0.1f);
 
-        filter.SetSamplePeriod(samplePeriod);
-        filter.SetBetas(betaMoving, betaStill);
-        filter.SetBetaThreshold(betaThreshold);
-        filter.SetMinGyroMagnitude(minGyroMagnitude);
+        //filter.SetSamplePeriod(samplePeriod);
+        //filter.SetBetas(betaMoving, betaStill);
+        //filter.SetBetaThreshold(betaThreshold);
+        //filter.SetMinGyroMagnitude(minGyroMagnitude);
 
         Assert.AreEqual(samplePeriod, filter.samplePeriod, "Sample period not set correctly in setter");
         Assert.AreEqual(betaMoving, GetPrivateField<float>(filter, "betaMoving"), "Beta moving not set correctly in setter");
@@ -68,7 +68,7 @@ public class MadgwickTests
     public Madgwick CreateFilter()
     {
         (betaMoving, betaStill, betaThreshold, minGyroMagnitude) = GenerateRandomParam();
-        Madgwick filter = new Madgwick(betaMoving, betaStill, betaThreshold, minGyroMagnitude);
+        Madgwick filter = new Madgwick();
         return filter;
     }
 
