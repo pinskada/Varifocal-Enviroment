@@ -44,8 +44,6 @@ public class CommRouter : MonoBehaviour
         {
             serialModule.InjectHardwareRouter(this);
         }
-
-        Debug.Log($"CommRouter initialized.");
     }
 
 

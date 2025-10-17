@@ -46,15 +46,13 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
         // Start the update thread to listen for incoming messages
         updateThread = new Thread(CheckForData) { IsBackground = true, Name = "IMU.CheckForData" };
         updateThread.Start();
-
-        Debug.Log("IMUHandler thread started.");
     }
 
 
     private void CheckForData()
     {
         // This method would handle any periodic updates needed in the thread.
-
+        Debug.Log("[IMUHandler] IMUHandler thread started.");
         foreach (var imuData in IMUQueueContainer.IMUqueue.GetConsumingEnumerable())
         {
             UpdateFilter(imuData);
@@ -65,7 +63,9 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
     public void OnApplicationQuit()
     {
         IMUQueueContainer.IMUqueue.CompleteAdding();
-        updateThread.Join(1000);
+
+        if (updateThread != null && updateThread.IsAlive)
+            updateThread.Join(1000);
     }
 
 
@@ -149,7 +149,7 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
             _ICameraAligner.ApplyOrientation(ConvertSensorToUnity(q));
         else
         {
-            Debug.LogWarning("_ICameraAligner is not assigned. Cannot apply rotation.");
+            Debug.LogWarning("[IMUHandler] _ICameraAligner is not assigned. Cannot apply rotation.");
         }
     }
 
@@ -158,7 +158,7 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
     {
         // Make a full reset of the orientation inside the filter and therefore target transform
 
-        if (_ICameraAligner != null && initialRotation != null)
+        if (_ICameraAligner != null)
         {
             _ICameraAligner.ApplyOrientation(initialRotation);
 
@@ -168,7 +168,7 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
             filter.Quaternion[2] = 0f;
             filter.Quaternion[3] = 1f;
 
-            Debug.Log("Full reset: camera and filter set to default orientation.");
+            Debug.Log("[IMUHandler] Full reset: camera and filter set to default orientation.");
         }
     }
 

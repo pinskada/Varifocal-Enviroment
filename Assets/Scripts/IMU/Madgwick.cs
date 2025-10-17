@@ -243,7 +243,7 @@ public class Madgwick : IModuleSettingsHandler
             Settings.IMU.betaThreshold > Settings.IMU.betaStill
         )
         {
-            Debug.LogError($"Beta threshold must be between betaMoving and betaStill, but is currently {Settings.IMU.betaThreshold}.");
+            Debug.LogError($"[Madgwick] Beta threshold must be between betaMoving and betaStill, but is currently {Settings.IMU.betaThreshold}.");
             return;
         }
     }

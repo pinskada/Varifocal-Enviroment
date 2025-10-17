@@ -33,7 +33,7 @@ public class ImageDecoder
 
         if (count <= 0)
         {
-            Debug.LogWarning("Decode: No images in payload.");
+            Debug.LogWarning("[ImageDecoder] No images in payload.");
             return new List<EyeImage>(); // return empty list
         }
 
@@ -58,13 +58,13 @@ public class ImageDecoder
 
             if (size <= 0 || width <= 0 || height <= 0)
             {
-                Debug.LogWarning($"Decode: Invalid image metadata (EyeId: {eyeId}, Width: {width}, Height: {height}, Size: {size}).");
+                Debug.LogWarning($"[ImageDecoder] Invalid image metadata (EyeId: {eyeId}, Width: {width}, Height: {height}, Size: {size}).");
                 return new List<EyeImage>();
             }
 
             if (size > MAX_IMAGE_SIZE)
             {
-                Debug.LogWarning($"Decode: Image size {size} exceeds limit.");
+                Debug.LogWarning($"[ImageDecoder] Image size {size} exceeds limit.");
                 return new List<EyeImage>();
             }
 
@@ -84,7 +84,7 @@ public class ImageDecoder
     {
         if (payloadLength < minExpectedLength)
         {
-            Debug.LogWarning("Decode: Payload too short.");
+            Debug.LogWarning("[ImageDecoder] Payload too short.");
             return false;
         }
         return true;

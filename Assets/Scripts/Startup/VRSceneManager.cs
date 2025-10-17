@@ -19,7 +19,6 @@ public class VRSceneManager : MonoBehaviour, ISceneManagement
         // Set game objects in the core scene to not be destroyed when loading new scenes
         DontDestroyOnLoad(gameObject);
 
-        Debug.Log("VRSceneManager initialized.");
         StartCoroutine(LoadInitialScenes());
     }
 
@@ -29,11 +28,10 @@ public class VRSceneManager : MonoBehaviour, ISceneManagement
 
         // Load GUI
         //yield return null;
-        Debug.Log("UI_EditorScene loaded.");
         SceneManager.LoadScene("UI_EditorScene", LoadSceneMode.Additive);
         // Load initial VR scene (SampleScene)
         yield return null;
-        SwitchVRScene("SampleScene");
+        //SwitchVRScene("SampleScene");
     }
 
     private IEnumerator SwitchVRScene(string newScene)
@@ -43,7 +41,7 @@ public class VRSceneManager : MonoBehaviour, ISceneManagement
         bool skipSceneLoad = false;
         if (newScene == currentVRScene)
         {
-            Debug.Log($"Scene '{newScene}' already active. Skipping load.");
+            Debug.Log($"[VRSceneManager] Scene '{newScene}' already active. Skipping load.");
             skipSceneLoad = true;
         }
 

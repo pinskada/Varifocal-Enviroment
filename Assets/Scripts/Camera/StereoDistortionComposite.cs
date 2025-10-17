@@ -30,22 +30,16 @@ public class StereoDistortionComposite : MonoBehaviour
         // Give Unity a frame to enumerate displays on Windows
         yield return null;
 
-        // Activate all external displays
-        for (int i = 1; i < Display.displays.Length; i++)
-        {
-            Display.displays[i].Activate();
-        }
-
         // Choose where to present: prefer Display 2 if present, else fall back to Display 1
-        int targetIdx = (Display.displays.Length > 1) ? 1 : 0;
-        _cam.targetDisplay = targetIdx;
-
-        Debug.Log($"CompositeCam → Display {targetIdx + 1} "
-                + $"({Display.displays[targetIdx].systemWidth}x{Display.displays[targetIdx].systemHeight})");
-
-        if (Display.displays.Length == 1)
+        if (Display.displays.Length >= 2)
         {
-            Debug.LogWarning("Only one display found. Compositor will render to Display 1 (monitor).");
+            Display.displays[1].Activate();
+            _cam.targetDisplay = 1; // Display 2
+            Debug.Log("[StereoDistortionComposite] Using Display 2 for stereo composite output.");
+        }
+        else
+        {
+            Debug.LogError("[StereoDistortionComposite] Only one display found.");
         }
     }
 
@@ -55,7 +49,7 @@ public class StereoDistortionComposite : MonoBehaviour
         if (rtManager == null || distortionMaterial == null ||
             rtManager.leftRT == null || rtManager.rightRT == null)
         {
-            Debug.LogWarning("Missing references, or first image, cannot composite stereo images.");
+            Debug.LogWarning("[StereoDistortionComposite] Missing references, or first image, cannot composite stereo images.");
             Graphics.Blit(src, dst);
             return;
         }

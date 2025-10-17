@@ -62,7 +62,7 @@ public class GuiInterface : MonoBehaviour
 
             if (field == null)
             {
-                Debug.LogError($"[GUI] InputField {input.gameObject.name} missing UIField component");
+                Debug.LogError($"[GuiInterface] InputField {input.gameObject.name} missing UIField component");
                 return;
             }
 
@@ -71,7 +71,7 @@ public class GuiInterface : MonoBehaviour
 
             if (string.IsNullOrEmpty(module) || string.IsNullOrEmpty(name))
             {
-                Debug.LogWarning($"[GUI] InputField {input.gameObject.name} has empty module or field name");
+                Debug.LogWarning($"[GuiInterface] InputField {input.gameObject.name} has empty module or field name");
                 return;
             }
 
@@ -85,12 +85,12 @@ public class GuiInterface : MonoBehaviour
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError($"[GUI] Failed to set InputField text: {ex.Message}");
+                    Debug.LogError($"[GuiInterface] Failed to set InputField text: {ex.Message}");
                 }
             }
             else
             {
-                Debug.LogWarning($"[GUI] Config {module}.{name} not found");
+                Debug.LogWarning($"[GuiInterface] Config {module}.{name} not found");
             }
         }
     }
@@ -117,7 +117,7 @@ public class GuiInterface : MonoBehaviour
             var moduleField = settingsType.GetField(moduleName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
             if (moduleField == null)
             {
-                Debug.LogWarning($"[Settings] Module '{moduleName}' not found in Settings");
+                Debug.LogWarning($"[GuiInterface] Module '{moduleName}' not found in Settings");
                 return null;
             }
 
@@ -128,7 +128,7 @@ public class GuiInterface : MonoBehaviour
             var fieldInfo = moduleInstance.GetType().GetField(fieldName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
             if (fieldInfo == null)
             {
-                Debug.LogWarning($"[Settings] Field '{fieldName}' not found in module '{moduleName}'");
+                Debug.LogWarning($"[GuiInterface] Field '{fieldName}' not found in module '{moduleName}'");
                 return null;
             }
 
@@ -137,7 +137,7 @@ public class GuiInterface : MonoBehaviour
         }
         catch (Exception ex)
         {
-            Debug.LogError($"[Settings] Failed to extract {moduleName}.{fieldName}: {ex.Message}");
+            Debug.LogError($"[GuiInterface] Failed to extract {moduleName}.{fieldName}: {ex.Message}");
             return null;
         }
     }
@@ -159,7 +159,7 @@ public class GuiInterface : MonoBehaviour
                 _VRSceneManager.NextScene();
                 break;
             default:
-                Debug.LogWarning($"[GUI] Invalid scene index: {Index}");
+                Debug.LogWarning($"[GuiInterface] Invalid scene index: {Index}");
                 break;
         }
     }
@@ -179,7 +179,7 @@ public class GuiInterface : MonoBehaviour
         var configList = _IConfigManager.GetConfigFileNames();
         if (configList == null || Index < 0 || Index > configList.Count)
         {
-            Debug.LogWarning($"[GUI] Invalid config profile index: {Index}");
+            Debug.LogWarning($"[GuiInterface] Invalid config profile index: {Index}");
             return;
         }
 
@@ -190,7 +190,7 @@ public class GuiInterface : MonoBehaviour
         }
 
         var selectedProfile = configList[Index];
-        Debug.Log($"[GUI] Changing to config profile: {selectedProfile}");
+        Debug.Log($"[GuiInterface] Changing to config profile: {selectedProfile}");
 
         _IConfigManager.ChangeCurrentProfile(selectedProfile);
 
@@ -202,7 +202,7 @@ public class GuiInterface : MonoBehaviour
     {
         if (string.IsNullOrEmpty(newProfileName))
         {
-            Debug.Log("[GUI] New profile creation cancelled or invalid name");
+            Debug.Log("[GuiInterface] New profile creation cancelled or invalid name");
             return;
         }
 
@@ -216,10 +216,10 @@ public class GuiInterface : MonoBehaviour
 
         if (Index < 0 || Index >= panels.Count)
         {
-            Debug.LogWarning($"[GUI] Invalid panel index: {Index}");
+            Debug.LogWarning($"[GuiInterface] Invalid panel index: {Index}");
             return;
         }
-
+        Debug.Log($"[GuiInterface] Switching to panel index: {Index}");
         foreach (var panel in panels)
             panel.SetActive(false);
 
@@ -237,7 +237,7 @@ public class GuiInterface : MonoBehaviour
 
         if (string.IsNullOrEmpty(module) || string.IsNullOrEmpty(name))
         {
-            Debug.LogWarning("[GUI] Missing module or field name");
+            Debug.LogWarning("[GuiInterface] Missing module or field name");
             return;
         }
 
@@ -261,7 +261,7 @@ public class GuiInterface : MonoBehaviour
     {
         var key = $"{moduleName}.{fieldName}";
 
-        Debug.Log($"[GUI] {moduleName}.{fieldName} = {value}");
+        Debug.Log($"[GuiInterface] {moduleName}.{fieldName} = {value}");
 
         // Example: generic backend call
         ConfigQueueContainer.configQueue.Add((key, value));

@@ -91,13 +91,13 @@ public class CameraFrustrum : MonoBehaviour, IModuleSettingsHandler
     {
         if (eyeSide == EyeSide.None)
         {
-            Debug.LogError($"Eyeside not assigned.");
+            Debug.LogError($"[CameraFrustrum] Eyeside not assigned.");
             return;
         }
 
         if (GetComponent<Camera>() == null)
         {
-            Debug.LogError($"Camera component for {eyeSide} camera not assigned.");
+            Debug.LogError($"[CameraFrustrum] Camera component for {eyeSide} camera not assigned.");
             return;
         }
         else
@@ -115,7 +115,7 @@ public class CameraFrustrum : MonoBehaviour, IModuleSettingsHandler
         )
         {
             // Validate parameters to ensure they are set to positive values.
-            Debug.LogError("CameraFrustrum: Invalid parameters. Ensure all dimensions are initialized and set to positive values.");
+            Debug.LogError("[CameraFrustrum] Invalid parameters. Ensure all dimensions are initialized and set to positive values.");
         }
     }
 
@@ -124,19 +124,19 @@ public class CameraFrustrum : MonoBehaviour, IModuleSettingsHandler
     {
         if (Settings.Display.ipd <= 0 || Settings.Display.ipd > 120)
         {
-            Debug.LogError($"Invalid IPD: {Settings.Display.ipd}");
+            Debug.LogError($"[CameraFrustrum] Invalid IPD: {Settings.Display.ipd}");
         }
 
         if (Settings.Display.nearClipPlane <= 0)
         {
             // Validate the near clipping plane to ensure it is set to a positive value.
-            Debug.LogError("Near clip plane must be set to a positive value.");
+            Debug.LogError("[CameraFrustrum] Near clip plane must be set to a positive value.");
         }
 
         if (Settings.Display.nearClipPlane >= Settings.Display.farClipPlane)
         {
             // Ensure the near clip plane is less than the far clip plane.
-            Debug.LogError("Near clip plane must be less than the far clip plane.");
+            Debug.LogError("[CameraFrustrum] Near clip plane must be less than the far clip plane.");
         }
     }
 

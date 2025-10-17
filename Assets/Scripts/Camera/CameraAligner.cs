@@ -39,11 +39,11 @@ public class CameraAligner : MonoBehaviour, ICameraAligner
         {
             transform.position = anchor.transform.position;
             transform.rotation = anchor.transform.rotation;
-            Debug.Log($"Camera aligned to anchor '{anchorName}' in scene.");
+            Debug.Log($"[CameraAligner] Camera aligned to anchor '{anchorName}' in scene.");
         }
         else
         {
-            Debug.LogWarning($"No anchor '{anchorName}' found in scene.");
+            Debug.LogWarning($"[CameraAligner] No anchor '{anchorName}' found in scene.");
         }
     }
 

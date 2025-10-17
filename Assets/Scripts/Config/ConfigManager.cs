@@ -67,7 +67,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
             var (key, newValue) = newConfig;
             if (key == null || newValue == null)
             {
-                Debug.LogError("ConfigManager: Received null config key or data.");
+                Debug.LogError("[ConfigManager] Received null config key or data.");
                 return;
             }
 
@@ -103,7 +103,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
                 headsetSubFolder = "UserVR";
                 break;
             default:
-                Debug.LogError($"Unsupported VR mode: {mode}");
+                Debug.LogError($"[ConfigManager] Unsupported VR mode: {mode}");
                 return;
         }
 
@@ -128,21 +128,21 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
             string json = File.ReadAllText(configPath);
             // Apply any differences from the JSON to the current config
             JsonUtility.FromJsonOverwrite(json, Config);
-            Debug.Log($"Loaded config: {configPath}");
+            Debug.Log($"[ConfigManager] Loaded config: {configPath}");
         }
         else
         {
             // If no JSON config exists, create it
             SaveConfig();
-            Debug.Log($"No config found; created default at {configPath}");
+            Debug.Log($"[ConfigManager] No config found; created default at {configPath}");
         }
 
-        Debug.Log("ConfigManager: Config loaded successfully.");
+        Debug.Log($"[ConfigManager] Config loaded successfully.");
 
         // Initialize the config file names list
         ListFileNames(configFolder);
 
-        Debug.Log("ConfigManager: Config file names listed successfully.");
+        Debug.Log($"[ConfigManager] Config file names listed successfully.");
     }
 
 
@@ -151,13 +151,13 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
         // Serializes the active config back to JSON on disk.
 
         if (string.IsNullOrEmpty(configPath))
-            Debug.LogError("configPath is empty.");
+            Debug.LogError("[ConfigManager] ConfigPath is empty.");
 
         // Serialize the current config to JSON and write it to the new path
         string json = JsonUtility.ToJson(Config, prettyPrint: true);
         File.WriteAllText(configPath, json);
 
-        Debug.Log($"Saved config: {configPath}");
+        Debug.Log($"[ConfigManager] Saved config: {configPath}");
     }
 
 
@@ -168,7 +168,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
 
         if (string.IsNullOrEmpty(profileName))
         {
-            Debug.LogWarning("Profile name cannot be null or empty.");
+            Debug.LogWarning("[ConfigManager] Profile name cannot be null or empty.");
             return;
         }
 
@@ -180,7 +180,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
         // Initialize the config file names list
         ListFileNames(configFolder);
 
-        Debug.Log($"Created new config profile: {configPath}");
+        Debug.Log($"[ConfigManager] Created new config profile: {configPath}");
     }
 
 
@@ -191,7 +191,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
 
         if (string.IsNullOrEmpty(profileName))
         {
-            Debug.LogWarning("Profile name cannot be null or empty.");
+            Debug.LogWarning("[ConfigManager] Profile name cannot be null or empty.");
             return;
         }
 
@@ -202,11 +202,11 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
         {
             string json = File.ReadAllText(configPath);
             JsonUtility.FromJsonOverwrite(json, Config);
-            Debug.Log($"Changed to config profile: {configPath}");
+            Debug.Log($"[ConfigManager] Changed to config profile: {configPath}");
         }
         else
         {
-            Debug.Log($"Config profile not found: {configPath}");
+            Debug.Log($"[ConfigManager] Config profile not found: {configPath}");
         }
     }
 
@@ -219,7 +219,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
         // Check if the folder exists
         if (!Directory.Exists(folderPath))
         {
-            Debug.LogWarning($"Folder does not exist: {folderPath}");
+            Debug.LogWarning($"[ConfigManager] Folder does not exist: {folderPath}");
             return;
         }
         // Get all files in that folder (non‐recursive)
@@ -281,7 +281,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Failed to bind '{moduleName}': {ex.Message}");
+                Debug.LogError($"[ConfigManager] Failed to bind '{moduleName}': {ex.Message}");
             }
         }
     }
@@ -376,7 +376,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
         var targetField = moduleObj.GetType().GetField(fieldName);
         if (targetField == null)
         {
-            Debug.LogError($"Field '{fieldName}' not found on module '{moduleName}'.");
+            Debug.LogError($"[ConfigManager] Field '{fieldName}' not found on module '{moduleName}'.");
             return;
         }
 
@@ -409,7 +409,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
         }
         catch (Exception ex)
         {
-            Debug.LogError($"Failed to set '{fieldName}' on '{moduleName}': {ex.Message}");
+            Debug.LogError($"[ConfigManager] Failed to set '{fieldName}' on '{moduleName}': {ex.Message}");
         }
     }
 
@@ -423,7 +423,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
         // Check if the key is null or whitespace
         if (string.IsNullOrWhiteSpace(key))
         {
-            Debug.LogError("Key cannot be null or whitespace");
+            Debug.LogError("[ConfigManager] Key cannot be null or whitespace");
             return (null, null);
         }
 
@@ -435,7 +435,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
             || string.IsNullOrWhiteSpace(parts[0])
             || string.IsNullOrWhiteSpace(parts[1]))
         {
-            Debug.LogError($"Key must be in the form 'ModuleName.fieldName': '{key}'");
+            Debug.LogError($"[ConfigManager] Key must be in the form 'ModuleName.fieldName': '{key}'");
             return (null, null);
         }
 
@@ -464,13 +464,13 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
                 }
                 else
                 {
-                    Debug.Log($"Handler {h.GetType().Name} does not implement SettingsChanged, skipping.");
+                    Debug.Log($"[ConfigManager] Handler {h.GetType().Name} does not implement SettingsChanged, skipping.");
                 }
             }
         }
         else
         {
-            Debug.LogWarning($"No listeners registered for key: {key}");
+            Debug.LogWarning($"[ConfigManager] No listeners registered for key: {key}");
         }
     }
 
@@ -485,7 +485,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
         var moduleField = Config.GetType().GetField(moduleName);
         if (moduleField == null)
         {
-            Debug.LogError($"Module '{moduleName}' not found on config.");
+            Debug.LogError($"[ConfigManager] Module '{moduleName}' not found on config.");
             return null;
         }
         var moduleObj = moduleField.GetValue(Config);

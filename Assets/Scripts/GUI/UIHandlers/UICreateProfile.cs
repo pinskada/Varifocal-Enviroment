@@ -37,7 +37,7 @@ public class UICreateProfile : MonoBehaviour
 
         if (string.IsNullOrEmpty(name))
         {
-            Debug.LogWarning("[UI] Profile name cannot be empty");
+            Debug.LogWarning("[UICreateProfile] Profile name cannot be empty");
             return;
         }
 

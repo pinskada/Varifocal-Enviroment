@@ -120,7 +120,7 @@ public class ImageSelector : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
             };
         }
         else
-            Debug.LogError($"Wrong side assigned to ImageSelector: {eyeSide}");
+            Debug.LogError($"[ImageSelector] Wrong side assigned to ImageSelector: {eyeSide}");
 
         EnqueueCrop(normalizedCoordinates);
         isCroped = true;
@@ -130,7 +130,7 @@ public class ImageSelector : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
     public void resetScale()
     {
         EnqueueCrop(currentResetCrop);
-        Debug.Log($"Resetting crop to {eyeSide} image");
+        Debug.Log($"[ImageSelector] Resetting crop to {eyeSide} image");
         isCroped = false;
     }
 

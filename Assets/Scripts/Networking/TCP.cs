@@ -30,9 +30,6 @@ public class TCP : IModuleSettingsHandler
 
 
         this.networkManager = networkManager;
-
-
-        UnityEngine.Debug.Log("All components and settings initialized.");
     }
 
     public void SettingsChanged(string moduleName, string fieldName)
@@ -77,96 +74,186 @@ public class TCP : IModuleSettingsHandler
 
         if (!IPisSet && Configuration.currentVersion == VRMode.Testbed)
         {
-            UnityEngine.Debug.LogError("IP configuration failed, cannot connect to server.");
+            UnityEngine.Debug.LogError("[TCP] IP configuration failed, cannot connect to server.");
             return; // Exit if IP configuration fails
         }
 
         incomingBuffer = new byte[Settings.TCP.readBufferSize * 4];
 
-        UnityEngine.Debug.Log("Attempting to connect to a server...");
-        ConnectToServer(); // Connect to the RPI TCP server
+        UnityEngine.Debug.Log("[TCP] Attempting to connect to a server...");
+        //ConnectToServer(); // Connect to the RPI TCP server
     }
 
+    /*
+        public bool ConfigureIPmode(bool setStatic)
+        {
+            // This method sets static IP to be able to communicate with the RPI on a local network.
+            // IN ORDER TO WORK THESE SETTINGS MUST BE ENSURED: Edit -> Project Settings -> Player -> 
+            // -> Configuration -> Scripting Backend: Mono; Api Compatibility Level: .NET Framework
 
+
+            // Validate inputs
+            if (string.IsNullOrWhiteSpace(Settings.TCP.adapterName) ||
+                (setStatic && (string.IsNullOrWhiteSpace(Settings.TCP.ipAddress) || string.IsNullOrWhiteSpace(Settings.TCP.subnetMask))))
+
+            {
+                UnityEngine.Debug.LogError("[TCP] ConfigureIPmode: missing adapter/IP/mask.");
+                return false;
+            }
+
+            string args = setStatic
+                ? $"interface ipv4 set address name=\"{Settings.TCP.adapterName}\" source=static address={Settings.TCP.ipAddress} mask={Settings.TCP.subnetMask} gateway=none"
+                : $"interface ipv4 set address name=\"{Settings.TCP.adapterName}\" source=dhcp";
+                */
+    /* OLD VERSION if the new one does not work
+    string args = setStatic
+        ? $"interface ip set address name=\"{adapterName}\" static {ipAddress} {subnetMask} {gateway} 1"
+        : $"interface ip set address name=\"{adapterName}\" source=dhcp";
+    */
+    /*
+        string netshPath = string.IsNullOrWhiteSpace(Settings.TCP.netshFileName)
+            ? Environment.ExpandEnvironmentVariables(@"%SystemRoot%\System32\netsh.exe")
+            : Settings.TCP.netshFileName;
+
+            // If running as a 32-bit process on 64-bit Windows, System32 is redirected; use Sysnative to reach real System32
+            if (!Environment.Is64BitProcess && Environment.Is64BitOperatingSystem)
+            {
+                string sysnative = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\Sysnative\netsh.exe");
+                if (File.Exists(sysnative)) netshPath = sysnative;
+            }
+
+    // Start the netsh process with elevated privileges
+    var setStaticIProcess = new ProcessStartInfo
+    {
+        FileName = netshPath,
+        Arguments = args,
+        UseShellExecute = false,     // fine since you already run as admin
+        CreateNoWindow = true
+    };*/
+    /* OLD VERSION if the new one does not work
+    {
+        FileName = @"C:\Windows\System32\netsh.exe", // Path to netsh executable
+        Arguments = args, // Arguments for the command
+        Verb = "runas", // This is required to run as administrator
+        UseShellExecute = false, // This is required to redirect output
+        RedirectStandardOutput = true, // Redirect output to read it
+        RedirectStandardError = true, // Redirect error to read it
+        CreateNoWindow = true // Don't create a window
+    };
+    */
+    /*
+    // Try to start the process
+    try
+    {
+        using (var p = Process.Start(setStaticIProcess))
+        {
+            bool exited = p.WaitForExit(Settings.TCP.IPsetTimeout);  // Timeout to avoid hangs
+
+            if (!exited)
+            {
+                UnityEngine.Debug.LogError("[TCP] Netsh did not exit within 15s. Args: " + args);
+                return false;
+            }
+    if (p.ExitCode != 0)
+    {
+        UnityEngine.Debug.LogError($"[TCP] Netsh failed (exit {p.ExitCode}). Args: {args}");
+        return false;
+    }
+    else
+    {
+        UnityEngine.Debug.Log("[TCP] " + (setStatic ? "Static IP set." : "IP reset to DHCP."));
+        return true;
+    }
+        }
+    }
+    catch (Exception ex)
+    {
+        UnityEngine.Debug.LogError("[TCP] Netsh error: " + ex.Message);
+    return false;
+    }
+        }
+    */
     public bool ConfigureIPmode(bool setStatic)
     {
-        // This method sets static IP to be able to communicate with the RPI on a local network.
-        // IN ORDER TO WORK THESE SETTINGS MUST BE ENSURED: Edit -> Project Settings -> Player -> 
-        // -> Configuration -> Scripting Backend: Mono; Api Compatibility Level: .NET Framework
-
-
         // Validate inputs
         if (string.IsNullOrWhiteSpace(Settings.TCP.adapterName) ||
-            (setStatic && (string.IsNullOrWhiteSpace(Settings.TCP.ipAddress) || string.IsNullOrWhiteSpace(Settings.TCP.subnetMask))))
-
+           (setStatic && (string.IsNullOrWhiteSpace(Settings.TCP.ipAddress) || string.IsNullOrWhiteSpace(Settings.TCP.subnetMask))))
         {
             UnityEngine.Debug.LogError("[TCP] ConfigureIPmode: missing adapter/IP/mask.");
             return false;
         }
 
+        // Prefer explicit full path to avoid WOW64 redirection shenanigans
+        string netshPath = string.IsNullOrWhiteSpace(Settings.TCP.netshFileName)
+            ? Environment.ExpandEnvironmentVariables(@"%SystemRoot%\System32\netsh.exe")
+            : Settings.TCP.netshFileName;
+
+        // If running as a 32-bit process on 64-bit Windows, System32 is redirected; use Sysnative to reach real System32
+        if (!Environment.Is64BitProcess && Environment.Is64BitOperatingSystem)
+        {
+            string sysnative = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\Sysnative\netsh.exe");
+            if (File.Exists(sysnative)) netshPath = sysnative;
+        }
+
+        // Helper to run netsh and capture output
+        bool RunNetsh(string arguments, out int exitCode, out string stdout, out string stderr)
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = netshPath,
+                Arguments = arguments,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            };
+            using (var p = Process.Start(psi))
+            {
+                stdout = p.StandardOutput.ReadToEnd();
+                stderr = p.StandardError.ReadToEnd();
+                bool exited = p.WaitForExit(Settings.TCP.IPsetTimeout);
+                exitCode = exited ? p.ExitCode : -999;
+                return exited;
+            }
+        }
+
+        // 1) Confirm the interface exists and get its exact alias
+        {
+            RunNetsh("interface ipv4 show interfaces", out var code, out var so, out var se);
+            // Optional Log
+            //UnityEngine.Debug.Log($"[TCP] netsh show interfaces (exit {code})\n{so}\n{se}");
+            // Quick presence check
+            if (!so.Contains(Settings.TCP.adapterName))
+            {
+                UnityEngine.Debug.LogError($"[TCP] Adapter '{Settings.TCP.adapterName}' not found. " +
+                                           "Use the exact alias from 'netsh interface ipv4 show interfaces'.");
+                return false;
+            }
+        }
+
+        // 2) Apply configuration
         string args = setStatic
             ? $"interface ipv4 set address name=\"{Settings.TCP.adapterName}\" source=static address={Settings.TCP.ipAddress} mask={Settings.TCP.subnetMask} gateway=none"
             : $"interface ipv4 set address name=\"{Settings.TCP.adapterName}\" source=dhcp";
-        /* OLD VERSION if the new one does not work
-        if (setStatic)
-            args = $"interface ip set address name=\"{adapterName}\" static {ipAddress} {subnetMask} {gateway} 1";
-        else
-            args = $"interface ip set address name=\"{adapterName}\" source=dhcp";
-        */
 
-        var file = string.IsNullOrWhiteSpace(Settings.TCP.netshFileName) ? "netsh" : Settings.TCP.netshFileName;
-
-        // Start the netsh process with elevated privileges
-        var setStaticIProcess = new ProcessStartInfo
+        if (!RunNetsh(args, out var setCode, out var setOut, out var setErr))
         {
-            FileName = file,
-            Arguments = args,
-            UseShellExecute = false,     // fine since you already run as admin
-            CreateNoWindow = true
-        };
-        /* OLD VERSION if the new one does not work
-        {
-            FileName = @"C:\Windows\System32\netsh.exe", // Path to netsh executable
-            Arguments = args, // Arguments for the command
-            Verb = "runas", // This is required to run as administrator
-            UseShellExecute = false, // This is required to redirect output
-            RedirectStandardOutput = true, // Redirect output to read it
-            RedirectStandardError = true, // Redirect error to read it
-            CreateNoWindow = true // Don't create a window
-        };
-        */
-
-        // Try to start the process
-        try
-        {
-            using (var p = Process.Start(setStaticIProcess))
-            {
-                bool exited = p.WaitForExit(Settings.TCP.IPsetTimeout);  // Timeout to avoid hangs
-
-                if (!exited)
-                {
-                    UnityEngine.Debug.LogError("Netsh did not exit within 15s. Args: " + args);
-                    return false;
-                }
-                if (p.ExitCode != 0)
-                {
-                    UnityEngine.Debug.LogError($"Netsh failed (exit {p.ExitCode}). Args: {args}");
-                    return false;
-                }
-                else
-                {
-                    UnityEngine.Debug.Log(setStatic ? "Static IP set." : "IP reset to DHCP.");
-                    return true;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            UnityEngine.Debug.LogError("Netsh error: " + ex.Message);
+            UnityEngine.Debug.LogError("[TCP] Netsh did not exit within timeout.");
             return false;
         }
-    }
+        if (setCode != 0)
+        {
+            UnityEngine.Debug.LogError($"[TCP] Netsh failed (exit {setCode}). Args: {args}\nOUT:\n{setOut}\nERR:\n{setErr}");
+            return false;
+        }
 
+        // 3) Verify result (optional)
+        //RunNetsh($"interface ipv4 show config name=\"{Settings.TCP.adapterName}\"", out var verCode, out var verOut, out var verErr);
+        //UnityEngine.Debug.Log($"[TCP] Verify config (exit {verCode}):\n{verOut}\n{verErr}");
+
+        UnityEngine.Debug.Log("[TCP] " + (setStatic ? "Static IP set." : "IP reset to DHCP."));
+        return true;
+    }
 
     private void ConnectToServer()
     {
@@ -195,9 +282,9 @@ public class TCP : IModuleSettingsHandler
             isConnected = true;
 
             if (Configuration.currentVersion == VRMode.Testbed)
-                UnityEngine.Debug.Log("Connected to Raspberry Pi at " + Settings.TCP.raspberryPiIP + ":" + Settings.TCP.port);
+                UnityEngine.Debug.Log("[TCP] Connected to Raspberry Pi at " + Settings.TCP.raspberryPiIP + ":" + Settings.TCP.port);
             else
-                UnityEngine.Debug.Log("Connected to local server at " + Settings.TCP.localIP + ":" + Settings.TCP.port);
+                UnityEngine.Debug.Log("[TCP] Connected to local server at " + Settings.TCP.localIP + ":" + Settings.TCP.port);
 
             // Start the receive thread to listen for incoming messages
             receiveThread = new Thread(ReceiveViaTCP) { IsBackground = true, Name = "TCP.Receive" };
@@ -207,11 +294,11 @@ public class TCP : IModuleSettingsHandler
                 // Send initial configuration to the RPI
                 networkManager.SendTCPConfig();
             else
-                UnityEngine.Debug.LogError("NetworkManager reference is null, cannot send config over TCP.");
+                UnityEngine.Debug.LogError("[TCP] NetworkManager reference is null, cannot send config over TCP.");
         }
         catch (Exception e)
         {
-            UnityEngine.Debug.LogError("Connecting to to TCP server failed: " + e.Message);
+            UnityEngine.Debug.LogError("[TCP] Connecting to to TCP server failed: " + e.Message);
         }
     }
 
@@ -233,20 +320,20 @@ public class TCP : IModuleSettingsHandler
             stream?.Close();
             stream?.Dispose();
         }
-        catch (Exception e) { UnityEngine.Debug.LogWarning("Stream close failed: " + e.Message); }
+        catch (Exception e) { UnityEngine.Debug.LogWarning("[TCP] Stream close failed: " + e.Message); }
 
         try
         {
             client?.Close();
             client?.Dispose();
         }
-        catch (Exception e) { UnityEngine.Debug.LogWarning("Client close failed: " + e.Message); }
+        catch (Exception e) { UnityEngine.Debug.LogWarning("[TCP] Client close failed: " + e.Message); }
 
         receiveThread = null;
         stream = null;
         client = null;
 
-        UnityEngine.Debug.Log("Disconnected from TCP.");
+        UnityEngine.Debug.Log("[TCP] Disconnected from TCP.");
     }
 
 
@@ -257,7 +344,7 @@ public class TCP : IModuleSettingsHandler
         // Check if the client is connected and the stream is not null
         if (!isConnected || stream == null)
         {
-            UnityEngine.Debug.LogWarning("Can not send a message, not connected to server.");
+            UnityEngine.Debug.LogWarning("[TCP] Can not send a message, not connected to server.");
             return;
         }
 
@@ -267,15 +354,15 @@ public class TCP : IModuleSettingsHandler
             byte[] byteMessage = message as byte[];
             byte[] data = EncodeTCPStream(byteMessage, messageType);
             stream.Write(data, 0, data.Length);
-            UnityEngine.Debug.Log("Sent: " + message);
+            UnityEngine.Debug.Log("[TCP] Sent: " + message);
         }
         catch (Exception e)
         {
-            UnityEngine.Debug.LogError("Send failed: " + e.Message);
+            UnityEngine.Debug.LogError("[TCP] Send failed: " + e.Message);
             if (sendRetryCount > Settings.TCP.maxSendRetries)
             {
                 sendRetryCount = 0;
-                UnityEngine.Debug.LogError("Multiple send failures, disconnecting.");
+                UnityEngine.Debug.LogError("[TCP] Multiple send failures, disconnecting.");
                 isConnected = false; // Assume connection is lost
                 return;
             }
@@ -283,7 +370,7 @@ public class TCP : IModuleSettingsHandler
             {
                 sendRetryCount++;
                 SendViaTCP(message, messageType); // Retry sending the message
-                UnityEngine.Debug.LogWarning($"Send retry {sendRetryCount}/3");
+                UnityEngine.Debug.LogWarning($"[TCP] Send retry {sendRetryCount}/3");
             }
         }
     }
@@ -337,7 +424,7 @@ public class TCP : IModuleSettingsHandler
                     if (isShuttingDown)
                         break; // Exit quietly during shutdown
 
-                    UnityEngine.Debug.LogWarning("TCP Read timeout: " + ex.Message);
+                    UnityEngine.Debug.LogWarning("[TCP] Read timeout: " + ex.Message);
                 }
             }
         }
@@ -345,7 +432,7 @@ public class TCP : IModuleSettingsHandler
         {
             // Prevent errors during shutdown
             if (!isShuttingDown)
-                UnityEngine.Debug.LogError("Receive error: " + e.Message);
+                UnityEngine.Debug.LogError("[TCP] Receive error: " + e.Message);
         }
     }
 
@@ -380,7 +467,7 @@ public class TCP : IModuleSettingsHandler
             // Sanity check
             if (payloadLength <= 0 || payloadLength > Settings.TCP.maxPacketSize)
             {
-                UnityEngine.Debug.LogError($"Invalid payload length: {payloadLength}, clearing buffer.");
+                UnityEngine.Debug.LogError($"[TCP] Invalid payload length: {payloadLength}, clearing buffer.");
                 bufferOffset = 0;
                 bufferCount = 0;
                 return;
@@ -406,13 +493,13 @@ public class TCP : IModuleSettingsHandler
                 }
                 else
                 {
-                    UnityEngine.Debug.LogWarning("MessageType " + packetType + " not found.");
+                    UnityEngine.Debug.LogWarning("[TCP] MessageType " + packetType + " not found.");
                     return;
                 }
             }
             catch (Exception e)
             {
-                UnityEngine.Debug.LogError("MessageType parse error: " + e.Message);
+                UnityEngine.Debug.LogError("[TCP] MessageType parse error: " + e.Message);
                 return;
             }
 
@@ -420,7 +507,7 @@ public class TCP : IModuleSettingsHandler
             if (commRouter != null)
                 RouteQueueContainer.routeQueue.Add((payload, msgType));
             else
-                UnityEngine.Debug.LogError("CommRouter reference is null, cannot redirect message.");
+                UnityEngine.Debug.LogError("[TCP] CommRouter reference is null, cannot redirect message.");
 
             // Advance readPos
             readPos += 4 + payloadLength;

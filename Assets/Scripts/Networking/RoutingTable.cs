@@ -45,7 +45,7 @@ public static class RoutingTable
                 break;
 
             default:
-                Debug.LogError($"CommRouter: Unsupported VRMode {Configuration.currentVersion}");
+                Debug.LogError($"[CommRouter] Unsupported VRMode {Configuration.currentVersion}");
                 break;
         }
 
@@ -125,7 +125,7 @@ public static class RoutingTable
         }
         catch (Exception ex)
         {
-            Debug.LogError($"Failed to parse IMU data: {ex.Message}");
+            Debug.LogError($"[CommRouter]Failed to parse IMU data: {ex.Message}");
             return;
         }
         IMUQueueContainer.IMUqueue.Add(imuData);
@@ -138,7 +138,7 @@ public static class RoutingTable
         var images = payload as List<ImageDecoder.EyeImage>;
         if (images == null)
         {
-            Debug.LogError("HandlePreviewImage: Payload is not a list of EyeData.");
+            Debug.LogError("[CommRouter]HandlePreviewImage: Payload is not a list of EyeData.");
             return;
         }
 
@@ -153,11 +153,11 @@ public static class RoutingTable
                 else if (eye.EyeId == 1)
                     GUIQueueContainer.eyePreviewQueue.Enqueue((eyeTex, eye.Width, eye.Height, EyeSide.Right));
                 else
-                    Debug.LogError($"HandlePreviewImage: Unknown EyeId {eye.EyeId}.");
+                    Debug.LogError($"[CommRouter]HandlePreviewImage: Unknown EyeId {eye.EyeId}.");
             }
             catch (Exception ex)
             {
-                Debug.LogError($"HandlePreviewImage: Failed to load image for eye {eye.EyeId}: {ex.Message}");
+                Debug.LogError($"[CommRouter]HandlePreviewImage: Failed to load image for eye {eye.EyeId}: {ex.Message}");
             }
         }
     }

@@ -9,9 +9,6 @@ public class ImageRenderer : MonoBehaviour
     [SerializeField] private UnityEngine.UI.AspectRatioFitter leftEyeAspectFitter;
     [SerializeField] private UnityEngine.UI.AspectRatioFitter rightEyeAspectFitter;
 
-    [SerializeField] private ImageSelector leftEyeImageSelector;
-    [SerializeField] private ImageSelector rightEyeImageSelector;
-
 
     void Update()
     {
@@ -20,13 +17,13 @@ public class ImageRenderer : MonoBehaviour
         {
             if (leftEyeImage == null || rightEyeImage == null)
             {
-                Debug.LogError("ImageRenderer: Left or Right eye RawImage is not assigned.");
+                Debug.LogError("[ImageRenderer] Left or Right eye RawImage is not assigned.");
                 return;
             }
 
             if (image.rawData == null)
             {
-                Debug.LogError("ImageRenderer: Received null image data.");
+                Debug.LogError("[ImageRenderer] Received null image data.");
                 return;
             }
 

@@ -59,7 +59,6 @@ public class Bootstrapper : MonoBehaviour
 
     void Start()
     {
-        Debug.Log("Bootstrapper starting up...");
         GetGuiComponents();
         filter = imuHandler.GetFilterInstance();
 
@@ -75,7 +74,7 @@ public class Bootstrapper : MonoBehaviour
         var uiScene = SceneManager.GetSceneByName(uiSceneName);
         if (!uiScene.isLoaded)
         {
-            Debug.LogError($"Scene '{uiSceneName}' is not loaded. Load it additively before the Core scene.");
+            Debug.LogError($"[Bootstrapper] Scene '{uiSceneName}' is not loaded. Load it additively before the Core scene.");
             return;
         }
 
@@ -84,7 +83,7 @@ public class Bootstrapper : MonoBehaviour
 
         if (guiInterface == null)
         {
-            Debug.LogError($"No {nameof(GuiInterface)} found in '{uiSceneName}'.");
+            Debug.LogError($"[Bootstrapper] No {nameof(GuiInterface)} found in '{uiSceneName}'.");
             return;
         }
     }
@@ -99,7 +98,7 @@ public class Bootstrapper : MonoBehaviour
 
             if (found != null)
             {
-                Debug.LogError($"Multiple {typeof(T).Name} found in scene '{scene.name}'. Keep exactly one.");
+                Debug.LogError($"[Bootstrapper] Multiple {typeof(T).Name} found in scene '{scene.name}'. Keep exactly one.");
                 return null;
             }
             found = hit;
