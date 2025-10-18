@@ -40,7 +40,7 @@ public class NetworkManager : MonoBehaviour, IModuleSettingsHandler
         // Activates TCP client or server and serial port based on the setup.
         if (tcp != null)
         {
-            new Thread(tcp.StartTCP) { IsBackground = true, Name = "TCP.Startup" }.Start();
+            //new Thread(tcp.StartTCP) { IsBackground = true, Name = "TCP.Startup" }.Start();
         }
         if (serial != null)
         {
@@ -160,8 +160,8 @@ public class NetworkManager : MonoBehaviour, IModuleSettingsHandler
 
     private void OnApplicationQuit()
     {
-        // This method kills tcp client and serial connection
-        if (tcp != null) tcp.Shutdown();
+        // This method kills tcp client and serial connections
+        //if (tcp != null) tcp.Shutdown();
         if (serial != null) serial.Shutdown();
     }
 }

@@ -81,98 +81,10 @@ public class TCP : IModuleSettingsHandler
         incomingBuffer = new byte[Settings.TCP.readBufferSize * 4];
 
         UnityEngine.Debug.Log("[TCP] Attempting to connect to a server...");
-        //ConnectToServer(); // Connect to the RPI TCP server
+        ConnectToServer(); // Connect to the RPI TCP server
     }
 
-    /*
-        public bool ConfigureIPmode(bool setStatic)
-        {
-            // This method sets static IP to be able to communicate with the RPI on a local network.
-            // IN ORDER TO WORK THESE SETTINGS MUST BE ENSURED: Edit -> Project Settings -> Player -> 
-            // -> Configuration -> Scripting Backend: Mono; Api Compatibility Level: .NET Framework
 
-
-            // Validate inputs
-            if (string.IsNullOrWhiteSpace(Settings.TCP.adapterName) ||
-                (setStatic && (string.IsNullOrWhiteSpace(Settings.TCP.ipAddress) || string.IsNullOrWhiteSpace(Settings.TCP.subnetMask))))
-
-            {
-                UnityEngine.Debug.LogError("[TCP] ConfigureIPmode: missing adapter/IP/mask.");
-                return false;
-            }
-
-            string args = setStatic
-                ? $"interface ipv4 set address name=\"{Settings.TCP.adapterName}\" source=static address={Settings.TCP.ipAddress} mask={Settings.TCP.subnetMask} gateway=none"
-                : $"interface ipv4 set address name=\"{Settings.TCP.adapterName}\" source=dhcp";
-                */
-    /* OLD VERSION if the new one does not work
-    string args = setStatic
-        ? $"interface ip set address name=\"{adapterName}\" static {ipAddress} {subnetMask} {gateway} 1"
-        : $"interface ip set address name=\"{adapterName}\" source=dhcp";
-    */
-    /*
-        string netshPath = string.IsNullOrWhiteSpace(Settings.TCP.netshFileName)
-            ? Environment.ExpandEnvironmentVariables(@"%SystemRoot%\System32\netsh.exe")
-            : Settings.TCP.netshFileName;
-
-            // If running as a 32-bit process on 64-bit Windows, System32 is redirected; use Sysnative to reach real System32
-            if (!Environment.Is64BitProcess && Environment.Is64BitOperatingSystem)
-            {
-                string sysnative = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\Sysnative\netsh.exe");
-                if (File.Exists(sysnative)) netshPath = sysnative;
-            }
-
-    // Start the netsh process with elevated privileges
-    var setStaticIProcess = new ProcessStartInfo
-    {
-        FileName = netshPath,
-        Arguments = args,
-        UseShellExecute = false,     // fine since you already run as admin
-        CreateNoWindow = true
-    };*/
-    /* OLD VERSION if the new one does not work
-    {
-        FileName = @"C:\Windows\System32\netsh.exe", // Path to netsh executable
-        Arguments = args, // Arguments for the command
-        Verb = "runas", // This is required to run as administrator
-        UseShellExecute = false, // This is required to redirect output
-        RedirectStandardOutput = true, // Redirect output to read it
-        RedirectStandardError = true, // Redirect error to read it
-        CreateNoWindow = true // Don't create a window
-    };
-    */
-    /*
-    // Try to start the process
-    try
-    {
-        using (var p = Process.Start(setStaticIProcess))
-        {
-            bool exited = p.WaitForExit(Settings.TCP.IPsetTimeout);  // Timeout to avoid hangs
-
-            if (!exited)
-            {
-                UnityEngine.Debug.LogError("[TCP] Netsh did not exit within 15s. Args: " + args);
-                return false;
-            }
-    if (p.ExitCode != 0)
-    {
-        UnityEngine.Debug.LogError($"[TCP] Netsh failed (exit {p.ExitCode}). Args: {args}");
-        return false;
-    }
-    else
-    {
-        UnityEngine.Debug.Log("[TCP] " + (setStatic ? "Static IP set." : "IP reset to DHCP."));
-        return true;
-    }
-        }
-    }
-    catch (Exception ex)
-    {
-        UnityEngine.Debug.LogError("[TCP] Netsh error: " + ex.Message);
-    return false;
-    }
-        }
-    */
     public bool ConfigureIPmode(bool setStatic)
     {
         // Validate inputs

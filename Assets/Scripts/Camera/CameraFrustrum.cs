@@ -29,7 +29,7 @@ public class CameraFrustrum : MonoBehaviour, IModuleSettingsHandler
 
 
         // Calculate the half Interpupillary Distance (IPD) for camera positioning.
-        float halfIPD = Settings.Display.ipd / 2f;
+        float halfIPD = Settings.Display.ipd / 1000f / 2f;
 
         Vector3 relativeCamPosition;
 
@@ -53,12 +53,12 @@ public class CameraFrustrum : MonoBehaviour, IModuleSettingsHandler
 
 
         // Reassing parameters for easier use
-        var near = Settings.Display.nearClipPlane;
-        var far = Settings.Display.farClipPlane;
-        var eyeToScreen = Settings.Display.eyeToScreenDist;
-        var height = Settings.Display.screenHeight;
-        var width = Settings.Display.screenWidth;
-        var ipd = Settings.Display.ipd;
+        var near = Settings.Display.eyeToScreenDist / 1000f; // in meters
+        var far = Settings.Display.farClipPlane; // in meters
+
+        var height = Settings.Display.screenHeight / 1000f; // in millimeters
+        var width = Settings.Display.screenWidth / 1000f; // in millimeters
+        var ipd = Settings.Display.ipd / 1000f; // in millimeters
 
         // Set near and far clip plane
         cameraComponent.nearClipPlane = near;
@@ -66,20 +66,28 @@ public class CameraFrustrum : MonoBehaviour, IModuleSettingsHandler
 
         // Convert screen space to projection space
         float halfWidth = width / 2f;
-        float halfIPD = (ipd / 1000f) / 2f;
-        float eyeOffset;
+        float halfIPD = ipd / 2f;
 
-        if (eyeSide == EyeSide.Left)
-            eyeOffset = -halfIPD;
-        else
-            eyeOffset = halfIPD;
+        float eyeOffset = (eyeSide == EyeSide.Left) ? -halfIPD : halfIPD;
 
+
+        var left = 0f;
+        var right = 0f;
 
         // Calculate shift in view frustum due to eye offset
-        var left = ((-halfWidth - eyeOffset) * near) / eyeToScreen;
-        var right = ((halfWidth - eyeOffset) * near) / eyeToScreen;
-        var bottom = (-height / 2f) * near / eyeToScreen;
-        var top = (height / 2f) * near / eyeToScreen;
+        if (eyeSide == EyeSide.Left)
+        {
+            left = -halfWidth - eyeOffset;
+            right = 0 - eyeOffset;
+        }
+        else
+        {
+            left = 0 - eyeOffset;
+            right = halfWidth - eyeOffset;
+        }
+
+        var bottom = -height / 2f;
+        var top = height / 2f;
 
         // Create the asymmetric projection matrix
         var proj = Matrix4x4.Frustum(left, right, bottom, top, near, far);
@@ -127,13 +135,7 @@ public class CameraFrustrum : MonoBehaviour, IModuleSettingsHandler
             Debug.LogError($"[CameraFrustrum] Invalid IPD: {Settings.Display.ipd}");
         }
 
-        if (Settings.Display.nearClipPlane <= 0)
-        {
-            // Validate the near clipping plane to ensure it is set to a positive value.
-            Debug.LogError("[CameraFrustrum] Near clip plane must be set to a positive value.");
-        }
-
-        if (Settings.Display.nearClipPlane >= Settings.Display.farClipPlane)
+        if (Settings.Display.eyeToScreenDist >= Settings.Display.farClipPlane)
         {
             // Ensure the near clip plane is less than the far clip plane.
             Debug.LogError("[CameraFrustrum] Near clip plane must be less than the far clip plane.");
@@ -143,11 +145,10 @@ public class CameraFrustrum : MonoBehaviour, IModuleSettingsHandler
 
     public void SettingsChanged(string moduleName, string fieldName)
     {
+        Debug.Log($"[CameraFrustrum] Settings changed: {moduleName} - {fieldName}");
+
         CheckDisplayParam();
         CheckCameraParam();
-
-        if (fieldName == "nearClipPlane")
-            cameraComponent.farClipPlane = Settings.Display.nearClipPlane;
 
         if (fieldName == "farClipPlane")
             cameraComponent.farClipPlane = Settings.Display.farClipPlane;

@@ -1,23 +1,25 @@
 using UnityEngine;
 using System.Collections;
-
+using Contracts;
 
 [RequireComponent(typeof(Camera))]
 [DisallowMultipleComponent]
-public class StereoDistortionComposite : MonoBehaviour
+public class StereoDistortionComposite : MonoBehaviour, IModuleSettingsHandler
 {
-    [SerializeField] private Material distortionMaterial;
+    [SerializeField] private Material distortionMaterialLeft;
+    [SerializeField] private Material distortionMaterialRight;
 
-    private StereoRTManager rtManager;
+    [SerializeField] private StereoRTManager rtManager;
     private float compositeCameraDepth = 1000f;
     private Camera _cam;
-
+    private int currentDisplay;
 
     void Awake()
     {
         _cam = GetComponent<Camera>();
 
-        // Composite camera renders nothing from the scene; it only draws the final blit
+        CheckComponentsExistence();
+
         _cam.cullingMask = 0;
         _cam.clearFlags = CameraClearFlags.Nothing;
         _cam.depth = compositeCameraDepth; // render last
@@ -34,46 +36,125 @@ public class StereoDistortionComposite : MonoBehaviour
         if (Display.displays.Length >= 2)
         {
             Display.displays[1].Activate();
-            _cam.targetDisplay = 1; // Display 2
+            currentDisplay = 1;
+            _cam.targetDisplay = currentDisplay; // Display 2
             Debug.Log("[StereoDistortionComposite] Using Display 2 for stereo composite output.");
         }
         else
         {
-            Debug.LogError("[StereoDistortionComposite] Only one display found.");
+            currentDisplay = 0;
+            _cam.targetDisplay = currentDisplay; // Display 1
+            Debug.LogWarning("[StereoDistortionComposite] Only one display found.");
+        }
+
+        ApplyMaterialSettings();
+    }
+
+
+    private void CheckComponentsExistence()
+    {
+        if (rtManager == null)
+        {
+            Debug.LogError("[StereoDistortionComposite] StereoRTManager is missing!");
+        }
+
+        if (distortionMaterialLeft == null)
+        {
+            Debug.LogError("[StereoDistortionComposite] Left Distortion Material is missing!");
+        }
+
+        if (distortionMaterialRight == null)
+        {
+            Debug.LogError("[StereoDistortionComposite] Right Distortion Material is missing!");
         }
     }
 
 
     void OnRenderImage(RenderTexture src, RenderTexture dst)
     {
-        if (rtManager == null || distortionMaterial == null ||
-            rtManager.leftRT == null || rtManager.rightRT == null)
+        Graphics.Blit(src, dst);
+
+        if (rtManager.leftRT == null || rtManager.rightRT == null)
         {
             Debug.LogWarning("[StereoDistortionComposite] Missing references, or first image, cannot composite stereo images.");
-            Graphics.Blit(src, dst);
             return;
         }
 
-        // We’ll draw into dst twice: left half and right half.
-        Graphics.SetRenderTarget(dst);
-        GL.PushMatrix();
-        // Pixel space (0..width, 0..height) so we can draw exact halves
-        GL.LoadPixelMatrix(0, dst.width, dst.height, 0);
+        // Use target display resolution
+        int outW = Display.displays[currentDisplay].systemWidth;
+        int outH = Display.displays[currentDisplay].systemHeight;
 
-        // Left half
-        Graphics.DrawTexture(
-            new Rect(0, 0, dst.width / 2, dst.height), // Left half of the dst
-            rtManager.leftRT, // Use the left eye RT
-            distortionMaterial // Material with distortion shader
-        );
+        if (outW <= 0 || outH <= 0)
+        {
+            Graphics.Blit(src, dst);
+            Debug.LogWarning($"[StereoDistortionComposite] Invalid display resolution: " + outW + "x" + outH);
+            return;
+        }
 
-        // Right half
-        Graphics.DrawTexture(
-            new Rect(dst.width / 2, 0, dst.width / 2, dst.height), // Right half of the dst
-            rtManager.rightRT, // Use the right eye RT
-            distortionMaterial // Material with distortion shader
-        );
+        bool pushed = false;
+        var prevRT = RenderTexture.active;
 
-        GL.PopMatrix();
+        try
+        {
+            // Set render target: null means backbuffer
+            Graphics.SetRenderTarget(dst);
+
+            int halfW = outW / 2;
+
+            // Use pixel matrix in output resolution
+            GL.PushMatrix();
+            pushed = true;
+            GL.LoadPixelMatrix(0, outW, outH, 0);
+
+            // Left half
+            Graphics.DrawTexture(
+                new Rect(0, 0, halfW, outH),
+                rtManager.leftRT,
+                distortionMaterialLeft
+            );
+
+            // Right half
+            Graphics.DrawTexture(
+                new Rect(halfW, 0, halfW, outH),
+                rtManager.rightRT,
+                distortionMaterialRight
+            );
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"[StereoDistortionComposite] OnRenderImage error: {ex.Message}");
+        }
+        finally
+        {
+            if (pushed) GL.PopMatrix();        // 3) Always balance the stack
+            RenderTexture.active = prevRT;     // restore active RT
+        }
+    }
+
+    private void ApplyMaterialSettings()
+    {
+        distortionMaterialLeft.SetFloat("_DistortionStrength", Settings.Display.distortionStrength);
+        distortionMaterialRight.SetFloat("_DistortionStrength", Settings.Display.distortionStrength);
+
+        var halfWidth = Settings.Display.screenWidth / 1000f / 2f; // in meters
+        var halfIPD = Settings.Display.ipd / 1000f / 2f; // in meters
+
+        var xOffset = halfIPD / halfWidth;
+
+        var leftCenter = new Vector2(1 - xOffset, 0.5f);
+        var rightCenter = new Vector2(xOffset, 0.5f);
+
+        Debug.Log($"[StereoDistortionComposite] Left center: {leftCenter}, Right center: {rightCenter}");
+
+        distortionMaterialLeft.SetVector("_Center", leftCenter);
+        distortionMaterialRight.SetVector("_Center", rightCenter);
+
+        distortionMaterialLeft.SetFloat("_ClampBlack", 1f);
+        distortionMaterialRight.SetFloat("_ClampBlack", 1f);
+    }
+
+    public void SettingsChanged(string moduleName, string fieldName)
+    {
+        ApplyMaterialSettings();
     }
 }

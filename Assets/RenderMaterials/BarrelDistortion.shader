@@ -1,72 +1,89 @@
-Shader "Custom/BarrelDistortion"
+Shader "Custom/InverseBarrel"
 {
-    // This is a custom made shader for supressing barell distortion
-    // caused by used lenses. The lenses used are from early version
-    // of Samsung Gear VR and are perfectly spherical. This results
-    // in a relatively simple inverse pre-distorion using barrel stretch.
-
-
     Properties
     {
-        // Image to distort
-        _MainTex ("Texture", 2D) = "white" {}
-        // Distortion power
-        _Distortion ("Distortion Strength", Float) = 0.3
+        _MainTex   ("Texture", 2D) = "black" {}
+        _Center    ("Center (UV)", Vector) = (0.5, 0.5, 0, 0) // UV in [0..1], per-eye
+        _Strength  ("Strength", Float) = 0.15                 // k>0 pincushion (inverse barrel), k<0 barrel
+        _ClampBlack("Clamp Outside Black", Float) = 1.0       // 1 = black outside, 0 = wrap sample
     }
+
     SubShader
     {
-        // Shader is opaque
-        Tags { "RenderType"="Opaque" }
-        // Set maximum Level Of Detail
-        LOD 100
+        Tags { "Queue" = "Transparent" "RenderType"="Transparent" }
+        ZWrite Off
+        Cull Off
+        Blend One Zero
 
         Pass
         {
-            // Custom vertex and fragment function
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
             #include "UnityCG.cginc"
 
-            // Import predefined variables
             sampler2D _MainTex;
-            float _Distortion;
+            float4 _MainTex_TexelSize;   // x=1/w, y=1/h, z=w, w=h (Unity fills)
+            float2 _Center;              // in UV [0..1] of the source RT
+            float  _Strength;            // k parameter
+            float  _ClampBlack;
+
+            struct appdata {
+                float4 vertex : POSITION;
+                float2 uv     : TEXCOORD0;
+            };
 
             struct v2f {
-                // Vertex-to-fragment
-
-                // Screen-space position of the pixel
                 float4 pos : SV_POSITION;
-                // Texture coordinate
                 float2 uv  : TEXCOORD0;
             };
 
-            v2f vert(appdata_base v)
+            v2f vert (appdata v)
             {
-                // Converts vertex space object to plane object
-
-                // Create a new instance
                 v2f o;
-                // Changes 3D world to a 2D screen
                 o.pos = UnityObjectToClipPos(v.vertex);
-                // Expand the UV from [0,1] to [-1,1], so that centre is 0
-                o.uv = v.texcoord.xy * 2.0 - 1.0;
+                o.uv  = v.uv;
                 return o;
             }
 
-            fixed4 frag(v2f i) : SV_Target
+            fixed4 frag (v2f i) : SV_Target
             {
-                // Applies distortion
-
-                // Copy centred UV
+                // Normalize to -1..1 space around _Center with aspect correction
+                // (so distortion is radially symmetric even if RT isn't square)
                 float2 uv = i.uv;
-                // Measure the distance from origin
-                float r2 = dot(uv, uv);
-                // Aply distortion
-                float2 distortedUV = uv * (1 + _Distortion * r2);
-                // Convert UV back to default range
-                distortedUV = (distortedUV + 1.0) * 0.5;
-                return tex2D(_MainTex, distortedUV);
+
+                // Convert to centered coordinates
+                float2 p = uv - _Center;
+
+                // aspect-correct Y to match X scale
+                float aspect = _MainTex_TexelSize.w / _MainTex_TexelSize.z; // h/w
+                p.y *= aspect;
+
+                // Radial distance squared
+                float r2 = dot(p, p);
+
+                // Inverse barrel (pincushion) when _Strength > 0
+                // Mapping: p' = p * (1 + k*r^2)
+                float k = _Strength;
+                float factor = 1.0 + k * r2;
+                float2 p2 = p * factor;
+
+                // Undo aspect on Y and shift back to UV
+                p2.y /= aspect;
+                float2 uv2 = p2 + _Center;
+
+                // Optional clamp outside to black
+                if (_ClampBlack > 0.5)
+                {
+                    if (any(uv2 < 0.0) || any(uv2 > 1.0))
+                        return 0;
+                }
+                else
+                {
+                    uv2 = frac(uv2);
+                }
+
+                return tex2D(_MainTex, uv2);
             }
             ENDCG
         }

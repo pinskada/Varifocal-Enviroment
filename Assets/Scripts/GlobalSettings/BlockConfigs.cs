@@ -36,12 +36,12 @@ public class SerialSettings
 [System.Serializable]
 public class DisplaySettings
 {
-    public float ipd = 63f;
-    public float screenWidth = 120f;
-    public float screenHeight = 68f;
-    public float eyeToScreenDist = 50f;
-    public float nearClipPlane = 0.01f;
-    public float farClipPlane = 1000f;
+    public float ipd = 63f; // in mm
+    public float screenWidth = 120f; // in mm
+    public float screenHeight = 68f; // in mm
+    public float eyeToScreenDist = 50f; // in mm
+    public float farClipPlane = 1000f; // in meters
+    public float distortionStrength = 0.15f; // distortion strength parameter
 }
 
 
