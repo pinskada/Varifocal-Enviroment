@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.UI;
 using TMPro;
+using System.Reflection;
 
 
 public class GuiInterface : MonoBehaviour
@@ -47,7 +48,7 @@ public class GuiInterface : MonoBehaviour
 
     private void ConnectEditFields()
     {
-        foreach (var input in FindObjectsByType<InputField>(FindObjectsSortMode.None))
+        foreach (var input in FindObjectsByType<TMP_InputField>(FindObjectsSortMode.None))
         {
             input.onEndEdit.AddListener(value => OnFieldEdited(input, value));
         }
@@ -56,8 +57,10 @@ public class GuiInterface : MonoBehaviour
 
     private void PopulateEditFields()
     {
-        foreach (var input in FindObjectsByType<InputField>(FindObjectsSortMode.None))
+        Debug.Log("[GuiInterface] Populating edit fields");
+        foreach (var input in FindObjectsByType<TMP_InputField>(FindObjectsSortMode.None))
         {
+            Debug.Log($"[GuiInterface] Found InputField: {input.gameObject.name}");
             var field = input.GetComponent<UIField>();
 
             if (field == null)
@@ -75,12 +78,12 @@ public class GuiInterface : MonoBehaviour
                 return;
             }
 
-            // TODO: Get current config value from backend
             var value = GetSettingValue(module, name);
             if (value != null)
             {
                 try
                 {
+                    Debug.Log($"[GuiInterface] Setting {module}.{name} to {value}");
                     input.text = value.ToString();
                 }
                 catch (Exception ex)
@@ -114,18 +117,23 @@ public class GuiInterface : MonoBehaviour
             var settingsType = typeof(Settings);
 
             // Find the field representing the module
-            var moduleField = settingsType.GetField(moduleName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-            if (moduleField == null)
+            var moduleProp = settingsType.GetProperty(moduleName, BindingFlags.Public | BindingFlags.Static);
+            if (moduleProp == null)
             {
                 Debug.LogWarning($"[GuiInterface] Module '{moduleName}' not found in Settings");
                 return null;
             }
 
             // Get the instance of that module
-            var moduleInstance = moduleField.GetValue(null); // Static field → null instance
+            var moduleInstance = moduleProp.GetValue(null);
+            if (moduleInstance == null)
+            {
+                Debug.LogWarning($"[GuiInterface] Module '{moduleName}' instance is null. Is Settings.Provider set?");
+                return null;
+            }
 
             // Find the field inside the module
-            var fieldInfo = moduleInstance.GetType().GetField(fieldName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            var fieldInfo = moduleInstance.GetType().GetField(fieldName, BindingFlags.Public | BindingFlags.Instance);
             if (fieldInfo == null)
             {
                 Debug.LogWarning($"[GuiInterface] Field '{fieldName}' not found in module '{moduleName}'");
@@ -219,15 +227,16 @@ public class GuiInterface : MonoBehaviour
             Debug.LogWarning($"[GuiInterface] Invalid panel index: {Index}");
             return;
         }
-        Debug.Log($"[GuiInterface] Switching to panel index: {Index}");
+
         foreach (var panel in panels)
             panel.SetActive(false);
 
         panels[Index].SetActive(true);
+        PopulateEditFields();
     }
 
 
-    public void OnFieldEdited(InputField input, string value)
+    public void OnFieldEdited(TMP_InputField input, string value)
     {
         var field = input.GetComponent<UIField>();
         if (field == null) return;

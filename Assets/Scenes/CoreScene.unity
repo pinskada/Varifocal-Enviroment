@@ -335,6 +335,17 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 298801919}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &562252544 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2511429938750472489, guid: e891f244bd7afd24fa73374be0f68b4f, type: 3}
+  m_PrefabInstance: {fileID: 7305458601068771017}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 169f7da7d7584f341999148ba1cebe7e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &666292225
 GameObject:
   m_ObjectHideFlags: 0
@@ -530,6 +541,7 @@ MonoBehaviour:
   leftCameraFrustrum: {fileID: 2854347324086686176}
   rightCameraFrustrum: {fileID: 7924829902992500184}
   cameraAligner: {fileID: 2277114943433822046}
+  stereoDistortionComposite: {fileID: 562252544}
   configManager: {fileID: 9093187801876925106}
   VRSceneManager: {fileID: 1449722771}
 --- !u!4 &1512006820 stripped

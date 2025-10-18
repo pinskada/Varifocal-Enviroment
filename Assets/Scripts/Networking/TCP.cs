@@ -78,7 +78,7 @@ public class TCP : IModuleSettingsHandler
             return; // Exit if IP configuration fails
         }
 
-        incomingBuffer = new byte[Settings.TCP.readBufferSize * 4];
+        incomingBuffer = new byte[Settings.tcp.readBufferSize * 4];
 
         UnityEngine.Debug.Log("[TCP] Attempting to connect to a server...");
         ConnectToServer(); // Connect to the RPI TCP server
@@ -88,17 +88,17 @@ public class TCP : IModuleSettingsHandler
     public bool ConfigureIPmode(bool setStatic)
     {
         // Validate inputs
-        if (string.IsNullOrWhiteSpace(Settings.TCP.adapterName) ||
-           (setStatic && (string.IsNullOrWhiteSpace(Settings.TCP.ipAddress) || string.IsNullOrWhiteSpace(Settings.TCP.subnetMask))))
+        if (string.IsNullOrWhiteSpace(Settings.tcp.adapterName) ||
+           (setStatic && (string.IsNullOrWhiteSpace(Settings.tcp.ipAddress) || string.IsNullOrWhiteSpace(Settings.tcp.subnetMask))))
         {
             UnityEngine.Debug.LogError("[TCP] ConfigureIPmode: missing adapter/IP/mask.");
             return false;
         }
 
         // Prefer explicit full path to avoid WOW64 redirection shenanigans
-        string netshPath = string.IsNullOrWhiteSpace(Settings.TCP.netshFileName)
+        string netshPath = string.IsNullOrWhiteSpace(Settings.tcp.netshFileName)
             ? Environment.ExpandEnvironmentVariables(@"%SystemRoot%\System32\netsh.exe")
-            : Settings.TCP.netshFileName;
+            : Settings.tcp.netshFileName;
 
         // If running as a 32-bit process on 64-bit Windows, System32 is redirected; use Sysnative to reach real System32
         if (!Environment.Is64BitProcess && Environment.Is64BitOperatingSystem)
@@ -123,7 +123,7 @@ public class TCP : IModuleSettingsHandler
             {
                 stdout = p.StandardOutput.ReadToEnd();
                 stderr = p.StandardError.ReadToEnd();
-                bool exited = p.WaitForExit(Settings.TCP.IPsetTimeout);
+                bool exited = p.WaitForExit(Settings.tcp.IPsetTimeout);
                 exitCode = exited ? p.ExitCode : -999;
                 return exited;
             }
@@ -135,9 +135,9 @@ public class TCP : IModuleSettingsHandler
             // Optional Log
             //UnityEngine.Debug.Log($"[TCP] netsh show interfaces (exit {code})\n{so}\n{se}");
             // Quick presence check
-            if (!so.Contains(Settings.TCP.adapterName))
+            if (!so.Contains(Settings.tcp.adapterName))
             {
-                UnityEngine.Debug.LogError($"[TCP] Adapter '{Settings.TCP.adapterName}' not found. " +
+                UnityEngine.Debug.LogError($"[TCP] Adapter '{Settings.tcp.adapterName}' not found. " +
                                            "Use the exact alias from 'netsh interface ipv4 show interfaces'.");
                 return false;
             }
@@ -145,8 +145,8 @@ public class TCP : IModuleSettingsHandler
 
         // 2) Apply configuration
         string args = setStatic
-            ? $"interface ipv4 set address name=\"{Settings.TCP.adapterName}\" source=static address={Settings.TCP.ipAddress} mask={Settings.TCP.subnetMask} gateway=none"
-            : $"interface ipv4 set address name=\"{Settings.TCP.adapterName}\" source=dhcp";
+            ? $"interface ipv4 set address name=\"{Settings.tcp.adapterName}\" source=static address={Settings.tcp.ipAddress} mask={Settings.tcp.subnetMask} gateway=none"
+            : $"interface ipv4 set address name=\"{Settings.tcp.adapterName}\" source=dhcp";
 
         if (!RunNetsh(args, out var setCode, out var setOut, out var setErr))
         {
@@ -178,25 +178,25 @@ public class TCP : IModuleSettingsHandler
             if (Configuration.currentVersion == VRMode.Testbed)
             {
                 // Connect to the Raspberry Pi IP address
-                client.Connect(Settings.TCP.raspberryPiIP, Settings.TCP.port);
+                client.Connect(Settings.tcp.raspberryPiIP, Settings.tcp.port);
             }
             else
             {
                 // Connect to the local IP address for serial communication
-                client.Connect(Settings.TCP.localIP, Settings.TCP.port);
+                client.Connect(Settings.tcp.localIP, Settings.tcp.port);
             }
 
             // Get the network stream for reading and writing data
             stream = client.GetStream();
 
             // Set timeout for blocking reads
-            stream.ReadTimeout = Settings.TCP.readTimeout;
+            stream.ReadTimeout = Settings.tcp.readTimeout;
             isConnected = true;
 
             if (Configuration.currentVersion == VRMode.Testbed)
-                UnityEngine.Debug.Log("[TCP] Connected to Raspberry Pi at " + Settings.TCP.raspberryPiIP + ":" + Settings.TCP.port);
+                UnityEngine.Debug.Log("[TCP] Connected to Raspberry Pi at " + Settings.tcp.raspberryPiIP + ":" + Settings.tcp.port);
             else
-                UnityEngine.Debug.Log("[TCP] Connected to local server at " + Settings.TCP.localIP + ":" + Settings.TCP.port);
+                UnityEngine.Debug.Log("[TCP] Connected to local server at " + Settings.tcp.localIP + ":" + Settings.tcp.port);
 
             // Start the receive thread to listen for incoming messages
             receiveThread = new Thread(ReceiveViaTCP) { IsBackground = true, Name = "TCP.Receive" };
@@ -271,7 +271,7 @@ public class TCP : IModuleSettingsHandler
         catch (Exception e)
         {
             UnityEngine.Debug.LogError("[TCP] Send failed: " + e.Message);
-            if (sendRetryCount > Settings.TCP.maxSendRetries)
+            if (sendRetryCount > Settings.tcp.maxSendRetries)
             {
                 sendRetryCount = 0;
                 UnityEngine.Debug.LogError("[TCP] Multiple send failures, disconnecting.");
@@ -314,7 +314,7 @@ public class TCP : IModuleSettingsHandler
 
 
         // Buffer for incoming data
-        byte[] buffer = new byte[Settings.TCP.readBufferSize];
+        byte[] buffer = new byte[Settings.tcp.readBufferSize];
 
         try
         {
@@ -377,7 +377,7 @@ public class TCP : IModuleSettingsHandler
                                 incomingBuffer[readPos + 3];
 
             // Sanity check
-            if (payloadLength <= 0 || payloadLength > Settings.TCP.maxPacketSize)
+            if (payloadLength <= 0 || payloadLength > Settings.tcp.maxPacketSize)
             {
                 UnityEngine.Debug.LogError($"[TCP] Invalid payload length: {payloadLength}, clearing buffer.");
                 bufferOffset = 0;

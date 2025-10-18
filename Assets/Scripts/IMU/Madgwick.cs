@@ -200,20 +200,20 @@ public class Madgwick : IModuleSettingsHandler
         // Calculate gyro magnitude (radians/sec)
         float gyroMag = Mathf.Sqrt(gx * gx + gy * gy + gz * gz);
 
-        if (gyroMag < Settings.IMU.minGyroMagnitude)
+        if (gyroMag < Settings.imu.minGyroMagnitude)
         {
             // If gyro is nearly zero, we can skip the update
             return;
         }
 
         // Dynamic Beta Adjustment based on motion
-        if (gyroMag > Settings.IMU.betaThreshold) // If rotation speed is above 0.1 rad/s (~6 deg/s)
+        if (gyroMag > Settings.imu.betaThreshold) // If rotation speed is above 0.1 rad/s (~6 deg/s)
         {
-            beta = Settings.IMU.betaMoving; // Moving: trust gyro more, low beta
+            beta = Settings.imu.betaMoving; // Moving: trust gyro more, low beta
         }
         else
         {
-            beta = Settings.IMU.betaStill; // Still: correct towards accel/mag, higher beta
+            beta = Settings.imu.betaStill; // Still: correct towards accel/mag, higher beta
         }
     }
 
@@ -222,11 +222,11 @@ public class Madgwick : IModuleSettingsHandler
     {
         // Validate beta values
         if (
-            Settings.IMU.betaMoving <= 0f ||
-            Settings.IMU.betaStill <= 0f ||
-            Settings.IMU.betaMoving >= 1f ||
-            Settings.IMU.betaStill >= 1f ||
-            Settings.IMU.betaMoving > Settings.IMU.betaStill
+            Settings.imu.betaMoving <= 0f ||
+            Settings.imu.betaStill <= 0f ||
+            Settings.imu.betaMoving >= 1f ||
+            Settings.imu.betaStill >= 1f ||
+            Settings.imu.betaMoving > Settings.imu.betaStill
         )
         {
             Debug.LogError("[Madgwick] Beta values must be greater than zero and betaMoving must be less than betaStill.");
@@ -239,11 +239,11 @@ public class Madgwick : IModuleSettingsHandler
     {
         // Validate beta threshold
         if (
-            Settings.IMU.betaThreshold < Settings.IMU.betaMoving ||
-            Settings.IMU.betaThreshold > Settings.IMU.betaStill
+            Settings.imu.betaThreshold < Settings.imu.betaMoving ||
+            Settings.imu.betaThreshold > Settings.imu.betaStill
         )
         {
-            Debug.LogError($"[Madgwick] Beta threshold must be between betaMoving and betaStill, but is currently {Settings.IMU.betaThreshold}.");
+            Debug.LogError($"[Madgwick] Beta threshold must be between betaMoving and betaStill, but is currently {Settings.imu.betaThreshold}.");
             return;
         }
     }
@@ -252,7 +252,7 @@ public class Madgwick : IModuleSettingsHandler
     public void CheckMinGyroMagnitude()
     {
         // Validate minimum gyro magnitude
-        if (Settings.IMU.minGyroMagnitude < 0f)
+        if (Settings.imu.minGyroMagnitude < 0f)
         {
             Debug.LogError("[Madgwick] Minimum gyro magnitude must be non-negative.");
             return;

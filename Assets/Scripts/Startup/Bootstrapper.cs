@@ -11,6 +11,7 @@ public class Bootstrapper : MonoBehaviour
     public CameraFrustrum leftCameraFrustrum; // applies orientation to camera frustrums
     public CameraFrustrum rightCameraFrustrum;
     public CameraAligner cameraAligner; // interface to apply orientation to the camera
+    public StereoDistortionComposite stereoDistortionComposite; // handles stereo distortion correction
     public ConfigManager configManager; // configuration manager for runtime parameters
     public VRSceneManager VRSceneManager; // Manages VR scene transitions
 
@@ -36,6 +37,7 @@ public class Bootstrapper : MonoBehaviour
         // Local modules
         configManager.BindModule(leftCameraFrustrum, "display");
         configManager.BindModule(rightCameraFrustrum, "display");
+        configManager.BindModule(stereoDistortionComposite, "display");
 
         if (Configuration.currentVersion == VRMode.Testbed && tcp != null)
         {

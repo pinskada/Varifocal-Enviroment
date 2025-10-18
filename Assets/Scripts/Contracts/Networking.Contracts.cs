@@ -16,7 +16,7 @@ namespace Contracts
         espControl,
         trackerPreview,
         eyePreview,
-        eyeImage,
+        eyeImage
     }
 
     public enum FormatType

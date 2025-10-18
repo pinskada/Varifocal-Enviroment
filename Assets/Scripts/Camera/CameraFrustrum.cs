@@ -8,7 +8,7 @@ public class CameraFrustrum : MonoBehaviour, IModuleSettingsHandler
 {
     [SerializeField] private EyeSide eyeSide; // Determines if this camera is for the left eye (true) or right eye (false).
     private Camera cameraComponent; // Reference to the Camera component.
-
+    private bool createFrustrum = false;
 
     void Start()
     {
@@ -23,13 +23,22 @@ public class CameraFrustrum : MonoBehaviour, IModuleSettingsHandler
     }
 
 
+    void Update()
+    {
+        if (createFrustrum)
+        {
+            CreateFrustrum();
+            createFrustrum = false;
+        }
+    }
+
     private void SetCameraPositions()
     {
         // Sets the positions of the left and right eye cameras based on the Interpupillary Distance (IPD).
 
 
         // Calculate the half Interpupillary Distance (IPD) for camera positioning.
-        float halfIPD = Settings.Display.ipd / 1000f / 2f;
+        float halfIPD = Settings.display.ipd / 1000f / 2f;
 
         Vector3 relativeCamPosition;
 
@@ -53,12 +62,12 @@ public class CameraFrustrum : MonoBehaviour, IModuleSettingsHandler
 
 
         // Reassing parameters for easier use
-        var near = Settings.Display.eyeToScreenDist / 1000f; // in meters
-        var far = Settings.Display.farClipPlane; // in meters
+        var near = Settings.display.eyeToScreenDist / 1000f; // in meters
+        var far = Settings.display.farClipPlane; // in meters
 
-        var height = Settings.Display.screenHeight / 1000f; // in millimeters
-        var width = Settings.Display.screenWidth / 1000f; // in millimeters
-        var ipd = Settings.Display.ipd / 1000f; // in millimeters
+        var height = Settings.display.screenHeight / 1000f; // in millimeters
+        var width = Settings.display.screenWidth / 1000f; // in millimeters
+        var ipd = Settings.display.ipd / 1000f; // in millimeters
 
         // Set near and far clip plane
         cameraComponent.nearClipPlane = near;
@@ -116,10 +125,10 @@ public class CameraFrustrum : MonoBehaviour, IModuleSettingsHandler
     private void CheckDisplayParam()
     {
         if (
-            Settings.Display.screenWidth <= 0 ||
-            Settings.Display.screenHeight <= 0 ||
-            Settings.Display.eyeToScreenDist <= 0 ||
-            Settings.Display.ipd <= 0
+            Settings.display.screenWidth <= 0 ||
+            Settings.display.screenHeight <= 0 ||
+            Settings.display.eyeToScreenDist <= 0 ||
+            Settings.display.ipd <= 0
         )
         {
             // Validate parameters to ensure they are set to positive values.
@@ -130,12 +139,12 @@ public class CameraFrustrum : MonoBehaviour, IModuleSettingsHandler
 
     private void CheckCameraParam()
     {
-        if (Settings.Display.ipd <= 0 || Settings.Display.ipd > 120)
+        if (Settings.display.ipd <= 0 || Settings.display.ipd > 120)
         {
-            Debug.LogError($"[CameraFrustrum] Invalid IPD: {Settings.Display.ipd}");
+            Debug.LogError($"[CameraFrustrum] Invalid IPD: {Settings.display.ipd}");
         }
 
-        if (Settings.Display.eyeToScreenDist >= Settings.Display.farClipPlane)
+        if (Settings.display.eyeToScreenDist >= Settings.display.farClipPlane)
         {
             // Ensure the near clip plane is less than the far clip plane.
             Debug.LogError("[CameraFrustrum] Near clip plane must be less than the far clip plane.");
@@ -145,14 +154,11 @@ public class CameraFrustrum : MonoBehaviour, IModuleSettingsHandler
 
     public void SettingsChanged(string moduleName, string fieldName)
     {
-        Debug.Log($"[CameraFrustrum] Settings changed: {moduleName} - {fieldName}");
+        //Debug.Log($"[CameraFrustrum] Settings changed: {moduleName} - {fieldName} - {Settings.display.ipd}");
 
         CheckDisplayParam();
         CheckCameraParam();
 
-        if (fieldName == "farClipPlane")
-            cameraComponent.farClipPlane = Settings.Display.farClipPlane;
-
-        CreateFrustrum();
+        createFrustrum = true;
     }
 }

@@ -13,6 +13,7 @@ public class StereoDistortionComposite : MonoBehaviour, IModuleSettingsHandler
     private float compositeCameraDepth = 1000f;
     private Camera _cam;
     private int currentDisplay;
+    private bool modifyDistortion = false;
 
     void Awake()
     {
@@ -50,6 +51,15 @@ public class StereoDistortionComposite : MonoBehaviour, IModuleSettingsHandler
         ApplyMaterialSettings();
     }
 
+
+    void Update()
+    {
+        if (modifyDistortion == true)
+        {
+            ApplyMaterialSettings();
+            modifyDistortion = false;
+        }
+    }
 
     private void CheckComponentsExistence()
     {
@@ -133,11 +143,9 @@ public class StereoDistortionComposite : MonoBehaviour, IModuleSettingsHandler
 
     private void ApplyMaterialSettings()
     {
-        distortionMaterialLeft.SetFloat("_DistortionStrength", Settings.Display.distortionStrength);
-        distortionMaterialRight.SetFloat("_DistortionStrength", Settings.Display.distortionStrength);
 
-        var halfWidth = Settings.Display.screenWidth / 1000f / 2f; // in meters
-        var halfIPD = Settings.Display.ipd / 1000f / 2f; // in meters
+        var halfWidth = Settings.display.screenWidth / 1000f / 2f; // in meters
+        var halfIPD = Settings.display.ipd / 1000f / 2f; // in meters
 
         var xOffset = halfIPD / halfWidth;
 
@@ -145,6 +153,9 @@ public class StereoDistortionComposite : MonoBehaviour, IModuleSettingsHandler
         var rightCenter = new Vector2(xOffset, 0.5f);
 
         Debug.Log($"[StereoDistortionComposite] Left center: {leftCenter}, Right center: {rightCenter}");
+
+        distortionMaterialLeft.SetFloat("_Strength", Settings.display.distortionStrength);
+        distortionMaterialRight.SetFloat("_Strength", Settings.display.distortionStrength);
 
         distortionMaterialLeft.SetVector("_Center", leftCenter);
         distortionMaterialRight.SetVector("_Center", rightCenter);
@@ -155,6 +166,7 @@ public class StereoDistortionComposite : MonoBehaviour, IModuleSettingsHandler
 
     public void SettingsChanged(string moduleName, string fieldName)
     {
-        ApplyMaterialSettings();
+        Debug.Log($"[StereoDistortionComposite] Settings changed: {moduleName}.{fieldName}, marking for update.");
+        modifyDistortion = true;
     }
 }

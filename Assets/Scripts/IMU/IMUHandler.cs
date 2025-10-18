@@ -100,7 +100,7 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
 
         // Compute clamped dt
         double rawDt = currentTime - lastPacketTime;
-        deltaTime = Mathf.Clamp((float)rawDt, Settings.IMU.minDt, Settings.IMU.maxDt);
+        deltaTime = Mathf.Clamp((float)rawDt, Settings.imu.minDt, Settings.imu.maxDt);
         lastPacketTime = currentTime;
 
         filter.SetSamplePeriod((float)deltaTime); // Update the filter's sample period
