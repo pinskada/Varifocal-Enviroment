@@ -32,11 +32,13 @@ public class TCP : IModuleSettingsHandler
         this.networkManager = networkManager;
     }
 
+
     public void SettingsChanged(string moduleName, string fieldName)
     {
         // This method is called when settings are changed in the ConfigManager.
         // You can implement any necessary actions to handle the updated settings here.
     }
+
 
     public void InjectHardwareRouter(CommRouter router)
     {
@@ -167,6 +169,7 @@ public class TCP : IModuleSettingsHandler
         return true;
     }
 
+
     private void ConnectToServer()
     {
         // This method connects to either the RPI TCP server or localhost.
@@ -287,6 +290,7 @@ public class TCP : IModuleSettingsHandler
         }
     }
 
+
     private byte[] EncodeTCPStream(byte[] message, MessageType messageType)
     {
         int payloadLength = message.Length;
@@ -307,6 +311,7 @@ public class TCP : IModuleSettingsHandler
 
         return payload;
     }
+
 
     private void ReceiveViaTCP()
     {
