@@ -134,7 +134,7 @@ public static class RoutingTable
         }
         catch (Exception ex)
         {
-            Debug.LogError($"[CommRouter]Failed to parse IMU data: {ex.Message}");
+            Debug.LogError($"[CommRouter] Failed to parse IMU data: {ex.Message}");
             return;
         }
         IMUQueueContainer.IMUqueue.Add(imuData);
@@ -148,7 +148,7 @@ public static class RoutingTable
         var images = payload as List<ImageDecoder.EyeImage>;
         if (images == null)
         {
-            Debug.LogError("[CommRouter]HandlePreviewImage: Payload is not a list of EyeData.");
+            Debug.LogError("[CommRouter] HandlePreviewImage: Payload is not a list of EyeData.");
             return;
         }
 
@@ -160,7 +160,7 @@ public static class RoutingTable
 
                 if (!eyeTex.LoadImage(eye.Data))
                 {
-                    Debug.LogError($"[CommRouter]HandlePreviewImage: Failed to load image for eye {eye.EyeId}.");
+                    Debug.LogError($"[CommRouter] HandlePreviewImage: Failed to load image for eye {eye.EyeId}.");
                     continue;
                 }
                 if (eye.EyeId == 0)
@@ -168,7 +168,7 @@ public static class RoutingTable
                 else if (eye.EyeId == 1)
                     GUIQueueContainer.eyePreviewQueue.Enqueue((eyeTex, eye.Width, eye.Height, EyeSide.Right));
                 else
-                    Debug.LogError($"[CommRouter]HandlePreviewImage: Unknown EyeId {eye.EyeId}.");
+                    Debug.LogError($"[CommRouter] HandlePreviewImage: Unknown EyeId {eye.EyeId}.");
             }
             catch (Exception ex)
             {

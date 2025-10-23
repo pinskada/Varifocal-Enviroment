@@ -228,7 +228,7 @@ public class CommRouter : MonoBehaviour
         {
             case FormatType.JSON:
                 string json = System.Text.Encoding.UTF8.GetString(bytePayload);
-                return System.Text.Encoding.UTF8.GetBytes(json);
+                return json;
             case FormatType.PNG:
             case FormatType.JPEG:
                 var images = ImageDecoder.Decode(bytePayload);
