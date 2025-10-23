@@ -126,18 +126,29 @@ public static class RoutingTable
     {
         // Parse and enqueue IMU data.
 
-        IMUData imuData;
+        if (payload == null)
+        {
+            Debug.LogError("[CommRouter] HandleIMUData received null payload.");
+            return;
+        }
+
+        var json = payload as string;
+        if (json == null)
+        {
+            Debug.LogError($"[CommRouter] HandleIMUData expected JSON string, got {payload.GetType().Name}.");
+            return;
+        }
 
         try
         {
-            imuData = JsonUtility.FromJson<IMUData>(payload.ToString());
+            IMUData imuData = JsonUtility.FromJson<IMUData>(json);
+            IMUQueueContainer.IMUqueue.Add(imuData);
         }
         catch (Exception ex)
         {
             Debug.LogError($"[CommRouter] Failed to parse IMU data: {ex.Message}");
             return;
         }
-        IMUQueueContainer.IMUqueue.Add(imuData);
     }
 
 

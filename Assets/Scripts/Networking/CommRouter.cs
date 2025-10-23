@@ -223,6 +223,11 @@ public class CommRouter : MonoBehaviour
         // Decode the payload based on the specified format
 
         var bytePayload = payload as byte[];
+        if (bytePayload == null)
+        {
+            Debug.LogError("[CommRouter] DecodeMessage expected byte[] payload.");
+            return null;
+        }
 
         switch (format)
         {
