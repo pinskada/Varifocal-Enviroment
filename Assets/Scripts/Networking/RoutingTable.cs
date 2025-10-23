@@ -19,26 +19,31 @@ public static class RoutingTable
         switch (Configuration.currentVersion)
         {
             case VRMode.Testbed:
-                routingTable[MessageType.imu] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
-                routingTable[MessageType.unityControl] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
-                routingTable[MessageType.gazeDistance] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
-                routingTable[MessageType.tcpLogg] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
+                routingTable[MessageType.imuSensor] = (TransportSource.Unity, TransportTarget.Tcp, FormatType.JSON);
+                routingTable[MessageType.imuFilter] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
+                routingTable[MessageType.gazeData] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
+                routingTable[MessageType.gazeCalcControl] = (TransportSource.Unity, TransportTarget.Tcp, FormatType.JSON);
+                routingTable[MessageType.gazeSceneControl] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
+                routingTable[MessageType.trackerControl] = (TransportSource.Unity, TransportTarget.Tcp, FormatType.JSON);
                 routingTable[MessageType.tcpConfig] = (TransportSource.Unity, TransportTarget.Tcp, FormatType.JSON);
-                routingTable[MessageType.tcpControl] = (TransportSource.Unity, TransportTarget.Tcp, FormatType.JSON);
+                routingTable[MessageType.espConfig] = (TransportSource.Unity, TransportTarget.Tcp, FormatType.JSON);
+                routingTable[MessageType.tcpLogg] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
+                routingTable[MessageType.espLogg] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
                 routingTable[MessageType.trackerPreview] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.PNG);
                 routingTable[MessageType.eyePreview] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JPEG);
                 break;
 
             case VRMode.UserVR:
-                routingTable[MessageType.imu] = (TransportSource.Serial, TransportTarget.Unity, FormatType.JSON);
-                routingTable[MessageType.unityControl] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
-                routingTable[MessageType.gazeDistance] = (TransportSource.Tcp, TransportTarget.Serial, FormatType.JSON);
-                routingTable[MessageType.tcpLogg] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
-                routingTable[MessageType.tcpConfig] = (TransportSource.Unity, TransportTarget.Serial, FormatType.JSON);
-                routingTable[MessageType.tcpControl] = (TransportSource.Unity, TransportTarget.Serial, FormatType.JSON);
-                routingTable[MessageType.espLogg] = (TransportSource.Serial, TransportTarget.Unity, FormatType.JSON);
+                routingTable[MessageType.imuSensor] = (TransportSource.Unity, TransportTarget.Serial, FormatType.JSON);
+                routingTable[MessageType.imuFilter] = (TransportSource.Serial, TransportTarget.Unity, FormatType.JSON);
+                routingTable[MessageType.gazeData] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
+                routingTable[MessageType.gazeCalcControl] = (TransportSource.Unity, TransportTarget.Tcp, FormatType.JSON);
+                routingTable[MessageType.gazeSceneControl] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
+                routingTable[MessageType.trackerControl] = (TransportSource.Unity, TransportTarget.Tcp, FormatType.JSON);
+                routingTable[MessageType.tcpConfig] = (TransportSource.Unity, TransportTarget.Tcp, FormatType.JSON);
                 routingTable[MessageType.espConfig] = (TransportSource.Unity, TransportTarget.Serial, FormatType.JSON);
-                routingTable[MessageType.espControl] = (TransportSource.Unity, TransportTarget.Serial, FormatType.JSON);
+                routingTable[MessageType.tcpLogg] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
+                routingTable[MessageType.espLogg] = (TransportSource.Serial, TransportTarget.Unity, FormatType.JSON);
                 routingTable[MessageType.trackerPreview] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.PNG);
                 routingTable[MessageType.eyePreview] = (TransportSource.Serial, TransportTarget.Unity, FormatType.JPEG);
                 routingTable[MessageType.eyeImage] = (TransportSource.Serial, TransportTarget.Serial, FormatType.JPEG);
@@ -60,7 +65,7 @@ public static class RoutingTable
 
         var localRoutingTable = new Dictionary<MessageType, Action<object>>();
 
-        localRoutingTable[MessageType.imu] = (payload) => HandleIMUData(payload);
+        localRoutingTable[MessageType.imuFilter] = (payload) => HandleIMUData(payload);
         localRoutingTable[MessageType.tcpLogg] = (payload) => Debug.Log($"TCP Log: {payload}");
         localRoutingTable[MessageType.espLogg] = (payload) => Debug.Log($"ESP Log: {payload}");
         localRoutingTable[MessageType.trackerPreview] = (payload) => HandlePreviewImage(payload);

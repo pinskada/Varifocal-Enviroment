@@ -4,19 +4,19 @@ namespace Contracts
 {
     public enum MessageType
     {
-        imu = 0,
-        unityControl = 1,
-        gazeDistance = 2,
-        generalConfig = 3,
-        tcpLogg = 4,
-        tcpConfig = 5,
-        tcpControl = 6,
-        espLogg = 7,
-        espConfig = 8,
-        espControl = 9,
+        imuSensor = 0,
+        imuFilter = 1,
+        gazeData = 2,
+        gazeCalcControl = 3,
+        gazeSceneControl = 4,
+        trackerControl = 5,
+        tcpConfig = 6,
+        espConfig = 7,
+        tcpLogg = 8,
+        espLogg = 9,
         trackerPreview = 10,
         eyePreview = 11,
-        eyeImage = 12
+        eyeImage = 12,
     }
 
     public enum FormatType
