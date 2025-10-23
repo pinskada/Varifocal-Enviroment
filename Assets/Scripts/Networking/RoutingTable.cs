@@ -157,7 +157,12 @@ public static class RoutingTable
             try
             {
                 Texture2D eyeTex = new Texture2D(eye.Width, eye.Height);
-                eyeTex.LoadImage(eye.Data);
+
+                if (!eyeTex.LoadImage(eye.Data))
+                {
+                    Debug.LogError($"[CommRouter]HandlePreviewImage: Failed to load image for eye {eye.EyeId}.");
+                    continue;
+                }
                 if (eye.EyeId == 0)
                     GUIQueueContainer.eyePreviewQueue.Enqueue((eyeTex, eye.Width, eye.Height, EyeSide.Left));
                 else if (eye.EyeId == 1)
