@@ -101,6 +101,10 @@ public class NetworkManager : MonoBehaviour, IModuleSettingsHandler
         // Constructs a config message payload for a specific field in a settings block.
         // Returns a dictionary with the format { "ModuleName.FieldName": value }.
 
+        if (settingsBlock == null) Debug.LogWarning($"[NetworkManager] BuildConfigMessage expected settingsBlock, but got null.");
+        if (moduleName == null) Debug.LogWarning($"[NetworkManager] BuildConfigMessage expected moduleName, but got null.");
+        if (field == null) Debug.LogWarning($"[NetworkManager] BuildConfigMessage expected field, but got null.");
+
         var value = field.GetValue(settingsBlock);
 
         var payload = new Dictionary<string, object>

@@ -5,6 +5,8 @@ using Contracts;
 using Newtonsoft.Json;
 using System.Threading;
 using System.Linq;
+using System.Globalization;
+using System.Text;
 
 
 public class CommRouter : MonoBehaviour
@@ -186,6 +188,15 @@ public class CommRouter : MonoBehaviour
     }
 
 
+    private static readonly JsonSerializerSettings JsonSettings = new()
+    {
+        // Ignore null values and use invariant culture for serialization
+
+        NullValueHandling = NullValueHandling.Ignore,
+        Culture = CultureInfo.InvariantCulture
+    };
+
+
     private byte[] EncodeMessage(object payload, FormatType format)
     {
         // Encode the payload based on the specified format
@@ -193,8 +204,16 @@ public class CommRouter : MonoBehaviour
         switch (format)
         {
             case FormatType.JSON:
-                string json = JsonConvert.SerializeObject(payload);
-                return System.Text.Encoding.UTF8.GetBytes(json);
+                try
+                {
+                    string json = JsonConvert.SerializeObject(payload, JsonSettings);
+                    return Encoding.UTF8.GetBytes(json);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"[CommRouter] JSON encode failed: {ex.Message}");
+                    return Array.Empty<byte>();
+                }
             case FormatType.PNG:
                 if (payload is not Texture2D)
                 {
@@ -232,7 +251,7 @@ public class CommRouter : MonoBehaviour
         switch (format)
         {
             case FormatType.JSON:
-                string json = System.Text.Encoding.UTF8.GetString(bytePayload);
+                string json = Encoding.UTF8.GetString(bytePayload);
                 return json;
             case FormatType.PNG:
             case FormatType.JPEG:
