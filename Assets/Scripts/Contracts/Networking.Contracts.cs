@@ -17,6 +17,8 @@ namespace Contracts
         trackerPreview = 10,
         eyePreview = 11,
         eyeImage = 12,
+        configReady = 13,
+        trackerData = 14
     }
 
     public enum FormatType

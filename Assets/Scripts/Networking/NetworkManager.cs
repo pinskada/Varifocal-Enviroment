@@ -136,6 +136,8 @@ public class NetworkManager : MonoBehaviour, IModuleSettingsHandler
                 RouteQueueContainer.routeQueue.Add((payload, MessageType.tcpConfig));
             }
         }
+        var configReadyMsg = "ConfigReady";
+        RouteQueueContainer.routeQueue.Add((configReadyMsg, MessageType.configReady));
     }
 
 
@@ -159,6 +161,8 @@ public class NetworkManager : MonoBehaviour, IModuleSettingsHandler
                 serial.SendViaSerial(jsonMessage, MessageType.espConfig);
             }
         }
+        var configReadyMsg = "ConfigReady";
+        RouteQueueContainer.routeQueue.Add((configReadyMsg, MessageType.configReady));
     }
 
 
