@@ -1,18 +1,11 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Contracts;
 
 public class ImageDecoder
 {
     const int MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 MB
-
-    public struct EyeImage
-    {
-        public int EyeId;     // 0 = left, 1 = right
-        public int Width;
-        public int Height;
-        public byte[] Data;   // compressed image bytes
-    }
 
     public static List<EyeImage> Decode(byte[] payload)
     {

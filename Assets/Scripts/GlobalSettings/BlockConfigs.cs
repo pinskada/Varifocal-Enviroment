@@ -18,7 +18,7 @@ public class TCPSettings
     public string adapterName = "Ethernet";
     public string netshFileName;
     public int port = 65432;
-    public int readBufferSize = 1024; // Size of the buffer for incoming data
+    public int readBufferSize = 16777216; // Size of the buffer for incoming data
     public int IPsetTimeout = 15000; // Timeout in miliseconds for IP configuration
     public int readTimeout = 2000; // Timeout in milliseconds for blocking reads
     public int maxPacketSize = 16777216; // Maximum packet size in bytes (16 MB)
@@ -61,57 +61,57 @@ public class IMUSettings
 [System.Serializable]
 public class CameraSettings
 {
-    public int resWidth = 1080;
-    public int resHeight = 720;
+    public int res_width = 1080;
+    public int res_height = 720;
     public int focus = 30;
     public int exposure = 10000;
     public int gain = 2;
-    public int jpegQuality = 20;
-    public int previewFps = 5;
+    public int jpeg_quality = 20;
+    public int preview_fps = 5;
 }
 
 
 [System.Serializable]
 public class CropSettings
 {
-    public List<List<float>> cropRegionLeft = new List<List<float>>
+    public List<List<float>> crop_left = new List<List<float>>
     {
-        new List<float> { 0f, 1f },  // top, bottom
-        new List<float> { 0f, 0.5f }   // left, right
+        new List<float> { 0f, 0.5f },   // left, right
+        new List<float> { 0f, 1f }  // top, bottom
     };
 
-    public List<List<float>> cropRegionRight = new List<List<float>>
+    public List<List<float>> crop_right = new List<List<float>>
     {
-        new List<float> { 0f, 1f },  // top, bottom
-        new List<float> { 0.5f, 1f }   // left, right
+        new List<float> { 0.5f, 1f },   // left, right
+        new List<float> { 0f, 1f }  // top, bottom
     };
 
 }
 
 
 [System.Serializable]
-public class TrackerSettings
+public class EyeloopSettings
 {
-    public int leftThreshold = 128;
-    public int leftBlurSize = 5;
-    public int leftMinRadius = 5;
-    public int leftMaxRadius = 20;
-    public int leftSearchStep = 10;
-    public int rightThreshold = 128;
-    public int rightBlurSize = 5;
-    public int rightMinRadius = 5;
-    public int rightMaxRadius = 20;
-    public int rightSearchStep = 10;
+    public int left_threshold = 128;
+    public int left_blur_size = 5;
+    public int left_min_radius = 5;
+    public int left_max_radius = 20;
+    public int left_search_step = 10;
+    public int right_threshold = 128;
+    public int right_blur_size = 5;
+    public int right_min_radius = 5;
+    public int right_max_radius = 20;
+    public int right_search_step = 10;
 }
 
 
 [System.Serializable]
 public class GazeProcessorSettings
 {
-    public float alphaVal = 0.5f;
-    public float bufferCropFactor = 0.1f;
-    public float dataStdThreshold = 0.01f;
-    public float gyroThreshold = 5f;
+    public float filter_alpha = 0.5f;
+    public float buffer_crop_factor = 0.1f;
+    public float std_threshold = 0.01f;
+    public float gyro_threshold = 5f;
 }
 
 [System.Serializable]

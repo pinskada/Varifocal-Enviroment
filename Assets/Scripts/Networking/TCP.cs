@@ -73,13 +73,13 @@ public class TCP : IModuleSettingsHandler
         {
             IPisSet = ConfigureIPmode(true); // Set static IP to communicate with the RPI on a local network.
         }
+        Thread.Sleep(5000); // Wait for IP to be set
 
         if (!IPisSet && Configuration.currentVersion == VRMode.Testbed)
         {
             UnityEngine.Debug.LogError("[TCP] IP configuration failed, cannot connect to server.");
             return; // Exit if IP configuration fails
         }
-
         incomingBuffer = new byte[Settings.tcp.readBufferSize * 4];
 
         UnityEngine.Debug.Log("[TCP] Attempting to connect to a server...");
@@ -181,6 +181,7 @@ public class TCP : IModuleSettingsHandler
             if (Configuration.currentVersion == VRMode.Testbed)
             {
                 // Connect to the Raspberry Pi IP address
+                UnityEngine.Debug.Log("[TCP] Connecting to Raspberry Pi at " + Settings.tcp.raspberryPiIP + ":" + Settings.tcp.port);
                 client.Connect(Settings.tcp.raspberryPiIP, Settings.tcp.port);
             }
             else
@@ -213,7 +214,7 @@ public class TCP : IModuleSettingsHandler
         }
         catch (Exception e)
         {
-            UnityEngine.Debug.LogError("[TCP] Connecting to to TCP server failed: " + e.Message);
+            UnityEngine.Debug.LogError("[TCP] Connecting to to TCP server failed for " + (Configuration.currentVersion == VRMode.Testbed ? "Raspberry Pi" : "local server") + ": " + e.Message);
         }
     }
 
@@ -269,7 +270,7 @@ public class TCP : IModuleSettingsHandler
             byte[] byteMessage = message as byte[];
             byte[] data = EncodeTCPStream(byteMessage, messageType);
             stream.Write(data, 0, data.Length);
-            UnityEngine.Debug.Log("[TCP] Sent: " + message);
+
         }
         catch (Exception e)
         {
@@ -341,7 +342,16 @@ public class TCP : IModuleSettingsHandler
                     if (isShuttingDown)
                         break; // Exit quietly during shutdown
 
-                    UnityEngine.Debug.LogWarning("[TCP] Read timeout: " + ex.Message);
+                    // Timeout is delivered as IOException with an inner SocketException = TimedOut on most runtimes.
+                    var se = ex.InnerException as SocketException;
+                    if (se != null && se.SocketErrorCode == SocketError.TimedOut)
+                    {
+                        // just idle: do NOT warn-spam on normal timeouts
+                        continue;
+                    }
+
+                    // For other IO errors, log once and consider breaking
+                    UnityEngine.Debug.LogWarning("[TCP] Read IO error: " + ex.Message);
                 }
             }
         }
@@ -420,11 +430,9 @@ public class TCP : IModuleSettingsHandler
                 return;
             }
 
+            // UnityEngine.Debug.Log("[TCP] Passing message type: " + msgType + " to CommRouter.");
             // Dispatch
-            if (commRouter != null)
-                RouteQueueContainer.routeQueue.Add((payload, msgType));
-            else
-                UnityEngine.Debug.LogError("[TCP] CommRouter reference is null, cannot redirect message.");
+            RouteQueueContainer.routeQueue.Add((payload, msgType));
 
             // Advance readPos
             readPos += 4 + payloadLength;

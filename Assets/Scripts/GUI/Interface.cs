@@ -177,7 +177,28 @@ public class GuiInterface : MonoBehaviour
     {
         // RPI mode set based on dropdown index
         // TODO
+        var action = "";
+        switch (Index)
+        {
+            case 0:
+                action = "offline";
+                break;
+            case 1:
+                action = "camera_preview";
+                break;
+            case 2:
+                action = "tracker_preview";
+                break;
+            case 3:
+                action = "online";
+                break;
+        }
+        var message = new Dictionary<string, string>
+        {
+            { "mode", action }
+        };
 
+        RouteQueueContainer.routeQueue.Add((message, MessageType.trackerControl));
     }
 
 

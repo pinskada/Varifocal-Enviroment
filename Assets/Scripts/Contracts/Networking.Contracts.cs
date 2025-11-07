@@ -5,7 +5,7 @@ namespace Contracts
     public enum MessageType
     {
         imuSensor = 0,
-        imuFilter = 1,
+        imuCmd = 1,
         gazeData = 2,
         gazeCalcControl = 3,
         gazeSceneControl = 4,
@@ -18,7 +18,8 @@ namespace Contracts
         eyePreview = 11,
         eyeImage = 12,
         configReady = 13,
-        trackerData = 14
+        trackerData = 14,
+        ipdPreview = 15
     }
 
     public enum FormatType
@@ -52,5 +53,13 @@ namespace Contracts
     {
         public static readonly BlockingCollection<(object payload, MessageType messageType)> routeQueue =
             new BlockingCollection<(object payload, MessageType messageType)>();
+    }
+
+    public struct EyeImage
+    {
+        public int EyeId;     // 0 = left, 1 = right
+        public int Width;
+        public int Height;
+        public byte[] Data;   // compressed image bytes
     }
 }

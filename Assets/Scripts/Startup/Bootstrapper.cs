@@ -50,10 +50,10 @@ public class Bootstrapper : MonoBehaviour
         }
 
         // External modules
-        configManager.BindModule(networkManager, "tracker");
+        configManager.BindModule(networkManager, "eyeloop");
         configManager.BindModule(networkManager, "gaze");
         configManager.BindModule(networkManager, "camera");
-        configManager.BindModule(networkManager, "cameraCrop");
+        configManager.BindModule(networkManager, "tracker_crop");
 
         imuHandler.InjectModules(cameraAligner);
         networkManager.InjectModules(commRouter);

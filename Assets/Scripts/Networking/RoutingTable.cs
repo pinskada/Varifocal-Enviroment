@@ -8,6 +8,8 @@ public static class RoutingTable
 {
     // Defines hardcoded routing profiles.
 
+    private static ImageDecoder imageDecoder;
+
     public static Dictionary<MessageType, (TransportSource, TransportTarget, FormatType)> CreateGlobalRoutingTable()
     {
         // Create the global routing table based on the current VRMode.
@@ -19,8 +21,8 @@ public static class RoutingTable
         switch (Configuration.currentVersion)
         {
             case VRMode.Testbed:
-                routingTable[MessageType.imuSensor] = (TransportSource.Unity, TransportTarget.Tcp, FormatType.JSON);
-                routingTable[MessageType.imuFilter] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
+                routingTable[MessageType.imuCmd] = (TransportSource.Unity, TransportTarget.Tcp, FormatType.JSON);
+                routingTable[MessageType.imuSensor] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
                 routingTable[MessageType.gazeData] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
                 routingTable[MessageType.gazeCalcControl] = (TransportSource.Unity, TransportTarget.Tcp, FormatType.JSON);
                 routingTable[MessageType.gazeSceneControl] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
@@ -31,11 +33,15 @@ public static class RoutingTable
                 routingTable[MessageType.espLogg] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
                 routingTable[MessageType.trackerPreview] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.PNG);
                 routingTable[MessageType.eyePreview] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JPEG);
+                routingTable[MessageType.eyeImage] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
+                routingTable[MessageType.configReady] = (TransportSource.Unity, TransportTarget.Tcp, FormatType.JSON);
+                routingTable[MessageType.trackerData] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
+                routingTable[MessageType.ipdPreview] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
                 break;
 
             case VRMode.UserVR:
                 routingTable[MessageType.imuSensor] = (TransportSource.Unity, TransportTarget.Serial, FormatType.JSON);
-                routingTable[MessageType.imuFilter] = (TransportSource.Serial, TransportTarget.Unity, FormatType.JSON);
+                routingTable[MessageType.imuCmd] = (TransportSource.Serial, TransportTarget.Unity, FormatType.JSON);
                 routingTable[MessageType.gazeData] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
                 routingTable[MessageType.gazeCalcControl] = (TransportSource.Unity, TransportTarget.Tcp, FormatType.JSON);
                 routingTable[MessageType.gazeSceneControl] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
@@ -65,7 +71,7 @@ public static class RoutingTable
 
         var localRoutingTable = new Dictionary<MessageType, Action<object>>();
 
-        localRoutingTable[MessageType.imuFilter] = (payload) => HandleIMUData(payload);
+        localRoutingTable[MessageType.imuSensor] = (payload) => HandleIMUData(payload);
         localRoutingTable[MessageType.tcpLogg] = (payload) => Debug.Log($"TCP Log: {payload}");
         localRoutingTable[MessageType.espLogg] = (payload) => Debug.Log($"ESP Log: {payload}");
         localRoutingTable[MessageType.trackerPreview] = (payload) => HandlePreviewImage(payload);
@@ -86,13 +92,13 @@ public static class RoutingTable
         {
             case VRMode.Testbed:
                 tcpRoutingList.Add(new RoutingEntry("camera", () => Settings.camera));
-                tcpRoutingList.Add(new RoutingEntry("cameraCrop", () => Settings.cameraCrop));
-                tcpRoutingList.Add(new RoutingEntry("tracker", () => Settings.tracker));
+                tcpRoutingList.Add(new RoutingEntry("tracker_crop", () => Settings.tracker_crop));
+                tcpRoutingList.Add(new RoutingEntry("eyeloop", () => Settings.eyeloop));
                 tcpRoutingList.Add(new RoutingEntry("gaze", () => Settings.gaze));
                 break;
 
             case VRMode.UserVR:
-                tcpRoutingList.Add(new RoutingEntry("tracker", () => Settings.tracker));
+                tcpRoutingList.Add(new RoutingEntry("eyeloop", () => Settings.eyeloop));
                 break;
         }
 
@@ -113,7 +119,7 @@ public static class RoutingTable
                 break;
             case VRMode.UserVR:
                 serialRoutingList.Add(new RoutingEntry("camera", () => Settings.camera));
-                serialRoutingList.Add(new RoutingEntry("cameraCrop", () => Settings.cameraCrop));
+                serialRoutingList.Add(new RoutingEntry("tracker_crop", () => Settings.tracker_crop));
                 serialRoutingList.Add(new RoutingEntry("gaze", () => Settings.gaze));
                 break;
         }
@@ -142,6 +148,7 @@ public static class RoutingTable
         try
         {
             IMUData imuData = JsonUtility.FromJson<IMUData>(json);
+            //Debug.Log(json);
             IMUQueueContainer.IMUqueue.Add(imuData);
         }
         catch (Exception ex)
@@ -156,36 +163,14 @@ public static class RoutingTable
     {
         // Handle preview image data.
         // This function can be expanded to process the image as needed.
-        var images = payload as List<ImageDecoder.EyeImage>;
+        var images = payload as List<EyeImage>;
         if (images == null)
         {
             Debug.LogError("[CommRouter] HandlePreviewImage: Payload is not a list of EyeData.");
             return;
         }
 
-        foreach (var eye in images)
-        {
-            try
-            {
-                Texture2D eyeTex = new Texture2D(eye.Width, eye.Height);
-
-                if (!eyeTex.LoadImage(eye.Data))
-                {
-                    Debug.LogError($"[CommRouter] HandlePreviewImage: Failed to load image for eye {eye.EyeId}.");
-                    continue;
-                }
-                if (eye.EyeId == 0)
-                    GUIQueueContainer.eyePreviewQueue.Enqueue((eyeTex, eye.Width, eye.Height, EyeSide.Left));
-                else if (eye.EyeId == 1)
-                    GUIQueueContainer.eyePreviewQueue.Enqueue((eyeTex, eye.Width, eye.Height, EyeSide.Right));
-                else
-                    Debug.LogError($"[CommRouter] HandlePreviewImage: Unknown EyeId {eye.EyeId}.");
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[CommRouter]HandlePreviewImage: Failed to load image for eye {eye.EyeId}: {ex.Message}");
-            }
-        }
+        GUIQueueContainer.images.Enqueue(images);
     }
 }
 

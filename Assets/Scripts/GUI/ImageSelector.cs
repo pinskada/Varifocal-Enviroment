@@ -12,17 +12,17 @@ public class ImageSelector : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
     private Vector2 endMousePos;
     private bool isSelecting = false;
     private bool isCroped = false; // Flag to check if the image is cropped
-    private string leftCropConfigKey = "cameraCrop.cropRegionLeft";
-    private string rightCropConfigKey = "cameraCrop.cropRegionRight";
+    private string leftCropConfigKey = "tracker_crop.crop_left";
+    private string rightCropConfigKey = "tracker_crop.crop_right";
     private List<List<float>> leftResetCrop = new List<List<float>>
     {
-        new List<float> { 0f, 1f },
-        new List<float> { 0f, 0.5f }
+        new List<float> { 0f, 0.5f },
+        new List<float> { 0f, 1f }
     };
     private List<List<float>> rightResetCrop = new List<List<float>>
     {
-        new List<float> { 0f, 1f },
-        new List<float> { 0.5f, 1f }
+        new List<float> { 0.5f, 1f },
+        new List<float> { 0f, 1f }
     };
     private string currentCropConfigKey => eyeSide == EyeSide.Left ? leftCropConfigKey : rightCropConfigKey;
     private List<List<float>> currentResetCrop => eyeSide == EyeSide.Left ? leftResetCrop : rightResetCrop;
@@ -107,16 +107,16 @@ public class ImageSelector : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
         {
             normalizedCoordinates = new List<List<float>>
             {
-                new List<float>() { RoundToThreeDecimals((min.y + imgSize.y / 2) / imgSize.y), RoundToThreeDecimals((max.y + imgSize.y / 2) / imgSize.y)},
-                new List<float>() { RoundToThreeDecimals((min.x + imgSize.x / 2) / imgSize.x / 2), RoundToThreeDecimals((max.x + imgSize.x / 2) / imgSize.x) / 2}
+                new List<float>() { RoundToThreeDecimals((min.x + imgSize.x / 2) / imgSize.x / 2), RoundToThreeDecimals((max.x + imgSize.x / 2) / imgSize.x) / 2},
+                new List<float>() { RoundToThreeDecimals((min.y + imgSize.y / 2) / imgSize.y), RoundToThreeDecimals((max.y + imgSize.y / 2) / imgSize.y)}
             };
         }
         else if (eyeSide == EyeSide.Right)
         {
             normalizedCoordinates = new List<List<float>>
             {
-                new List<float>() { RoundToThreeDecimals((min.y + imgSize.y / 2) / imgSize.y), RoundToThreeDecimals((max.y + imgSize.y / 2) / imgSize.y)},
-                new List<float>() { RoundToThreeDecimals((min.x + imgSize.x / 2) / imgSize.x / 2 + 0.5f), RoundToThreeDecimals((max.x + imgSize.x / 2) / imgSize.x) / 2 + 0.5f}
+                new List<float>() { RoundToThreeDecimals((min.x + imgSize.x / 2) / imgSize.x / 2 + 0.5f), RoundToThreeDecimals((max.x + imgSize.x / 2) / imgSize.x) / 2 + 0.5f},
+                new List<float>() { RoundToThreeDecimals((min.y + imgSize.y / 2) / imgSize.y), RoundToThreeDecimals((max.y + imgSize.y / 2) / imgSize.y)}
             };
         }
         else

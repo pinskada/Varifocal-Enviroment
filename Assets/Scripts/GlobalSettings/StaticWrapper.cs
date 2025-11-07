@@ -7,8 +7,8 @@ public static class Settings
     public static TCPSettings tcp => Provider.Config.tcp;
     public static IMUSettings imu => Provider.Config.imu;
     public static DisplaySettings display => Provider.Config.display;
-    public static TrackerSettings tracker => Provider.Config.tracker;
+    public static EyeloopSettings eyeloop => Provider.Config.eyeloop;
     public static GazeProcessorSettings gaze => Provider.Config.gaze;
     public static CameraSettings camera => Provider.Config.camera;
-    public static CropSettings cameraCrop => Provider.Config.cameraCrop;
+    public static CropSettings tracker_crop => Provider.Config.tracker_crop;
 }

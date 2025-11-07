@@ -18,9 +18,9 @@ namespace Contracts
         public void pushConfigList(List<string> configFileNames);
     }
 
-    public static class GUIQueueContainer
+    public class GUIQueueContainer
     {
-        public static readonly ConcurrentQueue<(Texture2D rawData, int width, int height, EyeSide eyeSide)> eyePreviewQueue =
-        new ConcurrentQueue<(Texture2D, int, int, EyeSide)>();
+        public static readonly ConcurrentQueue<List<EyeImage>> images =
+        new ConcurrentQueue<List<EyeImage>>();
     }
 }

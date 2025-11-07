@@ -73,6 +73,11 @@ public class CommRouter : MonoBehaviour
         // Main routing function.
         // Determines transport source/target, encoding/decoding needs, and routes message.
 
+        if (type == MessageType.trackerControl) // Avoid spamming the log with frequent control messages
+        {
+            Debug.Log("[CommRouter] Sent: " + payload);
+        }
+
         // Decompose routing table entry
         (
             TransportSource transportSource,
@@ -81,7 +86,6 @@ public class CommRouter : MonoBehaviour
             bool isExistingRoute
         ) = DecomposeRoutingTable(type);
         if (!isExistingRoute) return;
-
 
         // Determine if encoding/decoding is needed
         (EncodingType encodeType, bool isValidRoute) = EncodeDecodeLogic(transportSource, transportTarget);

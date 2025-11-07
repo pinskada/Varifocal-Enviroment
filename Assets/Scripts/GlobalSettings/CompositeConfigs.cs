@@ -6,12 +6,12 @@ public abstract class BaseConfig
 {
     public TCPSettings tcp = new TCPSettings();
     public TestSettings test = new TestSettings();
-    public TrackerSettings tracker = new TrackerSettings();
+    public EyeloopSettings eyeloop = new EyeloopSettings();
     public GazeProcessorSettings gaze = new GazeProcessorSettings();
     public CameraSettings camera = new CameraSettings();
     public DisplaySettings display = new DisplaySettings();
     public IMUSettings imu = new IMUSettings();
-    public CropSettings cameraCrop = new CropSettings();
+    public CropSettings tracker_crop = new CropSettings();
 }
 
 // Testbed VR configuration (inherits all from BaseConfig).
