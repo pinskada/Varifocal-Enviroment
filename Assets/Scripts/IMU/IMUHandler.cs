@@ -52,7 +52,7 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
     private void CheckForData()
     {
         // This method would handle any periodic updates needed in the thread.
-        Debug.Log("[IMUHandler] IMUHandler thread started.");
+        //Debug.Log("[IMUHandler] IMUHandler thread started.");
         foreach (var imuData in IMUQueueContainer.IMUqueue.GetConsumingEnumerable())
         {
             UpdateFilter(imuData);

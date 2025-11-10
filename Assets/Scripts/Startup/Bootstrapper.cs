@@ -19,6 +19,7 @@ public class Bootstrapper : MonoBehaviour
     private Serial serial; // Serial communication module (for UserVR mode)
     private Madgwick filter; // Magdwick filter reference
     private GuiInterface guiInterface; // GUI manager for displaying information
+    private ImageRenderer imageRenderer; // GUI renderer for visual output
 
 
     void Awake()
@@ -64,7 +65,7 @@ public class Bootstrapper : MonoBehaviour
         GetGuiComponents();
         filter = imuHandler.GetFilterInstance();
 
-        guiInterface.InjectModules(configManager, VRSceneManager);
+        guiInterface.InjectModules(configManager, VRSceneManager, imageRenderer);
         configManager.BindModule(filter, "imu");
 
     }
@@ -82,10 +83,16 @@ public class Bootstrapper : MonoBehaviour
 
         // Find exactly one GuiInterface in that scene
         guiInterface = FindInScene<GuiInterface>(uiScene);
+        imageRenderer = FindInScene<ImageRenderer>(uiScene);
 
         if (guiInterface == null)
         {
             Debug.LogError($"[Bootstrapper] No {nameof(GuiInterface)} found in '{uiSceneName}'.");
+            return;
+        }
+        if (imageRenderer == null)
+        {
+            Debug.LogError($"[Bootstrapper] No {nameof(ImageRenderer)} found in '{uiSceneName}'.");
             return;
         }
     }

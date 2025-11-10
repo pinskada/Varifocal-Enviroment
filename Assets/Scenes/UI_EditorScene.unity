@@ -634,7 +634,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 14.75
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -1046,7 +1046,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: imu
   fieldName: betaThreshold
 --- !u!1 &59904704
 GameObject:
@@ -1666,7 +1666,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: tcp
   fieldName: localIP
 --- !u!1 &74290095
 GameObject:
@@ -1923,7 +1923,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: camera
   fieldName: gain
 --- !u!1 &90730918
 GameObject:
@@ -2302,7 +2302,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 18
+  m_fontSize: 17.85
   m_fontSizeBase: 20
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -2389,7 +2389,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -0.5}
+  m_AnchoredPosition: {x: 0, y: -0.49999905}
   m_SizeDelta: {x: -20, y: -13}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &121574331
@@ -2490,7 +2490,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 14.75
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -3203,7 +3203,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 9.75
+  m_fontSize: 8.5
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -3339,7 +3339,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 8.4
+  m_fontSize: 7.35
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -3475,7 +3475,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 19.95
+  m_fontSize: 20
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -3588,7 +3588,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 193500885}
-  - component: {fileID: 193500888}
   - component: {fileID: 193500887}
   - component: {fileID: 193500886}
   m_Layer: 5
@@ -3664,7 +3663,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 14.75
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -3716,20 +3715,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 193500884}
   m_CullTransparentMesh: 1
---- !u!114 &193500888
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 193500884}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moduleName: 
-  fieldName: LeftThreshold
 --- !u!1 &201085467
 GameObject:
   m_ObjectHideFlags: 0
@@ -3985,7 +3970,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: gaze
   fieldName: buffer_crop_factor
 --- !u!1 &209150271
 GameObject:
@@ -3996,18 +3981,17 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 209150272}
-  - component: {fileID: 209150277}
   - component: {fileID: 209150275}
   - component: {fileID: 209150274}
   - component: {fileID: 209150273}
   - component: {fileID: 209150276}
   m_Layer: 5
-  m_Name: DispSettings
+  m_Name: DispSett
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &209150272
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4053,7 +4037,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_AspectMode: 0
-  m_AspectRatio: 1.099091
+  m_AspectRatio: 1.1031715
 --- !u!114 &209150274
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4093,19 +4077,6 @@ CanvasRenderer:
   m_GameObject: {fileID: 209150271}
   m_CullTransparentMesh: 1
 --- !u!114 &209150276
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 209150271}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 894c51e9b315d0e4d8c34fb2c06f2dac, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moduleName: 
---- !u!114 &209150277
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -4411,7 +4382,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 13.45
+  m_fontSize: 5
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -4735,7 +4706,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 20
+  m_fontSize: 17.15
   m_fontSizeBase: 43
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -5103,7 +5074,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 14.9
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -5358,7 +5329,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: tcp
   fieldName: maxSendRetries
 --- !u!1 &276418335
 GameObject:
@@ -5580,7 +5551,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 13.9
+  m_fontSize: 7.05
   m_fontSizeBase: 35
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -5716,7 +5687,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 12.8
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -5988,7 +5959,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 20
+  m_fontSize: 17.05
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -6124,7 +6095,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 20
+  m_fontSize: 17.2
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -6396,7 +6367,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 10.1
+  m_fontSize: 8.85
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -6804,17 +6775,17 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 324985263}
-  - component: {fileID: 324985267}
   - component: {fileID: 324985266}
   - component: {fileID: 324985265}
   - component: {fileID: 324985264}
+  - component: {fileID: 324985267}
   m_Layer: 5
   m_Name: CamSettings
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &324985263
 RectTransform:
   m_ObjectHideFlags: 0
@@ -6864,7 +6835,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_AspectMode: 0
-  m_AspectRatio: 1.0965714
+  m_AspectRatio: 1.0970569
 --- !u!114 &324985265
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7028,7 +6999,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.6433777, y: 0.17529525}
   m_AnchorMax: {x: 0.96700007, y: 0.2376924}
-  m_AnchoredPosition: {x: 0.47851562, y: -1.5644531}
+  m_AnchoredPosition: {x: 0.47851562, y: -1.5644379}
   m_SizeDelta: {x: -0.004901886, y: 2.1454}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &331869255
@@ -7194,7 +7165,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: tcp
   fieldName: readTimeout
 --- !u!1 &340580859
 GameObject:
@@ -7906,7 +7877,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: tracker
   fieldName: left_blur_size
 --- !u!1 &373603573
 GameObject:
@@ -8044,7 +8015,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 13.15
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -8130,7 +8101,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.2621503, y: 0.09580836}
   m_AnchorMax: {x: 0.5364323, y: 0.14529388}
-  m_AnchoredPosition: {x: -0.2939453, y: -0.3203125}
+  m_AnchoredPosition: {x: -0.2939453, y: -0.32028198}
   m_SizeDelta: {x: -1.3146019, y: 0.5128}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &397792370
@@ -8241,7 +8212,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 401665578}
-  - component: {fileID: 401665581}
   - component: {fileID: 401665580}
   - component: {fileID: 401665579}
   m_Layer: 5
@@ -8369,20 +8339,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 401665577}
   m_CullTransparentMesh: 1
---- !u!114 &401665581
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 401665577}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moduleName: 
-  fieldName: LeftThreshold
 --- !u!1 &407905180
 GameObject:
   m_ObjectHideFlags: 0
@@ -8586,8 +8542,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
-  fieldName: filter_aplha
+  moduleName: gaze
+  fieldName: filter_alpha
 --- !u!1 &417607918
 GameObject:
   m_ObjectHideFlags: 0
@@ -8633,10 +8589,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 418369599}
-  - component: {fileID: 418369603}
   - component: {fileID: 418369602}
   - component: {fileID: 418369601}
   - component: {fileID: 418369600}
+  - component: {fileID: 418369603}
   m_Layer: 5
   m_Name: TcpSettings
   m_TagString: Untagged
@@ -8949,7 +8905,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 448563878}
-  - component: {fileID: 448563881}
   - component: {fileID: 448563880}
   - component: {fileID: 448563879}
   m_Layer: 5
@@ -9025,7 +8980,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 14.75
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -9077,20 +9032,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 448563877}
   m_CullTransparentMesh: 1
---- !u!114 &448563881
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 448563877}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moduleName: 
-  fieldName: LeftThreshold
 --- !u!1 &451455661
 GameObject:
   m_ObjectHideFlags: 0
@@ -9294,7 +9235,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: tcp
   fieldName: subnetMask
 --- !u!1 &457533895
 GameObject:
@@ -9877,7 +9818,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 14.6
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -10013,7 +9954,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 14.45
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -10099,7 +10040,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.21200001, y: 0.06185132}
   m_AnchorMax: {x: 0.507, y: 0.12776579}
-  m_AnchoredPosition: {x: -2.1376953, y: -0.5996094}
+  m_AnchoredPosition: {x: -2.1376877, y: -0.5996094}
   m_SizeDelta: {x: 3.623001, y: -1.4169998}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &493730352
@@ -10149,7 +10090,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 13.9
+  m_fontSize: 10.15
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -10422,7 +10363,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 19.95
+  m_fontSize: 20
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -11054,7 +10995,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: camera
   fieldName: preview_fps
 --- !u!1 &549813532
 GameObject:
@@ -11261,7 +11202,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 12.25
   m_fontSizeBase: 25
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -11690,7 +11631,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 14.95
+  m_fontSize: 14.1
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -11997,7 +11938,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: DispSettings
   fieldName: eyeToScreenDist
 --- !u!1 &597410570
 GameObject:
@@ -12083,7 +12024,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 12.6
   m_fontSizeBase: 25
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -12666,7 +12607,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 14.1
+  m_fontSize: 5.15
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -13602,7 +13543,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 10.15
+  m_fontSize: 8.85
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -13947,7 +13888,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 10.15
+  m_fontSize: 8.95
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -14202,7 +14143,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: DispSettings
   fieldName: screenWidth
 --- !u!1 &700602710
 GameObject:
@@ -14288,7 +14229,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 10.3
+  m_fontSize: 9
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -14783,7 +14724,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: tracker
   fieldName: right_blur_size
 --- !u!1 &729276467
 GameObject:
@@ -14869,7 +14810,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 12.1
   m_fontSizeBase: 35
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -15124,7 +15065,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: DispSettings
   fieldName: distortionStrength
 --- !u!1 &730535191
 GameObject:
@@ -15210,7 +15151,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 14
+  m_fontSize: 7.15
   m_fontSizeBase: 35
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -15428,10 +15369,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 776696482}
-  - component: {fileID: 776696486}
   - component: {fileID: 776696485}
   - component: {fileID: 776696484}
   - component: {fileID: 776696483}
+  - component: {fileID: 776696486}
   m_Layer: 5
   m_Name: GazeProcSettings
   m_TagString: Untagged
@@ -15482,7 +15423,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_AspectMode: 0
-  m_AspectRatio: 1.0922052
+  m_AspectRatio: 1.0929947
 --- !u!114 &776696484
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15862,7 +15803,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 798077426}
-  - component: {fileID: 798077429}
   - component: {fileID: 798077428}
   - component: {fileID: 798077427}
   m_Layer: 5
@@ -15990,20 +15930,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 798077425}
   m_CullTransparentMesh: 1
---- !u!114 &798077429
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 798077425}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moduleName: 
-  fieldName: LeftThreshold
 --- !u!1 &799672466
 GameObject:
   m_ObjectHideFlags: 0
@@ -16364,7 +16290,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: tcp
   fieldName: raspberryPiIP
 --- !u!1 &807339320
 GameObject:
@@ -16450,7 +16376,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 13.05
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -16586,7 +16512,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 11.5
   m_fontSizeBase: 25
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -16841,7 +16767,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: tcp
   fieldName: port
 --- !u!1 &823345597
 GameObject:
@@ -17203,7 +17129,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: DispSettings
   fieldName: farClipPlane
 --- !u!1 &827967376
 GameObject:
@@ -17692,7 +17618,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 14.15
+  m_fontSize: 5.2
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -18219,7 +18145,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: tracker
   fieldName: right_search_step
 --- !u!1 &867902589
 GameObject:
@@ -18550,7 +18476,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 14.05
+  m_fontSize: 7.15
   m_fontSizeBase: 35
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -18686,7 +18612,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 14.6
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -18822,7 +18748,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 20
+  m_fontSize: 17.3
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -19102,7 +19028,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 14
+  m_fontSize: 5.1
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -19238,7 +19164,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 12.55
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -19837,7 +19763,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: camera
   fieldName: focus
 --- !u!1 &983134391
 GameObject:
@@ -19873,7 +19799,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.024142904, y: 0.652}
   m_AnchorMax: {x: 0.23477545, y: 0.8717508}
-  m_AnchoredPosition: {x: 1.5, y: -1.512207}
+  m_AnchoredPosition: {x: 1.499939, y: -1.512207}
   m_SizeDelta: {x: 0.34765625, y: -0.94099426}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &983134393
@@ -19923,7 +19849,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 19.95
+  m_fontSize: 20
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -20573,7 +20499,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_AspectMode: 0
-  m_AspectRatio: 0.6702825
+  m_AspectRatio: 0.6703479
 --- !u!1 &1039608174
 GameObject:
   m_ObjectHideFlags: 0
@@ -20784,7 +20710,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 14.9
+  m_fontSize: 14.05
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -21206,7 +21132,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -0.5}
+  m_AnchoredPosition: {x: 0, y: -0.49999905}
   m_SizeDelta: {x: -20, y: -13}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1101391779
@@ -21426,7 +21352,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: tcp
   fieldName: netshFileName
 --- !u!1 &1110996291
 GameObject:
@@ -22163,7 +22089,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 12.8
   m_fontSizeBase: 35
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -22690,7 +22616,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: tcp
   fieldName: maxPacketSize
 --- !u!1 &1150635403
 GameObject:
@@ -22776,7 +22702,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 12.25
   m_fontSizeBase: 25
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -23142,7 +23068,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5463777, y: 0.133}
   m_AnchorMax: {x: 0.8056889, y: 0.21557283}
-  m_AnchoredPosition: {x: 1.1870117, y: -0.44726562}
+  m_AnchoredPosition: {x: 1.1870117, y: -0.44728088}
   m_SizeDelta: {x: -0.23000336, y: -0.5998001}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1179217535
@@ -23308,7 +23234,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: gaze
   fieldName: gyro_threshold
 --- !u!1 &1179387209
 GameObject:
@@ -23603,7 +23529,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15.4
+  m_fontSize: 11.15
   m_fontSizeBase: 43
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -23978,7 +23904,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1214349723}
-  - component: {fileID: 1214349726}
   - component: {fileID: 1214349725}
   - component: {fileID: 1214349724}
   m_Layer: 5
@@ -24106,20 +24031,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1214349722}
   m_CullTransparentMesh: 1
---- !u!114 &1214349726
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1214349722}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moduleName: 
-  fieldName: LeftThreshold
 --- !u!1 &1232628140
 GameObject:
   m_ObjectHideFlags: 0
@@ -24204,7 +24115,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 13.7
+  m_fontSize: 5.5
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -24549,7 +24460,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 13.75
+  m_fontSize: 5.2
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -24685,13 +24596,13 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 18
+  m_fontSize: 12.85
   m_fontSizeBase: 20
   m_fontWeight: 400
   m_enableAutoSizing: 1
   m_fontSizeMin: 5
   m_fontSizeMax: 18
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 256
   m_textAlignment: 65535
@@ -25076,7 +24987,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: camera
   fieldName: jpeg_quality
 --- !u!1 &1274541603
 GameObject:
@@ -25544,7 +25455,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: camera
   fieldName: res_width
 --- !u!1 &1284742729
 GameObject:
@@ -25555,7 +25466,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1284742730}
-  - component: {fileID: 1284742733}
   - component: {fileID: 1284742732}
   - component: {fileID: 1284742731}
   m_Layer: 5
@@ -25683,20 +25593,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1284742729}
   m_CullTransparentMesh: 1
---- !u!114 &1284742733
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1284742729}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moduleName: 
-  fieldName: LeftThreshold
 --- !u!1 &1289614654
 GameObject:
   m_ObjectHideFlags: 0
@@ -25781,7 +25677,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 13.95
+  m_fontSize: 10.05
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -26193,7 +26089,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 18
+  m_fontSize: 14.45
   m_fontSizeBase: 25
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -26551,7 +26447,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: camera
   fieldName: exposure
 --- !u!1 &1335147790
 GameObject:
@@ -26562,7 +26458,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1335147791}
-  - component: {fileID: 1335147794}
   - component: {fileID: 1335147793}
   - component: {fileID: 1335147792}
   m_Layer: 5
@@ -26690,20 +26585,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1335147790}
   m_CullTransparentMesh: 1
---- !u!114 &1335147794
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1335147790}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moduleName: 
-  fieldName: LeftThreshold
 --- !u!1 &1348645889
 GameObject:
   m_ObjectHideFlags: 0
@@ -26788,7 +26669,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 13.8
+  m_fontSize: 10
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -26924,7 +26805,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 14.15
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -27559,7 +27440,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: tracker
   fieldName: left_threshold
 --- !u!1 &1377849513
 GameObject:
@@ -27959,7 +27840,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 19.95
+  m_fontSize: 16.5
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -28490,7 +28371,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: DispSettings
   fieldName: 
 --- !u!114 &1398705963
 MonoBehaviour:
@@ -28504,7 +28385,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: DispSettings
   fieldName: ipd
 --- !u!1 &1412629277
 GameObject:
@@ -29203,7 +29084,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: imu
   fieldName: minDt
 --- !u!1 &1455742087
 GameObject:
@@ -29408,8 +29289,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
-  fieldName: data_std_threshold
+  moduleName: gaze
+  fieldName: std_threshold
 --- !u!1 &1458926879
 GameObject:
   m_ObjectHideFlags: 0
@@ -29613,7 +29494,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: tracker
   fieldName: left_max_radius
 --- !u!1 &1462992319
 GameObject:
@@ -29774,7 +29655,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 10.05
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -30061,10 +29942,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1487549490}
-  - component: {fileID: 1487549494}
   - component: {fileID: 1487549493}
   - component: {fileID: 1487549492}
   - component: {fileID: 1487549491}
+  - component: {fileID: 1487549494}
   m_Layer: 5
   m_Name: ImuSettings
   m_TagString: Untagged
@@ -30118,7 +29999,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_AspectMode: 0
-  m_AspectRatio: 1.0954038
+  m_AspectRatio: 1.098888
 --- !u!114 &1487549492
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -30428,7 +30309,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.20500001, y: 0.595}
   m_AnchorMax: {x: 0.507, y: 0.6502343}
-  m_AnchoredPosition: {x: -0.5, y: -0.30004883}
+  m_AnchoredPosition: {x: -0.49998474, y: -0.30004883}
   m_SizeDelta: {x: 0.3466034, y: -0.072999954}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1525381377
@@ -30478,7 +30359,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 13.45
+  m_fontSize: 9.75
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -30621,7 +30502,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_AspectMode: 0
-  m_AspectRatio: 0.671487
+  m_AspectRatio: 0.67151034
 --- !u!1 &1534631052
 GameObject:
   m_ObjectHideFlags: 0
@@ -30706,7 +30587,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 13.95
+  m_fontSize: 7.35
   m_fontSizeBase: 35
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -31306,7 +31187,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: imu
   fieldName: betaStill
 --- !u!1 &1562579460
 GameObject:
@@ -31511,7 +31392,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: camera
   fieldName: res_height
 --- !u!1 &1566050899
 GameObject:
@@ -31597,7 +31478,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 12.1
   m_fontSizeBase: 25
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -31733,7 +31614,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 13.8
+  m_fontSize: 9.95
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -31859,7 +31740,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_AspectMode: 0
-  m_AspectRatio: 1.0911145
+  m_AspectRatio: 1.0917418
 --- !u!114 &1567144698
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -31910,7 +31791,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 894c51e9b315d0e4d8c34fb2c06f2dac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: tracker
+  moduleName: eyeloop
 --- !u!1 &1574386702
 GameObject:
   m_ObjectHideFlags: 0
@@ -32114,7 +31995,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: tcp
   fieldName: adapterName
 --- !u!1 &1576695778
 GameObject:
@@ -32125,7 +32006,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1576695779}
-  - component: {fileID: 1576695782}
   - component: {fileID: 1576695781}
   - component: {fileID: 1576695780}
   m_Layer: 5
@@ -32253,20 +32133,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1576695778}
   m_CullTransparentMesh: 1
---- !u!114 &1576695782
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1576695778}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moduleName: 
-  fieldName: LeftThreshold
 --- !u!1 &1607087856
 GameObject:
   m_ObjectHideFlags: 0
@@ -32470,7 +32336,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: imu
   fieldName: minGyroMagnitude
 --- !u!1 &1608472095
 GameObject:
@@ -32608,7 +32474,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 12.55
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -32863,7 +32729,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: tcp
   fieldName: ipAddress
 --- !u!1 &1652130549
 GameObject:
@@ -32949,7 +32815,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 13.35
+  m_fontSize: 6.4
   m_fontSizeBase: 35
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -33085,7 +32951,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 14.65
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -33221,7 +33087,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 12.1
   m_fontSizeBase: 35
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -33307,7 +33173,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.30600002, y: 0.17529525}
   m_AnchorMax: {x: 0.5364323, y: 0.22874539}
-  m_AnchoredPosition: {x: 0.60009766, y: -0.7919922}
+  m_AnchoredPosition: {x: 0.60009766, y: -0.7919769}
   m_SizeDelta: {x: 0.3580017, y: 1.5846}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1691969244
@@ -33612,7 +33478,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: tracker
   fieldName: right_min_radius
 --- !u!1 &1738703951
 GameObject:
@@ -33780,7 +33646,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1749873136}
-  - component: {fileID: 1749873139}
   - component: {fileID: 1749873138}
   - component: {fileID: 1749873137}
   m_Layer: 5
@@ -33908,20 +33773,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1749873135}
   m_CullTransparentMesh: 1
---- !u!114 &1749873139
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1749873135}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moduleName: 
-  fieldName: LeftThreshold
 --- !u!1 &1756341666
 GameObject:
   m_ObjectHideFlags: 0
@@ -34088,7 +33939,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1769845006}
-  - component: {fileID: 1769845009}
   - component: {fileID: 1769845008}
   - component: {fileID: 1769845007}
   m_Layer: 5
@@ -34216,20 +34066,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1769845005}
   m_CullTransparentMesh: 1
---- !u!114 &1769845009
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1769845005}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moduleName: 
-  fieldName: LeftThreshold
 --- !u!1 &1773093839
 GameObject:
   m_ObjectHideFlags: 0
@@ -34665,7 +34501,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: tcp
   fieldName: IPsetTimeout
 --- !u!1 &1784653119
 GameObject:
@@ -35434,7 +35270,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 12.15
   m_fontSizeBase: 25
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -35570,7 +35406,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 14.8
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -35758,7 +35594,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 12.5
   m_fontSizeBase: 25
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -35995,7 +35831,7 @@ MonoBehaviour:
     - m_Text: Camera
       m_Image: {fileID: 0}
       m_Color: {r: 0, g: 0, b: 0, a: 0}
-    - m_Text: Tracker
+    - m_Text: Eyeloop
       m_Image: {fileID: 0}
       m_Color: {r: 0, g: 0, b: 0, a: 0}
     - m_Text: Gaze
@@ -36148,7 +35984,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 13.5
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -37137,7 +36973,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: tracker
   fieldName: left_search_step
 --- !u!1 &1921458467
 GameObject:
@@ -37275,7 +37111,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 14.05
+  m_fontSize: 10.15
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -37547,7 +37383,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 12.2
   m_fontSizeBase: 25
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -37819,7 +37655,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 12.6
   m_fontSizeBase: 35
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -37955,7 +37791,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 14.2
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -38883,7 +38719,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 18
+  m_fontSize: 17.95
   m_fontSizeBase: 25
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -39019,7 +38855,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 10.25
+  m_fontSize: 8.95
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -39431,7 +39267,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: tracker
   fieldName: right_max_radius
 --- !u!1 &2062809839
 GameObject:
@@ -39636,7 +39472,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: imu
   fieldName: maxDt
 --- !u!1 &2074187764
 GameObject:
@@ -39787,7 +39623,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_AspectMode: 0
-  m_AspectRatio: 7.989569
+  m_AspectRatio: 7.994013
 --- !u!114 &2074417967
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -40018,7 +39854,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 14.05
+  m_fontSize: 6.9
   m_fontSizeBase: 35
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -40273,7 +40109,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: tcp
   fieldName: readBufferSize
 --- !u!1 &2108333542
 GameObject:
@@ -40485,7 +40321,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 19.95
+  m_fontSize: 20
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -40740,7 +40576,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: DispSettings
   fieldName: screenHeight
 --- !u!1 &2121045327
 GameObject:
@@ -40945,7 +40781,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: tracker
   fieldName: right_threshold
 --- !u!1 &2121166117
 GameObject:
@@ -41150,7 +40986,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: imu
   fieldName: betaMoving
 --- !u!1 &2121287290
 GameObject:
@@ -41236,7 +41072,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
+  m_fontSize: 12.35
   m_fontSizeBase: 25
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -41491,7 +41327,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e015ce4d5b6ea9408d559cee263ac4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moduleName: 
+  moduleName: tracker
   fieldName: left_min_radius
 --- !u!1 &2126241336
 GameObject:

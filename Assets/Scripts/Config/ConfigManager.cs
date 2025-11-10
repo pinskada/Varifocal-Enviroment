@@ -137,12 +137,12 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
             Debug.Log($"[ConfigManager] No config found; created default at {configPath}");
         }
 
-        Debug.Log($"[ConfigManager] Config loaded successfully.");
+        //Debug.Log($"[ConfigManager] Config loaded successfully.");
 
         // Initialize the config file names list
         ListFileNames(configFolder);
 
-        Debug.Log($"[ConfigManager] Config file names listed successfully.");
+        //Debug.Log($"[ConfigManager] Config file names listed successfully.");
     }
 
 
@@ -393,7 +393,12 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
         {
             object valueToSet;
 
-            if (targetType.IsEnum)
+            if (targetType.IsAssignableFrom(rawValue.GetType()))
+            {
+                // exact or derived type: just use it
+                valueToSet = rawValue;
+            }
+            else if (targetType.IsEnum)
             {
                 // Convert enum
                 valueToSet = Enum.Parse(targetType, rawValue.ToString(), ignoreCase: true);

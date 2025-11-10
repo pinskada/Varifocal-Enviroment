@@ -71,12 +71,7 @@ public class CommRouter : MonoBehaviour
     private void RouteMessage(object payload, MessageType type)
     {
         // Main routing function.
-        // Determines transport source/target, encoding/decoding needs, and routes message.
-
-        if (type == MessageType.trackerControl) // Avoid spamming the log with frequent control messages
-        {
-            Debug.Log("[CommRouter] Sent: " + payload);
-        }
+        // Determines transport source/target, encoding/decoding needs, and routes message.  
 
         // Decompose routing table entry
         (

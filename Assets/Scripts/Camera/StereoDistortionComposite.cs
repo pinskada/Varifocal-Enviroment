@@ -152,7 +152,7 @@ public class StereoDistortionComposite : MonoBehaviour, IModuleSettingsHandler
         var leftCenter = new Vector2(1 - xOffset, 0.5f);
         var rightCenter = new Vector2(xOffset, 0.5f);
 
-        Debug.Log($"[StereoDistortionComposite] Left center: {leftCenter}, Right center: {rightCenter}");
+        //Debug.Log($"[StereoDistortionComposite] Left center: {leftCenter}, Right center: {rightCenter}");
 
         distortionMaterialLeft.SetFloat("_Strength", Settings.display.distortionStrength);
         distortionMaterialRight.SetFloat("_Strength", Settings.display.distortionStrength);

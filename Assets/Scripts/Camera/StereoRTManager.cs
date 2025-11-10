@@ -38,7 +38,7 @@ public class StereoRTManager : MonoBehaviour
         leftCam.targetTexture = leftRT;
         rightCam.targetTexture = rightRT;
 
-        Debug.Log("[StereoRTManager] Left and Right RenderTextures created and assigned.");
+        //Debug.Log("[StereoRTManager] Left and Right RenderTextures created and assigned.");
     }
 
 

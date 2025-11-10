@@ -135,9 +135,22 @@ public class ImageSelector : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
     }
 
 
-    private void EnqueueCrop(List<List<float>> coordinates)
+    private void EnqueueCrop(List<List<float>> coords)
     {
-        ConfigQueueContainer.configQueue.Add((currentCropConfigKey, coordinates));
+        // Ensure well-ordered & clamped values
+        float xMin = Mathf.Clamp01(Mathf.Min(coords[0][0], coords[0][1]));
+        float xMax = Mathf.Clamp01(Mathf.Max(coords[0][0], coords[0][1]));
+        float yMin = Mathf.Clamp01(Mathf.Min(coords[1][0], coords[1][1]));
+        float yMax = Mathf.Clamp01(Mathf.Max(coords[1][0], coords[1][1]));
+
+        var crop = new CropRect
+        {
+            x = new Range { min = xMin, max = xMax },
+            y = new Range { min = yMin, max = yMax }
+        };
+
+
+        ConfigQueueContainer.configQueue.Add((currentCropConfigKey, crop));
     }
 
 

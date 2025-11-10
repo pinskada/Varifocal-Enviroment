@@ -1,8 +1,9 @@
 using UnityEngine;
 using Contracts;
 using System;
+using JetBrains.Annotations;
 
-public class ImageRenderer : MonoBehaviour
+public class ImageRenderer : MonoBehaviour, ImageDestroyer
 {
     [SerializeField] private UnityEngine.UI.RawImage leftEyeImage;
     [SerializeField] private UnityEngine.UI.RawImage rightEyeImage;
@@ -12,6 +13,7 @@ public class ImageRenderer : MonoBehaviour
 
     private Texture2D _leftTex, _rightTex;
     private int printCounter = 0;
+    private bool displayTextures = false;
     private void Start()
     {
         if (leftEyeImage == null || rightEyeImage == null)
@@ -33,13 +35,20 @@ public class ImageRenderer : MonoBehaviour
     {
         if (!GUIQueueContainer.images.TryDequeue(out var images)) return;
 
+        if (!displayTextures)
+        {
+            if (_leftTex != null || _rightTex != null)
+                ClearTextures();
+            return;
+        }
+
         foreach (var eye in images)
         {
             try
             {
                 printCounter++;
-                if (printCounter % 30 == 0)
-                    Debug.Log($"[ImageRenderer] Decoded image for eye {eye.EyeId}: {eye.Width}x{eye.Height}");
+                //if (printCounter % 30 == 0)
+                //Debug.Log($"[ImageRenderer] Decoded image for eye {eye.EyeId}: {eye.Width}x{eye.Height}");
 
                 var isLeft = eye.EyeId == 0;
                 ref Texture2D dstTex = ref (isLeft ? ref _leftTex : ref _rightTex);
@@ -52,9 +61,9 @@ public class ImageRenderer : MonoBehaviour
                 var bytes = eye.Data;
 
                 // Reject clearly bad frames before touching native decoder
-                if (!IsLikelyJpeg(bytes))
+                if (!IsLikelyImage(bytes))
                 {
-                    Debug.LogWarning($"[ImageRenderer] Dropped non-JPEG frame for eye {eye.EyeId} (len={bytes?.Length}).");
+                    Debug.LogWarning($"[ImageRenderer] Dropped non-image frame for eye {eye.EyeId} (len={bytes?.Length}).");
                     continue;
                 }
 
@@ -82,14 +91,51 @@ public class ImageRenderer : MonoBehaviour
 
     }
 
-    private static bool IsLikelyJpeg(byte[] data)
+    private static bool IsLikelyImage(byte[] data)
     {
-        if (data == null || data.Length < 4) return false;
-        // JPEG must start with FF D8 and end with FF D9
-        if (data[0] != 0xFF || data[1] != 0xD8) return false;
-        if (data[^2] != 0xFF || data[^1] != 0xD9) return false;
-        // Optional: reject obviously bogus files with long 0x00 runs
-        return true;
+        if (data == null || data.Length < 8)
+            return false;
+
+        // --- JPEG ---
+        if (data[0] == 0xFF && data[1] == 0xD8 &&
+            data[^2] == 0xFF && data[^1] == 0xD9)
+            return true;
+
+        // --- PNG ---
+        // PNG signature: 89 50 4E 47 0D 0A 1A 0A
+        if (data.Length >= 8 &&
+            data[0] == 0x89 && data[1] == 0x50 &&
+            data[2] == 0x4E && data[3] == 0x47 &&
+            data[4] == 0x0D && data[5] == 0x0A &&
+            data[6] == 0x1A && data[7] == 0x0A)
+            return true;
+
+        return false;
+    }
+
+
+    public void ControlTextures(bool displayTextures)
+    {
+        //Debug.Log($"[ImageRenderer] Display textures set to {displayTextures}");
+        this.displayTextures = displayTextures;
+    }
+
+
+    private void ClearTextures()
+    {
+        //Debug.Log("[ImageRenderer] Clearing textures.");
+        if (_leftTex)
+        {
+            Destroy(_leftTex);
+            _leftTex = null;
+        }
+        if (_rightTex)
+        {
+            Destroy(_rightTex);
+            _rightTex = null;
+        }
+        if (leftEyeImage) leftEyeImage.texture = null;
+        if (rightEyeImage) rightEyeImage.texture = null;
     }
 
     private Texture2D Rotate(Texture2D src, bool clockwise)

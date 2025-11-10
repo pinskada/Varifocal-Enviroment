@@ -73,7 +73,7 @@ public class TCP : IModuleSettingsHandler
         {
             IPisSet = ConfigureIPmode(true); // Set static IP to communicate with the RPI on a local network.
         }
-        Thread.Sleep(5000); // Wait for IP to be set
+        Thread.Sleep(3500); // Wait for IP to be set
 
         if (!IPisSet && Configuration.currentVersion == VRMode.Testbed)
         {
@@ -82,7 +82,7 @@ public class TCP : IModuleSettingsHandler
         }
         incomingBuffer = new byte[Settings.tcp.readBufferSize * 4];
 
-        UnityEngine.Debug.Log("[TCP] Attempting to connect to a server...");
+        //UnityEngine.Debug.Log("[TCP] Attempting to connect to a server...");
         ConnectToServer(); // Connect to the RPI TCP server
     }
 
@@ -181,7 +181,7 @@ public class TCP : IModuleSettingsHandler
             if (Configuration.currentVersion == VRMode.Testbed)
             {
                 // Connect to the Raspberry Pi IP address
-                UnityEngine.Debug.Log("[TCP] Connecting to Raspberry Pi at " + Settings.tcp.raspberryPiIP + ":" + Settings.tcp.port);
+                //UnityEngine.Debug.Log("[TCP] Connecting to Raspberry Pi at " + Settings.tcp.raspberryPiIP + ":" + Settings.tcp.port);
                 client.Connect(Settings.tcp.raspberryPiIP, Settings.tcp.port);
             }
             else
@@ -249,7 +249,10 @@ public class TCP : IModuleSettingsHandler
         stream = null;
         client = null;
 
-        UnityEngine.Debug.Log("[TCP] Disconnected from TCP.");
+        if (Configuration.currentVersion == VRMode.Testbed)
+            UnityEngine.Debug.Log("[TCP] Disconnected from Raspberry Pi at " + Settings.tcp.raspberryPiIP + ":" + Settings.tcp.port);
+        else
+            UnityEngine.Debug.Log("[TCP] Disconnected from local server at " + Settings.tcp.localIP + ":" + Settings.tcp.port);
     }
 
 

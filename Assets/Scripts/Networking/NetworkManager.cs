@@ -105,6 +105,7 @@ public class NetworkManager : MonoBehaviour, IModuleSettingsHandler
         if (moduleName == null) Debug.LogWarning($"[NetworkManager] BuildConfigMessage expected moduleName, but got null.");
         if (field == null) Debug.LogWarning($"[NetworkManager] BuildConfigMessage expected field, but got null.");
 
+
         var value = field.GetValue(settingsBlock);
 
         var payload = new Dictionary<string, object>

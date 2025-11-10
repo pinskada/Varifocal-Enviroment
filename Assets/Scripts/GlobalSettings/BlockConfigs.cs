@@ -15,7 +15,7 @@ public class TCPSettings
     public string raspberryPiIP = "192.168.2.2";
     public string localIP = "127.0.0.1";
     public string subnetMask = "255.255.255.0";
-    public string adapterName = "Ethernet";
+    public string adapterName = "Ethernet 2";
     public string netshFileName;
     public int port = 65432;
     public int readBufferSize = 16777216; // Size of the buffer for incoming data
@@ -72,21 +72,39 @@ public class CameraSettings
 
 
 [System.Serializable]
+public class Range { public float min; public float max; }
+
+[System.Serializable]
+public class CropRect
+{
+    public Range x = new Range();
+    public Range y = new Range();
+}
+
+[System.Serializable]
 public class CropSettings
 {
-    public List<List<float>> crop_left = new List<List<float>>
-    {
-        new List<float> { 0f, 0.5f },   // left, right
-        new List<float> { 0f, 1f }  // top, bottom
-    };
-
-    public List<List<float>> crop_right = new List<List<float>>
-    {
-        new List<float> { 0.5f, 1f },   // left, right
-        new List<float> { 0f, 1f }  // top, bottom
-    };
-
+    public CropRect crop_left = new CropRect { x = new Range { min = 0f, max = 0.5f }, y = new Range { min = 0f, max = 1f } };
+    public CropRect crop_right = new CropRect { x = new Range { min = 0.5f, max = 1f }, y = new Range { min = 0f, max = 1f } };
 }
+
+
+// [System.Serializable]
+// public class CropSettings
+// {
+//     public List<List<float>> crop_left = new List<List<float>>
+//     {
+//         new List<float> { 0f, 0.5f },   // left, right
+//         new List<float> { 0f, 1f }  // top, bottom
+//     };
+
+//     public List<List<float>> crop_right = new List<List<float>>
+//     {
+//         new List<float> { 0.5f, 1f },   // left, right
+//         new List<float> { 0f, 1f }  // top, bottom
+//     };
+
+// }
 
 
 [System.Serializable]

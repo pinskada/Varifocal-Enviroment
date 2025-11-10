@@ -15,13 +15,23 @@ public class GuiInterface : MonoBehaviour
 
     public IConfigManagerCommunicator _IConfigManager;
     public ISceneManagement _VRSceneManager;
+    public ImageDestroyer _imageDestroyer;
 
-    public void InjectModules(IConfigManagerCommunicator _IConfigManager, ISceneManagement _VRSceneManager)
+    public void InjectModules(
+        IConfigManagerCommunicator _IConfigManager,
+        ISceneManagement _VRSceneManager,
+        ImageDestroyer _imageDestroyer
+    )
     {
         this._IConfigManager = _IConfigManager;
         this._VRSceneManager = _VRSceneManager;
+        this._imageDestroyer = _imageDestroyer;
     }
 
+    private void Awake()
+    {
+        PrewireUiSections();
+    }
 
     private void Start()
     {
@@ -31,6 +41,17 @@ public class GuiInterface : MonoBehaviour
         ConnectEditFields();
         PopulateEditFields();
         PopulateSettingsConfigDropdown();
+    }
+
+
+    private void PrewireUiSections()
+    {
+        var sections = FindObjectsByType<UISection>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None
+        );
+        foreach (var s in sections)
+            s.ApplyToChildren();
     }
 
 
@@ -45,10 +66,19 @@ public class GuiInterface : MonoBehaviour
         }
     }
 
+    private IEnumerable<TMP_InputField> GetAllInputs()
+    {
+        // Unity 6 (6000.0.42f1) supports the includeInactive flag
+        return FindObjectsByType<TMP_InputField>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None
+        );
+    }
+
 
     private void ConnectEditFields()
     {
-        foreach (var input in FindObjectsByType<TMP_InputField>(FindObjectsSortMode.None))
+        foreach (var input in GetAllInputs())
         {
             input.onEndEdit.AddListener(value => OnFieldEdited(input, value));
         }
@@ -57,43 +87,47 @@ public class GuiInterface : MonoBehaviour
 
     private void PopulateEditFields()
     {
-        Debug.Log("[GuiInterface] Populating edit fields");
-        foreach (var input in FindObjectsByType<TMP_InputField>(FindObjectsSortMode.None))
+        //Debug.Log("[GuiInterface] Populating edit fields");
+        foreach (var input in GetAllInputs())
         {
-            Debug.Log($"[GuiInterface] Found InputField: {input.gameObject.name}");
+            if (input.gameObject.name == "InputNameField") continue;
+
+            //Debug.Log($"[GuiInterface] Found InputField: {input.gameObject.name}");
             var field = input.GetComponent<UIField>();
 
             if (field == null)
             {
                 Debug.LogError($"[GuiInterface] InputField {input.gameObject.name} missing UIField component");
-                return;
+                continue;
             }
+
 
             string module = field.moduleName;
             string name = field.fieldName;
 
-            if (string.IsNullOrEmpty(module) || string.IsNullOrEmpty(name))
+            if (string.IsNullOrEmpty(module))
             {
-                Debug.LogWarning($"[GuiInterface] InputField {input.gameObject.name} has empty module or field name");
-                return;
+                Debug.LogError($"[GuiInterface] InputField {input.gameObject.name} has empty module name");
+                continue;
+            }
+            if (string.IsNullOrEmpty(name))
+            {
+                Debug.LogWarning($"[GuiInterface] InputField {input.gameObject.name} has empty field name");
+                continue;
             }
 
-            var value = GetSettingValue(module, name);
+            var value = GetSettingValue(module, name, input);
             if (value != null)
             {
                 try
                 {
-                    Debug.Log($"[GuiInterface] Setting {module}.{name} to {value}");
+                    //Debug.Log($"[GuiInterface] Setting {module}.{name} to {value}");
                     input.text = value.ToString();
                 }
                 catch (Exception ex)
                 {
                     Debug.LogError($"[GuiInterface] Failed to set InputField text: {ex.Message}");
                 }
-            }
-            else
-            {
-                Debug.LogWarning($"[GuiInterface] Config {module}.{name} not found");
             }
         }
     }
@@ -109,7 +143,7 @@ public class GuiInterface : MonoBehaviour
     }
 
 
-    private object GetSettingValue(string moduleName, string fieldName)
+    private object GetSettingValue(string moduleName, string fieldName, TMP_InputField inputField)
     {
         try
         {
@@ -120,7 +154,7 @@ public class GuiInterface : MonoBehaviour
             var moduleProp = settingsType.GetProperty(moduleName, BindingFlags.Public | BindingFlags.Static);
             if (moduleProp == null)
             {
-                Debug.LogWarning($"[GuiInterface] Module '{moduleName}' not found in Settings");
+                Debug.LogWarning($"[GuiInterface] Module '{moduleName}' of gameObject {inputField.gameObject.name} not found in Settings");
                 return null;
             }
 
@@ -182,15 +216,19 @@ public class GuiInterface : MonoBehaviour
         {
             case 0:
                 action = "offline";
+                _imageDestroyer.ControlTextures(false);
                 break;
             case 1:
                 action = "camera_preview";
+                _imageDestroyer.ControlTextures(true);
                 break;
             case 2:
                 action = "tracker_preview";
+                _imageDestroyer.ControlTextures(true);
                 break;
             case 3:
                 action = "online";
+                _imageDestroyer.ControlTextures(false);
                 break;
         }
         var message = new Dictionary<string, string>
