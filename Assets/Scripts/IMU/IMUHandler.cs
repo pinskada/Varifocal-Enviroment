@@ -16,7 +16,7 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
     private Madgwick filter; // Madgwick filter instance for orientation estimation
     private Quaternion initialRotation; // Initial rotation of the target transform to reset to
     private Quaternion q = Quaternion.identity; // Quaternion to hold the current orientation
-    public bool use9DOF = true; // Use 9DOF (gyro, accel, mag) or 6DOF (gyro, accel)
+    public bool use9DOF = false; // Use 9DOF (gyro, accel, mag) or 6DOF (gyro, accel)
     private double deltaTime = 0f; // Time since last packet for filter updates
     private double lastPacketTime = 0.0f; // Last packet time for calculating sample period
 
@@ -77,14 +77,19 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
         if (filter == null) return;
 
         // Parse the sensor data from the JSON object
-        Vector3 gyro = imuData.Gyro * Mathf.Deg2Rad;
-        Vector3 accel = imuData.Accel.normalized;
-        Vector3 mag = imuData.Mag.normalized;
-        double tempTime = imuData.TimeStamp;
+        Vector3 gyro = imuData.gyro * Mathf.Deg2Rad;
+        Vector3 accel = imuData.accel;
+        Vector3 mag = imuData.mag;
+        double tempTime = imuData.timestamp;
+
+        //Debug.Log("Accelerometer: " + accel.ToString("F4"));
 
         // Drop bad packets early
         if (!IsFinite(tempTime) || !IsFinite(gyro) || !IsFinite(accel) || !IsFinite(mag))
+        {
+            Debug.LogWarning("[IMUHandler] Dropping invalid IMU packet with non-finite values.");
             return;
+        }
 
         double currentTime = tempTime;
 
@@ -92,11 +97,16 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
         if (lastPacketTime == 0.0f)
         {
             lastPacketTime = currentTime;
+            Debug.Log("[IMUHandler] First IMU packet received. Initializing timeline.");
             return;
         }
 
         // Drop late or duplicate packets
-        if (currentTime <= lastPacketTime) return;
+        if (currentTime <= lastPacketTime)
+        {
+            Debug.LogWarning("[IMUHandler] Dropping late IMU packet.");
+            return;
+        }
 
         // Compute clamped dt
         double rawDt = currentTime - lastPacketTime;
@@ -105,22 +115,27 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
 
         filter.SetSamplePeriod((float)deltaTime); // Update the filter's sample period
 
-        // Update the filter with the new sensor data
+        float gyroMag = gyro.magnitude;
+        //Debug.Log($"gyroMag (rad/s): {gyroMag}");
+
+        //Update the filter with the new sensor data
         if (use9DOF)
         {
+            Debug.Log("Using 9DOF update");
             // For 9DOF, use gyro, accel, and mag
             filter.Update9DOF(
-                gyro.x, gyro.y, gyro.z,
-                accel.x, accel.y, accel.z,
-                mag.x, mag.y, mag.z
+                gyro.x, gyro.z, -gyro.y,
+                accel.x, -accel.y, accel.z,
+                mag.z, mag.y, mag.x
             );
         }
         else
         {
+            //Debug.Log("Using 6DOF update");
             // For 6DOF, use gyro and accel
             filter.Update6DOF(
                 gyro.x, gyro.y, gyro.z,
-                accel.x, accel.y, accel.z
+                -accel.x, -accel.y, -accel.z
             );
         }
     }
@@ -137,16 +152,20 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
             ResetOrientation();
             return;
         }
+        Debug.Log("q1: " + q);
 
         // Update the target rotation based on the filter's quaternion
-        q.x = filter.Quaternion[0];
+        q.x = filter.Quaternion[0] - 0.7f;
         q.y = filter.Quaternion[1];
         q.z = filter.Quaternion[2];
-        q.w = filter.Quaternion[3];
+        q.w = filter.Quaternion[3] + 0.7f;
 
         // Apply the computed orientation to the target transform
         if (_ICameraAligner != null)
+        {
+            Debug.Log("q2: " + q);
             _ICameraAligner.ApplyOrientation(ConvertSensorToUnity(q));
+        }
         else
         {
             Debug.LogWarning("[IMUHandler] _ICameraAligner is not assigned. Cannot apply rotation.");
@@ -177,7 +196,7 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
     {
         // Convert sensor quaternion to Unity's coordinate system
 
-        return new Quaternion(q.x, q.y, -q.z, -q.w);
+        return new Quaternion(q.x, -q.y, -q.z, q.w);
     }
 
 

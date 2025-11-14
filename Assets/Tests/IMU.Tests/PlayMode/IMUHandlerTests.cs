@@ -99,7 +99,7 @@ public class IMUHandlerTests
             (Vector3 gyro, Vector3 acc, Vector3 mag, float timeStamp) = testGlobals.GetNewIMUData();
 
             timeStamp = float.PositiveInfinity;
-            IMUData imuData = new IMUData(gyro, acc, mag, timeStamp);
+            //IMUData imuData = new IMUData(gyro, acc, mag, timeStamp);
             //imuHandler.UpdateFilter(imuData);
         }
 
@@ -116,7 +116,7 @@ public class IMUHandlerTests
         {
             (Vector3 gyro, Vector3 acc, Vector3 mag, float timeStamp) = testGlobals.GetNewIMUData();
 
-            IMUData imuData = new IMUData(gyro, acc, mag, timeStamp);
+            //IMUData imuData = new IMUData(gyro, acc, mag, timeStamp);
 
             //imuHandler.UpdateFilter(imuData);
         }

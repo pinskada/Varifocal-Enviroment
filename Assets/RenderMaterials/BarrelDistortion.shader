@@ -6,6 +6,7 @@ Shader "Custom/InverseBarrel"
         _Center    ("Center (UV)", Vector) = (0.5, 0.5, 0, 0) // UV in [0..1], per-eye
         _Strength  ("Strength", Float) = 0.15                 // k>0 pincushion (inverse barrel), k<0 barrel
         _ClampBlack("Clamp Outside Black", Float) = 1.0       // 1 = black outside, 0 = wrap sample
+        _PreScale  ("Pre-Scale", Float) = 1.15                 // 1.00–1.15 typical
     }
 
     SubShader
@@ -25,6 +26,7 @@ Shader "Custom/InverseBarrel"
             sampler2D _MainTex;
             float4 _MainTex_TexelSize;   // x=1/w, y=1/h, z=w, w=h (Unity fills)
             float2 _Center;              // in UV [0..1] of the source RT
+            float  _PreScale;            // overscan pre-zoom factor
             float  _Strength;            // k parameter
             float  _ClampBlack;
 
@@ -51,6 +53,9 @@ Shader "Custom/InverseBarrel"
                 // Normalize to -1..1 space around _Center with aspect correction
                 // (so distortion is radially symmetric even if RT isn't square)
                 float2 uv = i.uv;
+
+                // 1) Pre-zoom (overscan) around the distortion center
+                uv = (uv - _Center) / _PreScale + _Center;
 
                 // Convert to centered coordinates
                 float2 p = uv - _Center;

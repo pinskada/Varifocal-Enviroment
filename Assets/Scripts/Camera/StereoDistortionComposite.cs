@@ -152,6 +152,11 @@ public class StereoDistortionComposite : MonoBehaviour, IModuleSettingsHandler
         var leftCenter = new Vector2(1 - xOffset, 0.5f);
         var rightCenter = new Vector2(xOffset, 0.5f);
 
+        float overscan = Settings.display.preZoom;
+        float clampBlack = Settings.display.clampBlack;
+        if (clampBlack < 0.5f) clampBlack = 0f;
+        if (clampBlack >= 0.5f) clampBlack = 1f;
+
         //Debug.Log($"[StereoDistortionComposite] Left center: {leftCenter}, Right center: {rightCenter}");
 
         distortionMaterialLeft.SetFloat("_Strength", Settings.display.distortionStrength);
@@ -160,8 +165,11 @@ public class StereoDistortionComposite : MonoBehaviour, IModuleSettingsHandler
         distortionMaterialLeft.SetVector("_Center", leftCenter);
         distortionMaterialRight.SetVector("_Center", rightCenter);
 
-        distortionMaterialLeft.SetFloat("_ClampBlack", 1f);
-        distortionMaterialRight.SetFloat("_ClampBlack", 1f);
+        distortionMaterialLeft.SetFloat("_ClampBlack", clampBlack);
+        distortionMaterialRight.SetFloat("_ClampBlack", clampBlack);
+
+        distortionMaterialLeft.SetFloat("_PreScale", overscan);
+        distortionMaterialRight.SetFloat("_PreScale", overscan);
     }
 
     public void SettingsChanged(string moduleName, string fieldName)

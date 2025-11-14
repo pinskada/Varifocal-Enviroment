@@ -42,6 +42,8 @@ public class DisplaySettings
     public float eyeToScreenDist = 50f; // in mm
     public float farClipPlane = 1000f; // in meters
     public float distortionStrength = 0.15f; // distortion strength parameter
+    public float preZoom = 1f; // overscan pre-scale factor
+    public float clampBlack = 0f; // black clamp outside distortion
 }
 
 

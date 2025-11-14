@@ -4,24 +4,17 @@ using System.Collections.Concurrent;
 namespace Contracts
 {
     // Data Transfer Object carrying raw IMU readings (gyro, accel, mag) and timing info.
+    [System.Serializable]
     public class IMUData
     {
         // Gyroscope readings in radians/sec.
-        public Vector3 Gyro { get; }
+        public Vector3 gyro;
         // Accelerometer readings in g.
-        public Vector3 Accel { get; }
+        public Vector3 accel;
         // Magnetometer readings in µT.
-        public Vector3 Mag { get; }
+        public Vector3 mag;
         // Time since last sample in seconds (measured at the data source).
-        public float TimeStamp { get; }
-
-        public IMUData(Vector3 gyro, Vector3 accel, Vector3 mag, float timeStamp)
-        {
-            Gyro = gyro;
-            Accel = accel;
-            Mag = mag;
-            TimeStamp = timeStamp;
-        }
+        public double timestamp;
     }
 
     // Container for the IMU data queue.
