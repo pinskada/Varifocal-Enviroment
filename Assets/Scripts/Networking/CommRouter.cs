@@ -71,7 +71,7 @@ public class CommRouter : MonoBehaviour
     private void RouteMessage(object payload, MessageType type)
     {
         // Main routing function.
-        // Determines transport source/target, encoding/decoding needs, and routes message.  
+        // Determines transport source/target, encoding/decoding needs, and routes message.
 
         // Decompose routing table entry
         (
