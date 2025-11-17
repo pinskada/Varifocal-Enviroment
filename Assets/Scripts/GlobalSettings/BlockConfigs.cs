@@ -15,7 +15,7 @@ public class TCPSettings
     public string raspberryPiIP = "192.168.2.2";
     public string localIP = "127.0.0.1";
     public string subnetMask = "255.255.255.0";
-    public string adapterName = "Ethernet 2";
+    public string adapterName = "Ethernet";
     public string netshFileName;
     public int port = 65432;
     public int readBufferSize = 16777216; // Size of the buffer for incoming data
@@ -56,6 +56,7 @@ public class IMUSettings
     public float betaStill = 0.1f; // Madgwick filter beta gain when still [-]
     public float betaThreshold = 0.05f; // Threshold to switch between moving and still states [-]
     public float minGyroMagnitude = 0.01f;  // Threshold to skip updates when gyro is nearly zero [rad/s]
+    public float qSmoothAlpha = 0.95f; // Smoothing factor for accelerometer low-pass filter [0..1]
 
 }
 
@@ -63,8 +64,8 @@ public class IMUSettings
 [System.Serializable]
 public class CameraSettings
 {
-    public int res_width = 1080;
-    public int res_height = 720;
+    public int res_width = 4608;
+    public int res_height = 2592;
     public int focus = 30;
     public int exposure = 10000;
     public int gain = 2;

@@ -44,6 +44,22 @@ public class GuiInterface : MonoBehaviour
     }
 
 
+    void Update()
+    {
+        // Cycle to next scene on Right Arrow
+        if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            _VRSceneManager.NextScene();
+        }
+
+        // Cycle to previous scene on Left Arrow
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            _VRSceneManager.PreviousScene();
+        }
+    }
+
+
     private void PrewireUiSections()
     {
         var sections = FindObjectsByType<UISection>(

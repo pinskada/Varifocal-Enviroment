@@ -149,8 +149,7 @@ public static class RoutingTable
         try
         {
             IMUData imuData = JsonUtility.FromJson<IMUData>(json);
-            //Debug.Log(json);
-            IMUQueueContainer.IMUqueue.Add(imuData);
+            //IMUQueueContainer.IMUqueue.Add(imuData);
         }
         catch (Exception ex)
         {

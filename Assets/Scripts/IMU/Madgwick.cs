@@ -31,7 +31,7 @@ public class Madgwick : IModuleSettingsHandler
         CheckMinGyroMagnitude();
 
         // Identity in Unity order [x,y,z,w]
-        Quaternion = new float[] { 0.7f, 0f, 0f, -0.7f };
+        Quaternion = new float[] { 0f, 0f, 0f, 1f };
     }
 
     // ------------------- Main update functions -----------------------------
@@ -42,11 +42,11 @@ public class Madgwick : IModuleSettingsHandler
         float mx, float my, float mz)
     {
         // Adjust beta and possibly zero small gyro values
-        SetBetas(gx, gy, gz);
+        (gx, gy, gz) = SetBetas(gx, gy, gz);
 
         // If gyro completely zeroed, don't integrate
-        if (gx == 0f && gy == 0f && gz == 0f)
-            return;
+        // if (gx == 0f && gy == 0f && gz == 0f)
+        //     return;
 
         // If magnetometer invalid, fall back to IMU-only update
         if (mx == 0f && my == 0f && mz == 0f)
@@ -182,16 +182,14 @@ public class Madgwick : IModuleSettingsHandler
     public void Update6DOF(float gx, float gy, float gz,
                            float ax, float ay, float az)
     {
-        SetBetas(gx, gy, gz);
-
-        // If gyro completely zeroed, don't integrate
-        if (gx == 0f && gy == 0f && gz == 0f)
-            return;
+        (gx, gy, gz) = SetBetas(gx, gy, gz);
 
         float q0 = this.q0;
         float q1 = this.q1;
         float q2 = this.q2;
         float q3 = this.q3;
+
+        //Debug.Log("Before accel: q0: " + q0 + " q1: " + q1 + " q2: " + q2 + " q3: " + q3);
 
         // Rate of change of quaternion from gyroscope
         float qDot1 = 0.5f * (-q1 * gx - q2 * gy - q3 * gz);
@@ -202,11 +200,16 @@ public class Madgwick : IModuleSettingsHandler
         // If accelerometer is valid, apply gradient descent correction
         if (!(ax == 0f && ay == 0f && az == 0f))
         {
+            //Debug.Log("ax: " + ax + " ay: " + ay + " az: " + az);
             // Normalize accelerometer
             float recipNorm = 1.0f / Mathf.Sqrt(ax * ax + ay * ay + az * az);
+            //Debug.Log("recipNorm: " + recipNorm);
+
             ax *= recipNorm;
             ay *= recipNorm;
             az *= recipNorm;
+
+            //Debug.Log("Normalized accel: " + ax + ", " + ay + ", " + az);
 
             // Gradient descent algorithm corrective step
             float _2q0 = 2.0f * q0;
@@ -236,18 +239,25 @@ public class Madgwick : IModuleSettingsHandler
             float s3 = 4.0f * q1q1 * q3 - _2q1 * ax
                        + 4.0f * q2q2 * q3 - _2q2 * ay;
 
-            // Normalize step magnitude
-            recipNorm = 1.0f / Mathf.Sqrt(s0 * s0 + s1 * s1 + s2 * s2 + s3 * s3);
-            s0 *= recipNorm;
-            s1 *= recipNorm;
-            s2 *= recipNorm;
-            s3 *= recipNorm;
+            //Debug.Log("s before norm: " + s0 + ", " + s1 + ", " + s2 + ", " + s3);
+            float stepNormSq = s0 * s0 + s1 * s1 + s2 * s2 + s3 * s3;
 
-            // Apply feedback
-            qDot1 -= beta * s0;
-            qDot2 -= beta * s1;
-            qDot3 -= beta * s2;
-            qDot4 -= beta * s3;
+            //Debug.Log("Step norm sq: " + stepNormSq);
+
+            if (stepNormSq > 1e-12f && beta > 0f)
+            {
+                float recipNormS = 1.0f / Mathf.Sqrt(stepNormSq);
+                s0 *= recipNormS;
+                s1 *= recipNormS;
+                s2 *= recipNormS;
+                s3 *= recipNormS;
+
+                // Apply feedback
+                qDot1 -= beta * s0;
+                qDot2 -= beta * s1;
+                qDot3 -= beta * s2;
+                qDot4 -= beta * s3;
+            }
         }
 
         // Integrate to yield quaternion
@@ -274,6 +284,12 @@ public class Madgwick : IModuleSettingsHandler
         Quaternion[1] = q2;
         Quaternion[2] = q3;
         Quaternion[3] = q0;
+
+        Debug.Log("Filter Quaternion: " +
+            Quaternion[0].ToString("F4") + ", " +
+            Quaternion[1].ToString("F4") + ", " +
+            Quaternion[2].ToString("F4") + ", " +
+            Quaternion[3].ToString("F4"));
     }
 
     // ------------------- Utility / config methods -------------------------
@@ -309,10 +325,10 @@ public class Madgwick : IModuleSettingsHandler
         }
 
         // If gyro almost zero, zero it out completely so there is no integration
-        if (gyroMag < Settings.imu.minGyroMagnitude)
-        {
-            return (0f, 0f, 0f);
-        }
+        // if (gyroMag < Settings.imu.minGyroMagnitude)
+        // {
+        //     return (0f, 0f, 0f);
+        // }
 
         return (gx, gy, gz);
     }

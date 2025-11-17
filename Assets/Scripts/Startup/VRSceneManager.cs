@@ -9,10 +9,9 @@ using Contracts;
 public class VRSceneManager : MonoBehaviour, ISceneManagement
 {
     public static VRSceneManager Instance;
-    private string currentVRScene;
-    public List<string> availableScenes = new() { "SampleScene" };
+    private string currentVRScene = null;
+    public List<string> availableScenes = new() { };
     private int currentSceneIndex = 0;
-    private string previousSceneBeforeCalibration = null;
 
     void Awake()
     {
@@ -29,42 +28,44 @@ public class VRSceneManager : MonoBehaviour, ISceneManagement
         // Load GUI
         //yield return null;
         SceneManager.LoadScene("UI_EditorScene", LoadSceneMode.Additive);
-        // Load initial VR scene (SampleScene)
+        // Load initial VR scene (CoreScene)
         yield return null;
-        //SwitchVRScene("SampleScene");
+        currentVRScene = "CoreScene";
+        //SceneManager.LoadSceneAsync("CoreScene", LoadSceneMode.Additive);
+
     }
 
     private IEnumerator SwitchVRScene(string newScene)
     {
         // Checks if the new scene is already loaded and skip loading if it is
 
-        bool skipSceneLoad = false;
+        if (string.IsNullOrEmpty(newScene))
+        {
+            Debug.LogWarning("[VRSceneManager] New scene name is null or empty. Aborting scene switch.");
+            yield return null;
+        }
+
         if (newScene == currentVRScene)
         {
             Debug.Log($"[VRSceneManager] Scene '{newScene}' already active. Skipping load.");
-            skipSceneLoad = true;
+            yield return null;
         }
 
-        if (!skipSceneLoad)
-        {
-            if (!string.IsNullOrEmpty(currentVRScene))
-                yield return SceneManager.UnloadSceneAsync(currentVRScene);
+        yield return SceneManager.UnloadSceneAsync(currentVRScene);
 
-            yield return SceneManager.LoadSceneAsync(newScene, LoadSceneMode.Additive);
-            currentVRScene = newScene;
-        }
-        else
-        {
-            yield return null; // Wait a frame to ensure the coroutine completes
-        }
+        yield return SceneManager.LoadSceneAsync(newScene, LoadSceneMode.Additive);
+
+        currentVRScene = newScene;
     }
 
     public void LoadCalibScene()
     {
         // Switches to the calibration scene and stores the previous scene
 
-        previousSceneBeforeCalibration = availableScenes[currentSceneIndex];
-        SwitchVRScene("CalibScene");
+        Debug.Log("Load Calib Scene called");
+
+        StartCoroutine(SwitchVRScene("CalibScene"));
+        currentVRScene = "CalibScene";
     }
 
     public void NextScene()
@@ -72,14 +73,18 @@ public class VRSceneManager : MonoBehaviour, ISceneManagement
         // Loads the next scene in the list, or returns to the previous
         // scene before calibration if currently in the calibration scene
 
+        Debug.Log("Next Scene called");
+
         if (currentVRScene == "CalibScene")
         {
-            SwitchVRScene(previousSceneBeforeCalibration ?? availableScenes[0]);
+            StartCoroutine(SwitchVRScene(availableScenes[0]));
             return;
         }
 
         currentSceneIndex = (currentSceneIndex + 1) % availableScenes.Count;
-        SwitchVRScene(availableScenes[currentSceneIndex]);
+        Debug.Log("New scene index: " + currentSceneIndex);
+
+        StartCoroutine(SwitchVRScene(availableScenes[currentSceneIndex]));
     }
 
     public void PreviousScene()
@@ -87,13 +92,15 @@ public class VRSceneManager : MonoBehaviour, ISceneManagement
         // Loads the previous scene in the list, or returns to the previous
         // scene before calibration if currently in the calibration scene
 
+
         if (currentVRScene == "CalibScene")
         {
-            SwitchVRScene(previousSceneBeforeCalibration ?? availableScenes[0]);
+            StartCoroutine(SwitchVRScene(availableScenes[0]));
             return;
         }
 
         currentSceneIndex = (currentSceneIndex - 1 + availableScenes.Count) % availableScenes.Count;
-        SwitchVRScene(availableScenes[currentSceneIndex]);
+        Debug.Log("New scene index: " + currentSceneIndex);
+        StartCoroutine(SwitchVRScene(availableScenes[currentSceneIndex]));
     }
 }

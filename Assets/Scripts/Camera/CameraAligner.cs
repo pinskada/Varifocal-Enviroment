@@ -27,6 +27,11 @@ public class CameraAligner : MonoBehaviour, ICameraAligner
         StartCoroutine(AlignToAnchorNextFrame());
     }
 
+    public void Update()
+    {
+        //Debug.Log(transform.rotation);
+    }
+
 
     private IEnumerator AlignToAnchorNextFrame()
     {

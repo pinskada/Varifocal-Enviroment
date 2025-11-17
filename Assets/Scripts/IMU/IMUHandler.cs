@@ -16,10 +16,14 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
     private Madgwick filter; // Madgwick filter instance for orientation estimation
     private Quaternion initialRotation; // Initial rotation of the target transform to reset to
     private Quaternion q = Quaternion.identity; // Quaternion to hold the current orientation
+    private Quaternion q_smoothed = Quaternion.identity; // Smoothed quaternion for orientation
+    private readonly object filterLock = new object();
     public bool use9DOF = false; // Use 9DOF (gyro, accel, mag) or 6DOF (gyro, accel)
     private double deltaTime = 0f; // Time since last packet for filter updates
     private double lastPacketTime = 0.0f; // Last packet time for calculating sample period
-
+    private bool smoothInit = false;
+    private Vector3 accelFiltered = Vector3.zero;
+    private Vector3 rotFiltered = Vector3.zero;
 
     // Ensure that the sensor data is valid and finite
     static bool IsFinite(double x) => !(double.IsNaN(x) || double.IsInfinity(x));
@@ -77,15 +81,15 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
         if (filter == null) return;
 
         // Parse the sensor data from the JSON object
-        Vector3 gyro = imuData.gyro * Mathf.Deg2Rad;
-        Vector3 accel = imuData.accel;
-        Vector3 mag = imuData.mag;
+        Vector3 rawGyro = imuData.gyro * Mathf.Deg2Rad;
+        Vector3 rawAccel = imuData.accel;
+        Vector3 rawMag = imuData.mag;
         double tempTime = imuData.timestamp;
 
         //Debug.Log("Accelerometer: " + accel.ToString("F4"));
 
         // Drop bad packets early
-        if (!IsFinite(tempTime) || !IsFinite(gyro) || !IsFinite(accel) || !IsFinite(mag))
+        if (!IsFinite(tempTime) || !IsFinite(rawGyro) || !IsFinite(rawAccel) || !IsFinite(rawMag))
         {
             Debug.LogWarning("[IMUHandler] Dropping invalid IMU packet with non-finite values.");
             return;
@@ -113,30 +117,41 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
         deltaTime = Mathf.Clamp((float)rawDt, Settings.imu.minDt, Settings.imu.maxDt);
         lastPacketTime = currentTime;
 
-        filter.SetSamplePeriod((float)deltaTime); // Update the filter's sample period
 
-        float gyroMag = gyro.magnitude;
-        //Debug.Log($"gyroMag (rad/s): {gyroMag}");
+        // --- new: remap accelerometer into Madgwick's expected frame ---
+        // Rotate +90° around X so that "down" (0,1,0) -> (0,0,1)
+        Vector3 rotGyro = new Vector3(
+            rawGyro.x,
+            -rawGyro.z,
+            rawGyro.y
+        );
 
-        //Update the filter with the new sensor data
-        if (use9DOF)
+        Vector3 rotAccel = new Vector3(
+            rawAccel.x,
+            -rawAccel.z,
+            rawAccel.y
+        );
+
+        lock (filterLock)
         {
-            Debug.Log("Using 9DOF update");
-            // For 9DOF, use gyro, accel, and mag
-            filter.Update9DOF(
-                gyro.x, gyro.z, -gyro.y,
-                accel.x, -accel.y, accel.z,
-                mag.z, mag.y, mag.x
-            );
-        }
-        else
-        {
-            //Debug.Log("Using 6DOF update");
-            // For 6DOF, use gyro and accel
-            filter.Update6DOF(
-                gyro.x, gyro.y, gyro.z,
-                -accel.x, -accel.y, -accel.z
-            );
+            filter.SetSamplePeriod((float)deltaTime); // Update the filter's sample period
+
+            //Update the filter with the new sensor data
+            if (use9DOF)
+            {
+                filter.Update9DOF(
+                    rotGyro.x, rotGyro.y, rotGyro.z,
+                    rotAccel.x, rotAccel.y, rotAccel.z,
+                    rawMag.x, rawMag.y, rawMag.z
+                );
+            }
+            else
+            {
+                filter.Update6DOF(
+                    rotGyro.x, rotGyro.y, rotGyro.z,
+                    rotAccel.x, rotAccel.y, rotAccel.z
+                );
+            }
         }
     }
 
@@ -152,19 +167,38 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
             ResetOrientation();
             return;
         }
-        Debug.Log("q1: " + q);
 
-        // Update the target rotation based on the filter's quaternion
-        q.x = filter.Quaternion[0] - 0.7f;
-        q.y = filter.Quaternion[1];
-        q.z = filter.Quaternion[2];
-        q.w = filter.Quaternion[3] + 0.7f;
+        lock (filterLock)
+        {
+            // Update the target rotation based on the filter's quaternion
+            q.x = filter.Quaternion[0];
+            q.y = filter.Quaternion[1];
+            q.z = filter.Quaternion[2];
+            q.w = filter.Quaternion[3];
+        }
+
+        var q_converted = ConvertSensorToUnity(q);
+
+        if (!smoothInit)
+        {
+            q_smoothed = q_converted;
+            smoothInit = true;
+        }
+        else
+        {
+            // Exponential smoothing on the quaternion
+            // orientationSmoothAlpha in [0,1]: larger = more responsive, less smoothing
+            q_smoothed = Quaternion.Slerp(
+                q_smoothed,
+                q_converted,
+                Settings.imu.qSmoothAlpha
+            );
+        }
 
         // Apply the computed orientation to the target transform
         if (_ICameraAligner != null)
         {
-            Debug.Log("q2: " + q);
-            _ICameraAligner.ApplyOrientation(ConvertSensorToUnity(q));
+            _ICameraAligner.ApplyOrientation(q_smoothed);
         }
         else
         {
@@ -194,9 +228,18 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
 
     private Quaternion ConvertSensorToUnity(Quaternion q)
     {
-        // Convert sensor quaternion to Unity's coordinate system
+        // After remapping the IMU frame (+90° around X),
+        // Madgwick's Y/Z axes no longer line up with Unity's idea of yaw/roll.
+        // Pitch (X) is fine, but yaw and roll are swapped.
+        //
+        // Fix: swap Y and Z when mapping to Unity.
 
-        return new Quaternion(q.x, -q.y, -q.z, q.w);
+        return new Quaternion(
+            q.x,     // keep pitch axis as-is
+            -q.z,     // Unity yaw <- filter Z (with sign flip)
+            q.y,     // Unity roll <- filter Y (with sign flip)
+            q.w
+        );
     }
 
 

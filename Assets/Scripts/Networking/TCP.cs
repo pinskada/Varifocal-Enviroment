@@ -82,7 +82,7 @@ public class TCP : IModuleSettingsHandler
         }
         incomingBuffer = new byte[Settings.tcp.readBufferSize * 4];
 
-        //UnityEngine.Debug.Log("[TCP] Attempting to connect to a server...");
+        UnityEngine.Debug.Log("[TCP] Attempting to connect to a server...");
         ConnectToServer(); // Connect to the RPI TCP server
     }
 
