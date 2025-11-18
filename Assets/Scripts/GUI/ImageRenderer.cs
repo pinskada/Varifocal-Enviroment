@@ -2,6 +2,8 @@ using UnityEngine;
 using Contracts;
 using System;
 using JetBrains.Annotations;
+using System.Collections.Generic;
+using UnityEngine.UI;
 
 public class ImageRenderer : MonoBehaviour, ImageDestroyer
 {
@@ -11,15 +13,41 @@ public class ImageRenderer : MonoBehaviour, ImageDestroyer
     [SerializeField] private UnityEngine.UI.AspectRatioFitter leftEyeAspectFitter;
     [SerializeField] private UnityEngine.UI.AspectRatioFitter rightEyeAspectFitter;
 
+    [SerializeField] private RectTransform leftOverlayRoot;
+    [SerializeField] private RectTransform rightOverlayRoot;
+    [SerializeField] private Image leftCross;
+    [SerializeField] private Image leftCircle;
+    [SerializeField] private Image rightCross;
+    [SerializeField] private Image rightCircle;
+
     private Texture2D _leftTex, _rightTex;
     private int printCounter = 0;
     private bool displayTextures = false;
+
     private void Start()
     {
         if (leftEyeImage == null || rightEyeImage == null)
         {
             Debug.LogError("[ImageRenderer] RawImage components not assigned.");
         }
+
+        var crossTex = GenerateCrossTexture(256, 4);
+        var circleTex = GenerateCircleTexture(256, 4);
+
+        var crossSprite = MakeSprite(crossTex);
+        var circleSprite = MakeSprite(circleTex);
+
+        leftCross.sprite = crossSprite;
+        rightCross.sprite = crossSprite;
+
+        leftCircle.sprite = circleSprite;
+        rightCircle.sprite = circleSprite;
+
+        // Optional: keep aspect, tint, etc.
+        leftCross.preserveAspect = true;
+        rightCross.preserveAspect = true;
+        leftCircle.preserveAspect = true;
+        rightCircle.preserveAspect = true;
     }
 
     void OnDisable()
@@ -33,15 +61,33 @@ public class ImageRenderer : MonoBehaviour, ImageDestroyer
 
     void Update()
     {
-        if (!GUIQueueContainer.images.TryDequeue(out var images)) return;
+        var hasImages = GUIQueueContainer.images.TryDequeue(out var images);
+        var hasTrackerData = GUIQueueContainer.trackerData.TryDequeue(out var trackerData);
 
+        if (!hasImages || images == null)
+        {
+            leftCross.gameObject.SetActive(false);
+            leftCircle.gameObject.SetActive(false);
+            rightCross.gameObject.SetActive(false);
+            rightCircle.gameObject.SetActive(false);
+            return;
+        }
         if (!displayTextures)
         {
             if (_leftTex != null || _rightTex != null)
                 ClearTextures();
             return;
         }
+        RenderEyeImage(images);
+        if (hasTrackerData)
+        {
+            RenderOverlay(trackerData.left_eye, isLeft: true);
+            RenderOverlay(trackerData.right_eye, isLeft: false);
+        }
+    }
 
+    private void RenderEyeImage(List<EyeImage> images)
+    {
         foreach (var eye in images)
         {
             try
@@ -88,8 +134,37 @@ public class ImageRenderer : MonoBehaviour, ImageDestroyer
                 Debug.LogError($"[CommRouter]HandlePreviewImage: Failed to load image for eye {eye.EyeId}: {ex.Message}");
             }
         }
-
     }
+
+    private void RenderOverlay(EyeData tracker_data, bool isLeft)
+    {
+        var root = isLeft ? leftOverlayRoot : rightOverlayRoot;
+        var cross = isLeft ? leftCross : rightCross;
+        var circle = isLeft ? leftCircle : rightCircle;
+        var tex = isLeft ? _leftTex : _rightTex;
+
+        cross.gameObject.SetActive(tracker_data.is_valid);
+        circle.gameObject.SetActive(tracker_data.is_valid);
+
+        if (!tracker_data.is_valid || tex == null || root == null)
+            return;
+
+        float rectX = tracker_data.center_x * root.rect.width;
+        float rectY = (1f - tracker_data.center_y) * root.rect.height; // flip Y
+
+        Vector2 localPos = new Vector2(rectX, rectY);
+
+        var crossRect = cross.rectTransform;
+        var circleRect = circle.rectTransform;
+
+        crossRect.anchoredPosition = localPos;
+        circleRect.anchoredPosition = localPos;
+
+        // size in UI units – if radius is in normalized units, multiply by root size instead
+        circleRect.sizeDelta = new Vector2(tracker_data.radius_x * 2f,
+                                        tracker_data.radius_y * 2f);
+    }
+
 
     private static bool IsLikelyImage(byte[] data)
     {
@@ -198,5 +273,67 @@ public class ImageRenderer : MonoBehaviour, ImageDestroyer
         flipped.SetPixels32(flippedPixels);
         flipped.Apply();
         return flipped;
+    }
+
+    private Texture2D GenerateCircleTexture(int size, int thickness)
+    {
+        Texture2D tex = new Texture2D(size, size, TextureFormat.ARGB32, false);
+        tex.wrapMode = TextureWrapMode.Clamp;
+
+        Color32 clear = new Color32(0, 0, 0, 0);
+        Color32 white = new Color32(255, 255, 255, 255);
+
+        int radius = size / 2;
+
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                int dx = x - radius;
+                int dy = y - radius;
+                float dist = Mathf.Sqrt(dx * dx + dy * dy);
+
+                // Draw a ring with thickness
+                if (dist > radius - thickness && dist < radius)
+                    tex.SetPixel(x, y, white);
+                else
+                    tex.SetPixel(x, y, clear);
+            }
+        }
+
+        tex.Apply();
+        return tex;
+    }
+
+    private Texture2D GenerateCrossTexture(int size, int thickness)
+    {
+        Texture2D tex = new Texture2D(size, size, TextureFormat.ARGB32, false);
+        tex.wrapMode = TextureWrapMode.Clamp;
+
+        Color32 clear = new Color32(0, 0, 0, 0);
+        Color32 white = new Color32(255, 255, 255, 255);
+
+        tex.SetPixels32(new Color32[size * size]); // clear
+
+        for (int i = 0; i < size; i++)
+        {
+            // Vertical bar
+            for (int t = -thickness; t <= thickness; t++)
+                tex.SetPixel(size / 2 + t, i, white);
+
+            // Horizontal bar
+            for (int t = -thickness; t <= thickness; t++)
+                tex.SetPixel(i, size / 2 + t, white);
+        }
+
+        tex.Apply();
+        return tex;
+    }
+
+    private Sprite MakeSprite(Texture2D tex)
+    {
+        return Sprite.Create(tex,
+            new Rect(0, 0, tex.width, tex.height),
+            new Vector2(0.5f, 0.5f), 100f); // pivot center, 100 px/unit
     }
 }

@@ -27,5 +27,24 @@ namespace Contracts
     {
         public static readonly ConcurrentQueue<List<EyeImage>> images =
         new ConcurrentQueue<List<EyeImage>>();
+        public static readonly ConcurrentQueue<TrackerData> trackerData =
+        new ConcurrentQueue<TrackerData>();
+    }
+
+    [System.Serializable]
+    public class TrackerData
+    {
+        public EyeData left_eye;
+        public EyeData right_eye;
+    }
+
+    [System.Serializable]
+    public class EyeData
+    {
+        public float center_x;
+        public float center_y;
+        public float radius_x;
+        public float radius_y;
+        public bool is_valid;
     }
 }

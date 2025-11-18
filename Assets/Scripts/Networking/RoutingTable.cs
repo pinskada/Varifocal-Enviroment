@@ -129,6 +129,34 @@ public static class RoutingTable
     }
 
 
+    private static void HandleTrackerData(object payload)
+    {
+        // Handle tracker data.
+        if (payload == null)
+        {
+            Debug.LogError("[CommRouter] HandleTrackerData received null payload.");
+            return;
+        }
+
+        var json = payload as string;
+        if (json == null)
+        {
+            Debug.LogError($"[CommRouter] HandleTrackerData expected JSON string, got {payload.GetType().Name}.");
+            return;
+        }
+
+        try
+        {
+            TrackerData trackerData = JsonUtility.FromJson<TrackerData>(json);
+            GUIQueueContainer.trackerData.Enqueue(trackerData);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[CommRouter] Failed to parse tracker data: {ex.Message}");
+            return;
+        }
+    }
+
     private static void HandleIMUData(object payload)
     {
         // Parse and enqueue IMU data.
@@ -149,7 +177,7 @@ public static class RoutingTable
         try
         {
             IMUData imuData = JsonUtility.FromJson<IMUData>(json);
-            //IMUQueueContainer.IMUqueue.Add(imuData);
+            IMUQueueContainer.IMUqueue.Add(imuData);
         }
         catch (Exception ex)
         {
