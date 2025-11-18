@@ -11,4 +11,5 @@ public static class Settings
     public static GazeProcessorSettings gaze => Provider.Config.gaze;
     public static CameraSettings camera => Provider.Config.camera;
     public static CropSettings tracker_crop => Provider.Config.tracker_crop;
+    public static CalibrationSettings calibrationSettings => Provider.Config.calibrationSettings;
 }

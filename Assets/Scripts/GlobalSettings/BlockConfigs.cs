@@ -92,24 +92,6 @@ public class CropSettings
 }
 
 
-// [System.Serializable]
-// public class CropSettings
-// {
-//     public List<List<float>> crop_left = new List<List<float>>
-//     {
-//         new List<float> { 0f, 0.5f },   // left, right
-//         new List<float> { 0f, 1f }  // top, bottom
-//     };
-
-//     public List<List<float>> crop_right = new List<List<float>>
-//     {
-//         new List<float> { 0.5f, 1f },   // left, right
-//         new List<float> { 0f, 1f }  // top, bottom
-//     };
-
-// }
-
-
 [System.Serializable]
 public class EyeloopSettings
 {
@@ -134,6 +116,22 @@ public class GazeProcessorSettings
     public float std_threshold = 0.01f;
     public float gyro_threshold = 5f;
 }
+
+
+[System.Serializable]
+public class CalibEntry
+{
+    public float distance;   // meters
+    public float holdTime;   // seconds
+}
+
+[System.Serializable]
+public class CalibrationSettings
+{
+    public List<CalibEntry> calibrationPoints = new List<CalibEntry>();
+    public float pauseBetweenPoints = 0.5f;
+}
+
 
 [System.Serializable]
 public class TestSettings

@@ -12,6 +12,7 @@ public abstract class BaseConfig
     public DisplaySettings display = new DisplaySettings();
     public IMUSettings imu = new IMUSettings();
     public CropSettings tracker_crop = new CropSettings();
+    public CalibrationSettings calibrationSettings = new CalibrationSettings();
 }
 
 // Testbed VR configuration (inherits all from BaseConfig).
