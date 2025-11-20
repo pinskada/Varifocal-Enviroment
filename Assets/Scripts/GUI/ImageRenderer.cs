@@ -1,24 +1,22 @@
 using UnityEngine;
 using Contracts;
 using System;
-using JetBrains.Annotations;
 using System.Collections.Generic;
 using UnityEngine.UI;
 
 public class ImageRenderer : MonoBehaviour, ImageDestroyer
 {
-    [SerializeField] private UnityEngine.UI.RawImage leftEyeImage;
-    [SerializeField] private UnityEngine.UI.RawImage rightEyeImage;
+    [SerializeField] private RawImage leftEyeImage;
+    [SerializeField] private RawImage rightEyeImage;
 
-    [SerializeField] private UnityEngine.UI.AspectRatioFitter leftEyeAspectFitter;
-    [SerializeField] private UnityEngine.UI.AspectRatioFitter rightEyeAspectFitter;
-
-    [SerializeField] private RectTransform leftOverlayRoot;
-    [SerializeField] private RectTransform rightOverlayRoot;
-    [SerializeField] private Image leftCross;
-    [SerializeField] private Image leftCircle;
-    [SerializeField] private Image rightCross;
-    [SerializeField] private Image rightCircle;
+    [SerializeField] private AspectRatioFitter leftEyeAspectFitter;
+    [SerializeField] private AspectRatioFitter rightEyeAspectFitter;
+    // [SerializeField] private RectTransform leftOverlayRoot;
+    // [SerializeField] private RectTransform rightOverlayRoot;
+    [SerializeField] private RectTransform leftCross;
+    // [SerializeField] private RectTransform leftCircle;
+    [SerializeField] private RectTransform rightCross;
+    // [SerializeField] private RectTransform rightCircle;
 
     private Texture2D _leftTex, _rightTex;
     private int printCounter = 0;
@@ -31,23 +29,23 @@ public class ImageRenderer : MonoBehaviour, ImageDestroyer
             Debug.LogError("[ImageRenderer] RawImage components not assigned.");
         }
 
-        var crossTex = GenerateCrossTexture(256, 4);
-        var circleTex = GenerateCircleTexture(256, 4);
+        // var crossTex = GenerateCrossTexture(1000, 30);
+        // var circleTex = GenerateCircleTexture(1000, 30);
 
-        var crossSprite = MakeSprite(crossTex);
-        var circleSprite = MakeSprite(circleTex);
+        // var crossSprite = MakeSprite(crossTex);
+        // var circleSprite = MakeSprite(circleTex);
 
-        leftCross.sprite = crossSprite;
-        rightCross.sprite = crossSprite;
+        // leftCross.sprite = crossSprite;
+        // rightCross.sprite = crossSprite;
 
-        leftCircle.sprite = circleSprite;
-        rightCircle.sprite = circleSprite;
+        // leftCircle.sprite = circleSprite;
+        // rightCircle.sprite = circleSprite;
 
-        // Optional: keep aspect, tint, etc.
-        leftCross.preserveAspect = true;
-        rightCross.preserveAspect = true;
-        leftCircle.preserveAspect = true;
-        rightCircle.preserveAspect = true;
+        // // Optional: keep aspect, tint, etc.
+        // leftCross.preserveAspect = true;
+        // rightCross.preserveAspect = true;
+        // leftCircle.preserveAspect = true;
+        // rightCircle.preserveAspect = true;
     }
 
     void OnDisable()
@@ -64,21 +62,15 @@ public class ImageRenderer : MonoBehaviour, ImageDestroyer
         var hasImages = GUIQueueContainer.images.TryDequeue(out var images);
         var hasTrackerData = GUIQueueContainer.trackerData.TryDequeue(out var trackerData);
 
-        if (!hasImages || images == null)
-        {
-            leftCross.gameObject.SetActive(false);
-            leftCircle.gameObject.SetActive(false);
-            rightCross.gameObject.SetActive(false);
-            rightCircle.gameObject.SetActive(false);
-            return;
-        }
         if (!displayTextures)
         {
             if (_leftTex != null || _rightTex != null)
                 ClearTextures();
             return;
         }
-        RenderEyeImage(images);
+        if (hasImages && images != null)
+            RenderEyeImage(images);
+
         if (hasTrackerData)
         {
             RenderOverlay(trackerData.left_eye, isLeft: true);
@@ -138,31 +130,46 @@ public class ImageRenderer : MonoBehaviour, ImageDestroyer
 
     private void RenderOverlay(EyeData tracker_data, bool isLeft)
     {
-        var root = isLeft ? leftOverlayRoot : rightOverlayRoot;
         var cross = isLeft ? leftCross : rightCross;
-        var circle = isLeft ? leftCircle : rightCircle;
         var tex = isLeft ? _leftTex : _rightTex;
+        var img = isLeft ? leftEyeImage : rightEyeImage;
 
-        cross.gameObject.SetActive(tracker_data.is_valid);
-        circle.gameObject.SetActive(tracker_data.is_valid);
-
-        if (!tracker_data.is_valid || tex == null || root == null)
+        if (cross == null || tex == null || img == null)
             return;
 
-        float rectX = tracker_data.center_x * root.rect.width;
-        float rectY = (1f - tracker_data.center_y) * root.rect.height; // flip Y
+        if (!tracker_data.is_valid)
+        {
+            cross.gameObject.SetActive(false);
+            return;
+        }
 
-        Vector2 localPos = new Vector2(rectX, rectY);
+        cross.gameObject.SetActive(true);
 
-        var crossRect = cross.rectTransform;
-        var circleRect = circle.rectTransform;
+        // Rect of the preview on screen
+        RectTransform imgRectT = img.rectTransform;
+        Rect imgRect = imgRectT.rect;
 
-        crossRect.anchoredPosition = localPos;
-        circleRect.anchoredPosition = localPos;
+        // pixel -> normalized [0..1]
+        float nx = tracker_data.center_x / tex.width;
+        float ny = tracker_data.center_y / tex.height;
 
-        // size in UI units – if radius is in normalized units, multiply by root size instead
-        circleRect.sizeDelta = new Vector2(tracker_data.radius_x * 2f,
-                                        tracker_data.radius_y * 2f);
+        // normalized -> UI units in the preview rect
+        float uiX = nx * imgRect.width;
+        float uiY = (1f - ny) * imgRect.height; // flip Y
+
+        // our cross anchor is bottom-left of RightImage/LeftImage,
+        // so shift from preview bottom-left to parent bottom-left:
+        // (assumes RightImage/LeftImage is the direct parent of the preview)
+        Vector2 offsetInParent = imgRectT.anchoredPosition;
+
+        Vector2 pos = offsetInParent + new Vector2(uiX, uiY);
+
+        cross.anchoredPosition = pos;
+
+        Debug.Log("Rendererd overlay: " +
+            $"eye={(isLeft ? "left" : "right")}, " +
+            $"pos=({pos.x:F1}, {pos.y:F1}), " +
+            $"radius=({tracker_data.radius_x:F1}, {tracker_data.radius_y:F1})");
     }
 
 
@@ -281,7 +288,7 @@ public class ImageRenderer : MonoBehaviour, ImageDestroyer
         tex.wrapMode = TextureWrapMode.Clamp;
 
         Color32 clear = new Color32(0, 0, 0, 0);
-        Color32 white = new Color32(255, 255, 255, 255);
+        Color32 red = new Color32(255, 0, 0, 255);
 
         int radius = size / 2;
 
@@ -295,7 +302,7 @@ public class ImageRenderer : MonoBehaviour, ImageDestroyer
 
                 // Draw a ring with thickness
                 if (dist > radius - thickness && dist < radius)
-                    tex.SetPixel(x, y, white);
+                    tex.SetPixel(x, y, red);
                 else
                     tex.SetPixel(x, y, clear);
             }
@@ -311,7 +318,7 @@ public class ImageRenderer : MonoBehaviour, ImageDestroyer
         tex.wrapMode = TextureWrapMode.Clamp;
 
         Color32 clear = new Color32(0, 0, 0, 0);
-        Color32 white = new Color32(255, 255, 255, 255);
+        Color32 red = new Color32(255, 0, 0, 255);
 
         tex.SetPixels32(new Color32[size * size]); // clear
 
@@ -319,11 +326,11 @@ public class ImageRenderer : MonoBehaviour, ImageDestroyer
         {
             // Vertical bar
             for (int t = -thickness; t <= thickness; t++)
-                tex.SetPixel(size / 2 + t, i, white);
+                tex.SetPixel(size / 2 + t, i, red);
 
             // Horizontal bar
             for (int t = -thickness; t <= thickness; t++)
-                tex.SetPixel(i, size / 2 + t, white);
+                tex.SetPixel(i, size / 2 + t, red);
         }
 
         tex.Apply();

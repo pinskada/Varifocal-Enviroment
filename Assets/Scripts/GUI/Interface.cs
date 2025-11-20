@@ -244,7 +244,7 @@ public class GuiInterface : MonoBehaviour
                 break;
             case 3:
                 action = "online";
-                _imageDestroyer.ControlTextures(false);
+                _imageDestroyer.ControlTextures(true);
                 break;
         }
         var message = new Dictionary<string, string>

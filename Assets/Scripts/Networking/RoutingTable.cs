@@ -76,7 +76,7 @@ public static class RoutingTable
         localRoutingTable[MessageType.espLogg] = (payload) => Debug.Log($"ESP Log: {payload}");
         localRoutingTable[MessageType.trackerPreview] = (payload) => HandlePreviewImage(payload);
         localRoutingTable[MessageType.eyePreview] = (payload) => HandlePreviewImage(payload);
-        localRoutingTable[MessageType.trackerData] = (payload) => { /* Handle tracker data if needed */ };
+        localRoutingTable[MessageType.trackerData] = (payload) => HandleTrackerData(payload);
 
         return localRoutingTable;
     }
@@ -131,6 +131,7 @@ public static class RoutingTable
 
     private static void HandleTrackerData(object payload)
     {
+        //Debug.Log("[CommRouter] Handling tracker data.");
         // Handle tracker data.
         if (payload == null)
         {
