@@ -166,10 +166,10 @@ public class ImageRenderer : MonoBehaviour, ImageDestroyer
 
         cross.anchoredPosition = pos;
 
-        Debug.Log("Rendererd overlay: " +
-            $"eye={(isLeft ? "left" : "right")}, " +
-            $"pos=({pos.x:F1}, {pos.y:F1}), " +
-            $"radius=({tracker_data.radius_x:F1}, {tracker_data.radius_y:F1})");
+        // Debug.Log("Rendererd overlay: " +
+        //     $"eye={(isLeft ? "left" : "right")}, " +
+        //     $"pos=({pos.x:F1}, {pos.y:F1}), " +
+        //     $"radius=({tracker_data.radius_x:F1}, {tracker_data.radius_y:F1})");
     }
 
 

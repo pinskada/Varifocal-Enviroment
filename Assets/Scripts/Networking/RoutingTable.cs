@@ -77,6 +77,7 @@ public static class RoutingTable
         localRoutingTable[MessageType.trackerPreview] = (payload) => HandlePreviewImage(payload);
         localRoutingTable[MessageType.eyePreview] = (payload) => HandlePreviewImage(payload);
         localRoutingTable[MessageType.trackerData] = (payload) => HandleTrackerData(payload);
+        localRoutingTable[MessageType.gazeData] = (payload) => Debug.Log($"Gaze Data Received: {payload}");
 
         return localRoutingTable;
     }
