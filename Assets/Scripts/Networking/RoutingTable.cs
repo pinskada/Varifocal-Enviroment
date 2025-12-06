@@ -37,6 +37,8 @@ public static class RoutingTable
                 routingTable[MessageType.configReady] = (TransportSource.Unity, TransportTarget.Tcp, FormatType.JSON);
                 routingTable[MessageType.trackerData] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
                 routingTable[MessageType.ipdPreview] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
+                routingTable[MessageType.sceneMarker] = (TransportSource.Unity, TransportTarget.Tcp, FormatType.JSON);
+                routingTable[MessageType.calibData] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
                 break;
 
             case VRMode.UserVR:
@@ -78,6 +80,7 @@ public static class RoutingTable
         localRoutingTable[MessageType.eyePreview] = (payload) => HandlePreviewImage(payload);
         localRoutingTable[MessageType.trackerData] = (payload) => HandleTrackerData(payload);
         localRoutingTable[MessageType.gazeData] = (payload) => Debug.Log($"Gaze Data Received: {payload}");
+        localRoutingTable[MessageType.calibData] = (payload) => Debug.Log($"Calibration Data Received: {payload}");
 
         return localRoutingTable;
     }

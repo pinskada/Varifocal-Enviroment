@@ -19,7 +19,9 @@ namespace Contracts
         eyeImage = 12,
         configReady = 13,
         trackerData = 14,
-        ipdPreview = 15
+        ipdPreview = 15,
+        sceneMarker = 16,
+        calibData = 17
     }
 
     public enum FormatType

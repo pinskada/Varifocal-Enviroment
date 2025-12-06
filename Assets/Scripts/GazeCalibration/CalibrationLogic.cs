@@ -15,12 +15,32 @@ public class CalibrationLogic : MonoBehaviour, ICalibrationHub
     // MessageType.gazeCalcControl  ... controls the calibration state in the RPI
     // RouteQueueContainer.routeQueue.Add((message, MessageType.gazeCalcControl));   ... sends the message to RPI
 
+
     public void Start()
     {
         CheckComponents();
         ToggleGazeTarget(false);
         ToggleText(true);
     }
+
+
+    public void Update()
+    {
+        // Cycle to previous scene on Left Arrow
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            SetCalibState(CalibState.Calibration);
+        }
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            SetCalibState(CalibState.GazeMeasure);
+        }
+        if (Input.GetKeyDown(KeyCode.D))
+        {
+            SetCalibState(CalibState.GazePreview);
+        }
+    }
+
 
     public void SetCalibState(CalibState state)
     {
@@ -46,6 +66,7 @@ public class CalibrationLogic : MonoBehaviour, ICalibrationHub
         }
     }
 
+
     private IEnumerator RunCalibrationSequence()
     {
         // Turns off InstructionText
@@ -69,6 +90,7 @@ public class CalibrationLogic : MonoBehaviour, ICalibrationHub
 
         yield return null;
     }
+
 
     private IEnumerator RunGazeMeasureSequence()
     {
@@ -94,6 +116,7 @@ public class CalibrationLogic : MonoBehaviour, ICalibrationHub
         yield return null;
     }
 
+
     private void EnterPreviewMode()
     {
         // Turns off InstructionText
@@ -107,6 +130,7 @@ public class CalibrationLogic : MonoBehaviour, ICalibrationHub
         // SetTargetDistance() gets called from GUI with user defined distances
     }
 
+
     private void ExitPreviewMode()
     {
         // Sends "end_gaze_preview" command to RPI
@@ -118,26 +142,47 @@ public class CalibrationLogic : MonoBehaviour, ICalibrationHub
         ToggleText(true);
     }
 
-    public void SetTargetDistance(float distance)
+
+    public void SetTargetDistance(TargetPosition target_position)
     {
+        // Distance in meters
+        float distance = target_position.distance;
+        float horizontalAngle = target_position.horizontal; // degrees, + = to the right
+        float verticalAngle = target_position.vertical; // degrees, + = up
+
+        // Clamp distance to a reasonable minimum
         if (distance < 0.1f)
         {
-            distance = 0.1f; // Minimum distance limit
+            distance = 0.1f;
             Debug.LogWarning("Gaze target distance too small, setting to minimum of 0.1m.");
         }
-        GazeTarget.transform.position = CameraTarget.transform.position + CameraTarget.transform.forward * distance;
+
+        // Start from camera's forward direction
+        Vector3 direction = CameraTarget.transform.forward;
+
+        // Rotate around camera's UP for horizontal angle (yaw)
+        direction = Quaternion.AngleAxis(horizontalAngle, CameraTarget.transform.up) * direction;
+
+        // Rotate around camera's RIGHT for vertical angle (pitch)
+        // If you find "up" and "down" flipped, just negate verticalAngle here.
+        direction = Quaternion.AngleAxis(-verticalAngle, CameraTarget.transform.right) * direction;
+
+        // Set world-space position at the desired distance
+        GazeTarget.transform.position =
+            CameraTarget.transform.position + direction.normalized * distance;
     }
+
 
     private void ToggleText(bool display)
     {
         InstructionText.SetActive(display);
     }
 
+
     private void ToggleGazeTarget(bool display)
     {
         GazeTarget.SetActive(display);
     }
-
 
 
     private IEnumerator CycleGazePoint()
@@ -151,22 +196,59 @@ public class CalibrationLogic : MonoBehaviour, ICalibrationHub
         //      Sends message with dict: "state": stop; "distance": curr_distance
         //      Waits 0,5 seconds between points
         var settings = Settings.calibrationSettings;
+        var holdPointTime = settings.holdPointTime;
+        var pauseBetweenPoints = settings.pauseBetweenPoints;
+
+        yield return new WaitForSeconds(pauseBetweenPoints);
 
         foreach (var entry in settings.calibrationPoints)
         {
-            SetTargetDistance(entry.distance);
+            SetTargetDistance(entry.target_position);
+            ToggleGazeTarget(true);
 
             // START marker
-            RouteQueueContainer.routeQueue.Add((new { state = "start", distance = entry.distance }, MessageType.gazeCalcControl));
+            SendSceneMarker(MarkerState.START, entry);
 
-            yield return new WaitForSeconds(entry.holdTime);
+            yield return new WaitForSeconds(holdPointTime);
 
             // STOP marker
-            RouteQueueContainer.routeQueue.Add((new { state = "stop", distance = entry.distance }, MessageType.gazeCalcControl));
+            SendSceneMarker(MarkerState.STOP, entry);
 
-            yield return new WaitForSeconds(settings.pauseBetweenPoints);
+            ToggleGazeTarget(false);
+            yield return new WaitForSeconds(pauseBetweenPoints);
         }
     }
+
+
+    private void SendSceneMarker(MarkerState state, CalibrationPoint entry)
+    {
+        // Build strongly-typed SceneMarker first (nice for debugging / future use)
+        var marker = new SceneMarker
+        {
+            id = entry.id,
+            state = state,
+            type = entry.type,
+            target_position = entry.target_position
+        };
+
+        // DTO for JSON – ensures enums go out as strings
+        var dto = new
+        {
+            id = marker.id,
+            state = marker.state.ToString(),   // "START" / "STOP"
+            type = marker.type.ToString(),     // "REF" / "DIST" / "ANG"
+            target_position = new
+            {
+                distance = marker.target_position.distance,
+                horizontal = marker.target_position.horizontal,
+                vertical = marker.target_position.vertical
+            }
+        };
+
+        // Send via your existing route queue
+        RouteQueueContainer.routeQueue.Add((dto, MessageType.sceneMarker));
+    }
+
 
     private void CheckComponents()
     {

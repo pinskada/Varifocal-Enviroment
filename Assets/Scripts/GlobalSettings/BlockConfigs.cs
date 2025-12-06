@@ -64,8 +64,8 @@ public class IMUSettings
 [System.Serializable]
 public class CameraSettings
 {
-    public int res_width = 4608;
-    public int res_height = 2592;
+    public int full_res_width = 1536;
+    public int full_res_height = 864;
     public int focus = 30;
     public int exposure = 10000;
     public int gain = 2;
@@ -95,16 +95,23 @@ public class CropSettings
 [System.Serializable]
 public class EyeloopSettings
 {
-    public int left_threshold = 128;
-    public int left_blur_size = 5;
-    public int left_min_radius = 5;
-    public int left_max_radius = 20;
-    public int left_search_step = 10;
-    public int right_threshold = 128;
-    public int right_blur_size = 5;
-    public int right_min_radius = 5;
-    public int right_max_radius = 20;
-    public int right_search_step = 10;
+    public int left_threshold_pupil = 128;
+    public int left_blur_size_pupil = 5;
+    public int left_min_radius_pupil = 5;
+    public int left_max_radius_pupil = 20;
+    public int right_threshold_pupil = 128;
+    public int right_blur_size_pupil = 5;
+    public int right_min_radius_pupil = 5;
+    public int right_max_radius_pupil = 20;
+
+    public int left_threshold_cr = 128;
+    public int left_blur_size_cr = 5;
+    public int left_min_radius_cr = 5;
+    public int left_max_radius_cr = 20;
+    public int right_threshold_cr = 128;
+    public int right_blur_size_cr = 5;
+    public int right_min_radius_cr = 5;
+    public int right_max_radius_cr = 20;
 }
 
 
@@ -118,18 +125,14 @@ public class GazeProcessorSettings
 }
 
 
-[System.Serializable]
-public class CalibEntry
-{
-    public float distance;   // meters
-    public float holdTime;   // seconds
-}
 
 [System.Serializable]
 public class CalibrationSettings
 {
-    public List<CalibEntry> calibrationPoints = new List<CalibEntry>();
-    public float pauseBetweenPoints = 0.5f;
+    public List<CalibrationPoint> calibrationPoints = new List<CalibrationPoint>();
+    public float pauseBetweenPoints = 0.5f; // seconds
+    public float holdPointTime = 3.0f;   // seconds
+
 }
 
 
