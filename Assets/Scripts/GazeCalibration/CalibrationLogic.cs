@@ -203,6 +203,7 @@ public class CalibrationLogic : MonoBehaviour, ICalibrationHub
 
         foreach (var entry in settings.calibrationPoints)
         {
+            Debug.Log($"Calibrating point ID {entry.id}");
             SetTargetDistance(entry.target_position);
             ToggleGazeTarget(true);
 

@@ -39,7 +39,7 @@ public class DisplaySettings
     public float ipd = 63f; // in mm
     public float screenWidth = 120f; // in mm
     public float screenHeight = 68f; // in mm
-    public float eyeToScreenDist = 50f; // in mm
+    public float eyeToScreenDist = 55f; // in mm
     public float farClipPlane = 1000f; // in meters
     public float distortionStrength = 0.15f; // distortion strength parameter
     public float preZoom = 1f; // overscan pre-scale factor
@@ -64,9 +64,9 @@ public class IMUSettings
 [System.Serializable]
 public class CameraSettings
 {
-    public int full_res_width = 1536;
-    public int full_res_height = 864;
-    public int focus = 30;
+    public int full_res_width = 2304;
+    public int full_res_height = 1296;
+    public int focus = 28;
     public int exposure = 10000;
     public int gain = 2;
     public int jpeg_quality = 20;
@@ -87,31 +87,36 @@ public class CropRect
 [System.Serializable]
 public class CropSettings
 {
-    public CropRect crop_left = new CropRect { x = new Range { min = 0f, max = 0.5f }, y = new Range { min = 0f, max = 1f } };
-    public CropRect crop_right = new CropRect { x = new Range { min = 0.5f, max = 1f }, y = new Range { min = 0f, max = 1f } };
+    public CropRect crop_left = new CropRect { x = new Range { min = 0f, max = 0.35f }, y = new Range { min = 0.25f, max = 0.6f } };
+    public CropRect crop_right = new CropRect { x = new Range { min = 0.65f, max = 1f }, y = new Range { min = 0.25f, max = 0.6f } };
 }
 
 
 [System.Serializable]
 public class EyeloopSettings
 {
-    public int left_threshold_pupil = 128;
-    public int left_blur_size_pupil = 5;
-    public int left_min_radius_pupil = 5;
-    public int left_max_radius_pupil = 20;
-    public int right_threshold_pupil = 128;
-    public int right_blur_size_pupil = 5;
-    public int right_min_radius_pupil = 5;
-    public int right_max_radius_pupil = 20;
+    // Pupil detection settings
+    public int left_threshold_pupil = 75;
+    public int left_blur_size_pupil = 10;
+    public int left_min_radius_pupil = 20;
+    public int left_max_radius_pupil = 70;
 
-    public int left_threshold_cr = 128;
-    public int left_blur_size_cr = 5;
-    public int left_min_radius_cr = 5;
-    public int left_max_radius_cr = 20;
-    public int right_threshold_cr = 128;
-    public int right_blur_size_cr = 5;
-    public int right_min_radius_cr = 5;
-    public int right_max_radius_cr = 20;
+    public int right_threshold_pupil = 75;
+    public int right_blur_size_pupil = 10;
+    public int right_min_radius_pupil = 20;
+    public int right_max_radius_pupil = 70;
+
+
+    // Corneal reflection (CR) settings
+    public int left_threshold_cr = 160;
+    public int left_blur_size_cr = 1;
+    public int left_min_radius_cr = 2;
+    public int left_max_radius_cr = 10;
+
+    public int right_threshold_cr = 160;
+    public int right_blur_size_cr = 1;
+    public int right_min_radius_cr = 2;
+    public int right_max_radius_cr = 10;
 }
 
 
@@ -129,7 +134,23 @@ public class GazeProcessorSettings
 [System.Serializable]
 public class CalibrationSettings
 {
-    public List<CalibrationPoint> calibrationPoints = new List<CalibrationPoint>();
+    public List<CalibrationPoint> calibrationPoints = new List<CalibrationPoint>
+    {
+        new CalibrationPoint { id = 1, type = MarkerType.REF, target_position = new TargetPosition { distance = 40f, horizontal = 0.0f, vertical = 0.0f } },
+        new CalibrationPoint { id = 2, type = MarkerType.DIST, target_position = new TargetPosition { distance = 8.0f, horizontal = 0.0f, vertical = 0.0f } },
+        new CalibrationPoint { id = 3, type = MarkerType.DIST, target_position = new TargetPosition { distance = 4.0f, horizontal = 0.0f, vertical = 0.0f } },
+        new CalibrationPoint { id = 4, type = MarkerType.DIST, target_position = new TargetPosition { distance = 2.0f, horizontal = 0.0f, vertical = 0.0f } },
+        new CalibrationPoint { id = 5, type = MarkerType.DIST, target_position = new TargetPosition { distance = 1.0f, horizontal = 0.0f, vertical = 0.0f } },
+        new CalibrationPoint { id = 6, type = MarkerType.DIST, target_position = new TargetPosition { distance = 0.5f, horizontal = 0.0f, vertical = 0.0f } },
+        new CalibrationPoint { id = 7, type = MarkerType.ANG, target_position = new TargetPosition { distance = 2.0f, horizontal = -10.0f, vertical = 0.0f } },
+        new CalibrationPoint { id = 8, type = MarkerType.ANG, target_position = new TargetPosition { distance = 2.0f, horizontal = -3.5f, vertical = 0.0f } },
+        new CalibrationPoint { id = 9, type = MarkerType.ANG, target_position = new TargetPosition { distance = 2.0f, horizontal = 3.5f, vertical = 0.0f } },
+        new CalibrationPoint { id = 10, type = MarkerType.ANG, target_position = new TargetPosition { distance = 2.0f, horizontal = 10.0f, vertical = 0.0f } },
+        new CalibrationPoint { id = 11, type = MarkerType.ANG, target_position = new TargetPosition { distance = 2.0f, horizontal = 0.0f, vertical = 10.0f } },
+        new CalibrationPoint { id = 12, type = MarkerType.ANG, target_position = new TargetPosition { distance = 2.0f, horizontal = 0.0f, vertical = 3.5f } },
+        new CalibrationPoint { id = 13, type = MarkerType.ANG, target_position = new TargetPosition { distance = 2.0f, horizontal = 0.0f, vertical = -3.5f } },
+        new CalibrationPoint { id = 14, type = MarkerType.ANG, target_position = new TargetPosition { distance = 2.0f, horizontal = 0.0f, vertical = -10.0f } },
+    };
     public float pauseBetweenPoints = 0.5f; // seconds
     public float holdPointTime = 3.0f;   // seconds
 

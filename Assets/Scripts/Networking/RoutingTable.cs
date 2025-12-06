@@ -81,6 +81,7 @@ public static class RoutingTable
         localRoutingTable[MessageType.trackerData] = (payload) => HandleTrackerData(payload);
         localRoutingTable[MessageType.gazeData] = (payload) => Debug.Log($"Gaze Data Received: {payload}");
         localRoutingTable[MessageType.calibData] = (payload) => Debug.Log($"Calibration Data Received: {payload}");
+        localRoutingTable[MessageType.gazeSceneControl] = (payload) => Debug.Log($"RPI scene control: {payload}");
 
         return localRoutingTable;
     }

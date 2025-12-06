@@ -3,6 +3,7 @@ using UnityEngine.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
 using Contracts;
+using UnityEngine.Rendering;
 
 // This script manages the VR scene transitions and maintains the state of the current scene
 
@@ -66,6 +67,7 @@ public class VRSceneManager : MonoBehaviour, ISceneManagement
 
         StartCoroutine(SwitchVRScene("CalibScene"));
         currentVRScene = "CalibScene";
+        RenderSettings.ambientIntensity = 0.15f;
     }
 
     public void NextScene()
