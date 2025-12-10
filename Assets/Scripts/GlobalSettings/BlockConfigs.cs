@@ -149,17 +149,17 @@ public class CalibrationSettings
         new CalibrationPoint { id = 4, type = MarkerType.DIST, target_position = new TargetPosition { distance = 2.0f, horizontal = 0.0f, vertical = 0.0f } },
         new CalibrationPoint { id = 5, type = MarkerType.DIST, target_position = new TargetPosition { distance = 1.0f, horizontal = 0.0f, vertical = 0.0f } },
         new CalibrationPoint { id = 6, type = MarkerType.DIST, target_position = new TargetPosition { distance = 0.5f, horizontal = 0.0f, vertical = 0.0f } },
-        new CalibrationPoint { id = 7, type = MarkerType.ANG, target_position = new TargetPosition { distance = 2.0f, horizontal = -10.0f, vertical = 0.0f } },
-        new CalibrationPoint { id = 8, type = MarkerType.ANG, target_position = new TargetPosition { distance = 2.0f, horizontal = -3.5f, vertical = 0.0f } },
-        new CalibrationPoint { id = 9, type = MarkerType.ANG, target_position = new TargetPosition { distance = 2.0f, horizontal = 3.5f, vertical = 0.0f } },
-        new CalibrationPoint { id = 10, type = MarkerType.ANG, target_position = new TargetPosition { distance = 2.0f, horizontal = 10.0f, vertical = 0.0f } },
-        new CalibrationPoint { id = 11, type = MarkerType.ANG, target_position = new TargetPosition { distance = 2.0f, horizontal = 0.0f, vertical = 10.0f } },
-        new CalibrationPoint { id = 12, type = MarkerType.ANG, target_position = new TargetPosition { distance = 2.0f, horizontal = 0.0f, vertical = 3.5f } },
-        new CalibrationPoint { id = 13, type = MarkerType.ANG, target_position = new TargetPosition { distance = 2.0f, horizontal = 0.0f, vertical = -3.5f } },
-        new CalibrationPoint { id = 14, type = MarkerType.ANG, target_position = new TargetPosition { distance = 2.0f, horizontal = 0.0f, vertical = -10.0f } },
+        new CalibrationPoint { id = 7, type = MarkerType.ANG, target_position = new TargetPosition { distance = 2.0f, horizontal = -7.5f, vertical = 0.0f } },
+        new CalibrationPoint { id = 8, type = MarkerType.ANG, target_position = new TargetPosition { distance = 2.0f, horizontal = -2.5f, vertical = 0.0f } },
+        new CalibrationPoint { id = 9, type = MarkerType.ANG, target_position = new TargetPosition { distance = 2.0f, horizontal = 2.5f, vertical = 0.0f } },
+        new CalibrationPoint { id = 10, type = MarkerType.ANG, target_position = new TargetPosition { distance = 2.0f, horizontal = 7.5f, vertical = 0.0f } },
+        new CalibrationPoint { id = 11, type = MarkerType.ANG, target_position = new TargetPosition { distance = 2.0f, horizontal = 0.0f, vertical = 5.0f } },
+        new CalibrationPoint { id = 12, type = MarkerType.ANG, target_position = new TargetPosition { distance = 2.0f, horizontal = 0.0f, vertical = 1.666f } },
+        new CalibrationPoint { id = 13, type = MarkerType.ANG, target_position = new TargetPosition { distance = 2.0f, horizontal = 0.0f, vertical = -1.666f } },
+        new CalibrationPoint { id = 14, type = MarkerType.ANG, target_position = new TargetPosition { distance = 2.0f, horizontal = 0.0f, vertical = -5.0f } },
     };
-    public float pauseBetweenPoints = 0.5f; // seconds
-    public float holdPointTime = 3.0f;   // seconds
+    public float pauseBetweenPoints = 0.1f; // seconds
+    public float holdPointTime = 2.0f;   // seconds
 
 }
 

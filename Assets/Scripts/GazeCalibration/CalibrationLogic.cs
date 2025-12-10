@@ -11,9 +11,8 @@ public class CalibrationLogic : MonoBehaviour, ICalibrationHub
     private Coroutine currentRoutine;
     private bool inPreviewMode = false;
 
-    // Overview of calibration control messages:
-    // MessageType.gazeCalcControl  ... controls the calibration state in the RPI
-    // RouteQueueContainer.routeQueue.Add((message, MessageType.gazeCalcControl));   ... sends the message to RPI
+    private UnityEngine.Vector3 targetOffset = new UnityEngine.Vector3(0f, 0.065f, 0f);
+
 
 
     public void Start()
@@ -169,7 +168,7 @@ public class CalibrationLogic : MonoBehaviour, ICalibrationHub
 
         // Set world-space position at the desired distance
         GazeTarget.transform.position =
-            CameraTarget.transform.position + direction.normalized * distance;
+            CameraTarget.transform.position + direction.normalized * distance + targetOffset;
     }
 
 
