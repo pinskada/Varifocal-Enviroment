@@ -8,6 +8,7 @@ public abstract class BaseConfig
     public TestSettings test = new TestSettings();
     public EyeloopSettings eyeloop = new EyeloopSettings();
     public GazeProcessorSettings gaze = new GazeProcessorSettings();
+    public GazeCalcSettings gazeCalculator = new GazeCalcSettings();
     public CameraSettings camera = new CameraSettings();
     public DisplaySettings display = new DisplaySettings();
     public IMUSettings imu = new IMUSettings();

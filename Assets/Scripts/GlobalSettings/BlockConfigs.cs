@@ -130,6 +130,13 @@ public class GazeProcessorSettings
 }
 
 
+[System.Serializable]
+public class GazeCalcSettings
+{
+    public float distanceThreshold = 2.0f; // in meters
+    public int useTracker = 1; // 1 = use eye tracker, 0 = do not use
+}
+
 
 [System.Serializable]
 public class CalibrationSettings

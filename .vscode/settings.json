@@ -67,5 +67,5 @@
     },
     "editor.formatOnSave": true,
     "csharp.format.enable": true,
-    "dotnet.defaultSolution": "Varifocal Enviroment.sln"
+    "dotnet.defaultSolution": "Varifocal-Enviroment.sln"
 }

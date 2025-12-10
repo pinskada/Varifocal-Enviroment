@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+using UnityEngine;
 
 namespace Contracts
 {
@@ -40,6 +42,7 @@ namespace Contracts
         public TargetPosition target_position;
     }
 
+    [System.Serializable]
     public class CalibrationPoint
     {
         public int id;
@@ -47,10 +50,72 @@ namespace Contracts
         public TargetPosition target_position;
     }
 
+
     public interface ICalibrationHub
     {
         // Sets the current calibration state
         public void SetCalibState(CalibState state);
 
+    }
+
+
+
+    [System.Serializable]
+    public class AngleFitFunction
+    {
+        public float[] coeffs; // same order as numpy.polyfit (highest degree first)
+    }
+
+    [System.Serializable]
+    public class AngleParamsPerEye
+    {
+        public AngleFitFunction fx;
+        public AngleFitFunction fy;
+    }
+
+    [System.Serializable]
+    public class AngleParams
+    {
+        public AngleParamsPerEye left;
+        public AngleParamsPerEye right;
+    }
+
+    [System.Serializable]
+    public class ReferenceParams
+    {
+        public Vector2 left_ref;
+        public Vector2 right_ref;
+    }
+
+    [System.Serializable]
+    public class DistanceParams
+    {
+        public float a;
+        public float b;
+    }
+
+    [System.Serializable]
+    public class CalibratedData
+    {
+        public ReferenceParams reference;
+        public AngleParams angle;
+        public DistanceParams distance;
+    }
+
+    public static class CalibratorQueueContainer
+    {
+        public static readonly BlockingCollection<CalibratedData> CalibratorQueue = new BlockingCollection<CalibratedData>();
+    }
+
+    [System.Serializable]
+    public class EyeVectors
+    {
+        public Vector2 left;
+        public Vector2 right;
+    }
+
+    public static class EyeVectorsQueueContainer
+    {
+        public static readonly BlockingCollection<EyeVectors> EyeVectorsQueue = new BlockingCollection<EyeVectors>();
     }
 }

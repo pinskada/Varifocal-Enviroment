@@ -2,6 +2,7 @@ using Contracts;
 using System.Collections.Generic;
 using System;
 using UnityEngine;
+using GluonGui.WorkspaceWindow.Views.WorkspaceExplorer.Explorer;
 
 
 public static class RoutingTable
@@ -39,6 +40,7 @@ public static class RoutingTable
                 routingTable[MessageType.ipdPreview] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
                 routingTable[MessageType.sceneMarker] = (TransportSource.Unity, TransportTarget.Tcp, FormatType.JSON);
                 routingTable[MessageType.calibData] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
+                routingTable[MessageType.eyeVectors] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
                 break;
 
             case VRMode.UserVR:
@@ -80,8 +82,9 @@ public static class RoutingTable
         localRoutingTable[MessageType.eyePreview] = (payload) => HandlePreviewImage(payload);
         localRoutingTable[MessageType.trackerData] = (payload) => HandleTrackerData(payload);
         localRoutingTable[MessageType.gazeData] = (payload) => Debug.Log($"Gaze Data Received: {payload}");
-        localRoutingTable[MessageType.calibData] = (payload) => Debug.Log($"Calibration Data Received: {payload}");
+        localRoutingTable[MessageType.calibData] = (payload) => HandleCalibrationData(payload);
         localRoutingTable[MessageType.gazeSceneControl] = (payload) => Debug.Log($"RPI scene control: {payload}");
+        localRoutingTable[MessageType.eyeVectors] = (payload) => HandleEyeVectors(payload);
 
         return localRoutingTable;
     }
@@ -133,6 +136,65 @@ public static class RoutingTable
         return serialRoutingList;
     }
 
+
+    private static void HandleEyeVectors(object payload)
+    {
+        // Parse and enqueue eye vectors data.
+
+        if (payload == null)
+        {
+            Debug.LogError("[CommRouter] HandleEyeVectors received null payload.");
+            return;
+        }
+
+        var json = payload as string;
+        if (json == null)
+        {
+            Debug.LogError($"[CommRouter] HandleEyeVectors expected JSON string, got {payload.GetType().Name}.");
+            return;
+        }
+
+        try
+        {
+            EyeVectors eyeVectors = JsonUtility.FromJson<EyeVectors>(json);
+            EyeVectorsQueueContainer.EyeVectorsQueue.Add(eyeVectors);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[CommRouter] Failed to parse eye vectors data: {ex.Message}");
+            return;
+        }
+    }
+
+
+    private static void HandleCalibrationData(object payload)
+    {
+        // Parse and enqueue calibration data.
+
+        if (payload == null)
+        {
+            Debug.LogError("[CommRouter] HandleCalibrationData received null payload.");
+            return;
+        }
+
+        var json = payload as string;
+        if (json == null)
+        {
+            Debug.LogError($"[CommRouter] HandleCalibrationData expected JSON string, got {payload.GetType().Name}.");
+            return;
+        }
+
+        try
+        {
+            CalibratedData calibData = JsonUtility.FromJson<CalibratedData>(json);
+            CalibratorQueueContainer.CalibratorQueue.Add(calibData);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[CommRouter] Failed to parse calibration data: {ex.Message}");
+            return;
+        }
+    }
 
     private static void HandleTrackerData(object payload)
     {
