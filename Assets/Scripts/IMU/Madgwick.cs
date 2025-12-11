@@ -285,11 +285,11 @@ public class Madgwick : IModuleSettingsHandler
         Quaternion[2] = q3;
         Quaternion[3] = q0;
 
-        Debug.Log("Filter Quaternion: " +
-            Quaternion[0].ToString("F4") + ", " +
-            Quaternion[1].ToString("F4") + ", " +
-            Quaternion[2].ToString("F4") + ", " +
-            Quaternion[3].ToString("F4"));
+        // Debug.Log("Filter Quaternion: " +
+        //     Quaternion[0].ToString("F4") + ", " +
+        //     Quaternion[1].ToString("F4") + ", " +
+        //     Quaternion[2].ToString("F4") + ", " +
+        //     Quaternion[3].ToString("F4"));
     }
 
     // ------------------- Utility / config methods -------------------------

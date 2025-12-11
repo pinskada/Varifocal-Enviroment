@@ -2,7 +2,6 @@ using Contracts;
 using System.Collections.Generic;
 using System;
 using UnityEngine;
-using GluonGui.WorkspaceWindow.Views.WorkspaceExplorer.Explorer;
 
 
 public static class RoutingTable
@@ -24,7 +23,7 @@ public static class RoutingTable
             case VRMode.Testbed:
                 routingTable[MessageType.imuCmd] = (TransportSource.Unity, TransportTarget.Tcp, FormatType.JSON);
                 routingTable[MessageType.imuSensor] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
-                routingTable[MessageType.gazeData] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
+                routingTable[MessageType.gazeData] = (TransportSource.Unity, TransportTarget.Tcp, FormatType.JSON);
                 routingTable[MessageType.gazeCalcControl] = (TransportSource.Unity, TransportTarget.Tcp, FormatType.JSON);
                 routingTable[MessageType.gazeSceneControl] = (TransportSource.Tcp, TransportTarget.Unity, FormatType.JSON);
                 routingTable[MessageType.trackerControl] = (TransportSource.Unity, TransportTarget.Tcp, FormatType.JSON);
@@ -170,7 +169,7 @@ public static class RoutingTable
     private static void HandleCalibrationData(object payload)
     {
         // Parse and enqueue calibration data.
-
+        Debug.Log("[CommRouter] Handling calibration data.");
         if (payload == null)
         {
             Debug.LogError("[CommRouter] HandleCalibrationData received null payload.");

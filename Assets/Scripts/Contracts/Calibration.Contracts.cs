@@ -83,8 +83,9 @@ namespace Contracts
     [System.Serializable]
     public class ReferenceParams
     {
-        public Vector2 left_ref;
-        public Vector2 right_ref;
+        // Matches Python JSON: left_ref: [dx0_L, dy0_L]
+        public float[] left_ref;
+        public float[] right_ref;
     }
 
     [System.Serializable]
@@ -108,10 +109,17 @@ namespace Contracts
     }
 
     [System.Serializable]
+    public class EyeVector
+    {
+        public float dx;
+        public float dy;
+    }
+
+    [System.Serializable]
     public class EyeVectors
     {
-        public Vector2 left;
-        public Vector2 right;
+        public EyeVector left_eye_vector;
+        public EyeVector right_eye_vector;
     }
 
     public static class EyeVectorsQueueContainer

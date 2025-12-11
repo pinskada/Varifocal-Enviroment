@@ -101,7 +101,7 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
         if (lastPacketTime == 0.0f)
         {
             lastPacketTime = currentTime;
-            Debug.Log("[IMUHandler] First IMU packet received. Initializing timeline.");
+            // Debug.Log("[IMUHandler] First IMU packet received. Initializing timeline.");
             return;
         }
 
@@ -120,16 +120,28 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
 
         // --- new: remap accelerometer into Madgwick's expected frame ---
         // Rotate +90° around X so that "down" (0,1,0) -> (0,0,1)
+        // Vector3 rotGyro = new Vector3(
+        //     rawGyro.x,
+        //     -rawGyro.z,
+        //     rawGyro.y
+        // );
+
+        // Vector3 rotAccel = new Vector3(
+        //     rawAccel.x,
+        //     -rawAccel.z,
+        //     rawAccel.y
+        // );
+
         Vector3 rotGyro = new Vector3(
-            rawGyro.x,
-            -rawGyro.z,
-            rawGyro.y
+            -rawGyro.y,   // x
+            rawGyro.z,   // y
+            -rawGyro.x    // z
         );
 
         Vector3 rotAccel = new Vector3(
-            rawAccel.x,
-            -rawAccel.z,
-            rawAccel.y
+            -rawAccel.y,
+            rawAccel.z,
+            -rawAccel.x
         );
 
         lock (filterLock)

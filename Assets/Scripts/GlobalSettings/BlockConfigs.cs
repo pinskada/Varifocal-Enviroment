@@ -39,7 +39,7 @@ public class DisplaySettings
     public float ipd = 63f; // in mm
     public float screenWidth = 120f; // in mm
     public float screenHeight = 68f; // in mm
-    public float eyeToScreenDist = 55f; // in mm
+    public float eyeToScreenDist = 40f; // in mm
     public float farClipPlane = 1000f; // in meters
     public float distortionStrength = 0.15f; // distortion strength parameter
     public float preZoom = 1f; // overscan pre-scale factor
@@ -53,10 +53,10 @@ public class IMUSettings
     public float minDt = 0.001f; // Minimum delta time for filter updates [s]
     public float maxDt = 0.1f; // Maximum delta time for filter updates [s]
     public float betaMoving = 0.005f; // Madgwick filter beta gain when moving [-]
-    public float betaStill = 0.1f; // Madgwick filter beta gain when still [-]
-    public float betaThreshold = 0.05f; // Threshold to switch between moving and still states [-]
-    public float minGyroMagnitude = 0.01f;  // Threshold to skip updates when gyro is nearly zero [rad/s]
-    public float qSmoothAlpha = 0.95f; // Smoothing factor for accelerometer low-pass filter [0..1]
+    public float betaStill = 0.02f; // Madgwick filter beta gain when still [-]
+    public float betaThreshold = 2f; // Threshold to switch between moving and still states [-]
+    public float minGyroMagnitude = 1f;  // Threshold to skip updates when gyro is nearly zero [rad/s]
+    public float qSmoothAlpha = 0.65f; // Smoothing factor for accelerometer low-pass filter [0..1]
 
 }
 
@@ -68,7 +68,7 @@ public class CameraSettings
     public int full_res_height = 1296;
     public int focus = 28;
     public int exposure = 10000;
-    public int gain = 2;
+    public int gain = 40;
     public int jpeg_quality = 20;
     public int preview_fps = 5;
 }
@@ -87,8 +87,8 @@ public class CropRect
 [System.Serializable]
 public class CropSettings
 {
-    public CropRect crop_left = new CropRect { x = new Range { min = 0f, max = 0.35f }, y = new Range { min = 0.25f, max = 0.6f } };
-    public CropRect crop_right = new CropRect { x = new Range { min = 0.65f, max = 1f }, y = new Range { min = 0.25f, max = 0.6f } };
+    public CropRect crop_left = new CropRect { x = new Range { min = 0f, max = 0.35f }, y = new Range { min = 0.3f, max = 0.7f } };
+    public CropRect crop_right = new CropRect { x = new Range { min = 0.65f, max = 1f }, y = new Range { min = 0.3f, max = 0.7f } };
 }
 
 
@@ -133,7 +133,7 @@ public class GazeProcessorSettings
 [System.Serializable]
 public class GazeCalcSettings
 {
-    public float distanceThreshold = 2.0f; // in meters
+    public float distanceThreshold = 100.0f; // in meters
     public int useTracker = 1; // 1 = use eye tracker, 0 = do not use
 }
 

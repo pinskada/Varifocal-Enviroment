@@ -8,9 +8,11 @@ public class GazeDistanceCalculator : MonoBehaviour
 
     [SerializeField] GameObject cameraObject;
     private volatile CalibratedData calibratedData;
+    private bool isCalibrated = false;
     private Thread gazeCalculatorThread;
     private Thread calibratorThread;
     private volatile bool runRaycast = false;
+    private volatile bool newGazeAvailable = false;
     private volatile float vergenceDistance = 0f;
     private volatile float cyclopeanYawDeg = 0f;   // horizontal gaze angle (deg)
     private volatile float cyclopeanPitchDeg = 0f; // vertical gaze angle (deg)
@@ -66,7 +68,14 @@ public class GazeDistanceCalculator : MonoBehaviour
     public void SetCalibParam(CalibratedData data)
     {
         calibratedData = data;
-        Debug.Log($"GazeDistanceCalculator received calibrated data {calibratedData}.");
+        isCalibrated = true;
+        RouteQueueContainer.routeQueue.Add((new { command = "start_gaze_calc" }, MessageType.gazeCalcControl));
+
+        // Debug.Log($"Calib ref_left: {calibratedData.reference.left_ref[0]}, {calibratedData.reference.left_ref[1]}.");
+        // Debug.Log($"Calib ref_right: {calibratedData.reference.right_ref[0]}, {calibratedData.reference.right_ref[1]}.");
+        // Debug.Log($"Calib angle_left: {string.Join(", ", calibratedData.angle.left.fx.coeffs)}, {string.Join(", ", calibratedData.angle.left.fy.coeffs)}.");
+        // Debug.Log($"Calib angle_right: {string.Join(", ", calibratedData.angle.right.fx.coeffs)}, {string.Join(", ", calibratedData.angle.right.fy.coeffs)}.");
+        // Debug.Log($"Calib distance: a={calibratedData.distance.a}, b={calibratedData.distance.b}.");
     }
 
 
@@ -74,7 +83,7 @@ public class GazeDistanceCalculator : MonoBehaviour
     {
         foreach (EyeVectors data in EyeVectorsQueueContainer.EyeVectorsQueue.GetConsumingEnumerable())
         {
-            Debug.Log($"Received eye vectors: Left - {data.left}, Right - {data.right}");
+            // Debug.Log($"Left - {data.left_eye_vector.dx}, {data.left_eye_vector.dy}; Right - {data.right_eye_vector.dx}, {data.right_eye_vector.dy}");
             if (calibratedData != null)
             {
                 CalculateData(data);
@@ -102,8 +111,11 @@ public class GazeDistanceCalculator : MonoBehaviour
         cyclopeanPitchDeg = 0.5f * (leftAngles.y + rightAngles.y); // vertical
 
         vergenceDistance = distance;
+        // Debug.Log($"Calculated vergence distance: {distance} meters");
 
         runRaycast = !float.IsFinite(distance) || distance > 2.0f;
+
+        newGazeAvailable = true;
     }
 
 
@@ -114,10 +126,17 @@ public class GazeDistanceCalculator : MonoBehaviour
     {
         EyeVectors result = new EyeVectors
         {
-            left = eyeVectors.left - reference.left_ref,
-            right = eyeVectors.right - reference.right_ref
+            left_eye_vector = new EyeVector
+            {
+                dx = eyeVectors.left_eye_vector.dx - reference.left_ref[0],
+                dy = eyeVectors.left_eye_vector.dy - reference.left_ref[1]
+            },
+            right_eye_vector = new EyeVector
+            {
+                dx = eyeVectors.right_eye_vector.dx - reference.right_ref[0],
+                dy = eyeVectors.right_eye_vector.dy - reference.right_ref[1]
+            }
         };
-
         return result;
     }
 
@@ -127,8 +146,8 @@ public class GazeDistanceCalculator : MonoBehaviour
         AngleParams angleParams
     )
     {
-        Vector2 leftDelta = referenceVectors.left;
-        Vector2 rightDelta = referenceVectors.right;
+        Vector2 leftDelta = new Vector2(referenceVectors.left_eye_vector.dx, referenceVectors.left_eye_vector.dy);
+        Vector2 rightDelta = new Vector2(referenceVectors.right_eye_vector.dx, referenceVectors.right_eye_vector.dy);
 
         Vector2 leftAngles = Vector2.zero;
         Vector2 rightAngles = Vector2.zero;
@@ -199,11 +218,17 @@ public class GazeDistanceCalculator : MonoBehaviour
     void Update()
     {
         var useTracker = Settings.gazeCalculator.useTracker;
-
         if (useTracker == 0)
         {
             runRaycast = true;
         }
+
+        // Skip update if not calibrated yet
+        if (!isCalibrated)
+            return;
+        // Skip update if no new eyeVectors since last frame
+        if (!newGazeAvailable && useTracker == 1)
+            return;
 
         float finalDistance;
         // Optionally, you can call calculation methods here if they need to run on the main thread
@@ -216,7 +241,9 @@ public class GazeDistanceCalculator : MonoBehaviour
         {
             finalDistance = vergenceDistance;
         }
-
+        // Reset flag: we consumed the new value
+        newGazeAvailable = false;
+        Debug.Log($"Final: {finalDistance}, Vergence: {vergenceDistance}, Raycast: {runRaycast}");
         RouteQueueContainer.routeQueue.Add((finalDistance, MessageType.gazeData));
     }
 
@@ -249,7 +276,7 @@ public class GazeDistanceCalculator : MonoBehaviour
             direction = cameraObject.transform.TransformDirection(localRot * Vector3.forward);
         }
 
-        float maxDistance = Settings.gazeCalculator.distanceThreshold;
+        float maxDistance = Settings.gazeCalculator.distanceThreshold; // 2.0f meters
 
         if (Physics.Raycast(origin, direction, out RaycastHit hit, maxDistance))
         {
