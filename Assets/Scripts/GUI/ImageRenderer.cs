@@ -19,7 +19,7 @@ public class ImageRenderer : MonoBehaviour, ImageDestroyer
     // [SerializeField] private RectTransform rightCircle;
 
     private Texture2D _leftTex, _rightTex;
-    private int printCounter = 0;
+    // private int printCounter = 0;
     private bool displayTextures = false;
 
     private void Start()
@@ -28,24 +28,6 @@ public class ImageRenderer : MonoBehaviour, ImageDestroyer
         {
             Debug.LogError("[ImageRenderer] RawImage components not assigned.");
         }
-
-        // var crossTex = GenerateCrossTexture(1000, 30);
-        // var circleTex = GenerateCircleTexture(1000, 30);
-
-        // var crossSprite = MakeSprite(crossTex);
-        // var circleSprite = MakeSprite(circleTex);
-
-        // leftCross.sprite = crossSprite;
-        // rightCross.sprite = crossSprite;
-
-        // leftCircle.sprite = circleSprite;
-        // rightCircle.sprite = circleSprite;
-
-        // // Optional: keep aspect, tint, etc.
-        // leftCross.preserveAspect = true;
-        // rightCross.preserveAspect = true;
-        // leftCircle.preserveAspect = true;
-        // rightCircle.preserveAspect = true;
     }
 
     void OnDisable()
@@ -60,7 +42,7 @@ public class ImageRenderer : MonoBehaviour, ImageDestroyer
     void Update()
     {
         var hasImages = GUIQueueContainer.images.TryDequeue(out var images);
-        var hasTrackerData = GUIQueueContainer.trackerData.TryDequeue(out var trackerData);
+        // var hasTrackerData = GUIQueueContainer.trackerData.TryDequeue(out var trackerData);
 
         if (!displayTextures)
         {
@@ -71,11 +53,11 @@ public class ImageRenderer : MonoBehaviour, ImageDestroyer
         if (hasImages && images != null)
             RenderEyeImage(images);
 
-        if (hasTrackerData)
-        {
-            RenderOverlay(trackerData.left_eye, isLeft: true);
-            RenderOverlay(trackerData.right_eye, isLeft: false);
-        }
+        // if (hasTrackerData)
+        // {
+        //     RenderOverlay(trackerData.left_eye, isLeft: true);
+        //     RenderOverlay(trackerData.right_eye, isLeft: false);
+        // }
     }
 
     private void RenderEyeImage(List<EyeImage> images)
@@ -84,10 +66,6 @@ public class ImageRenderer : MonoBehaviour, ImageDestroyer
         {
             try
             {
-                printCounter++;
-                //if (printCounter % 30 == 0)
-                //Debug.Log($"[ImageRenderer] Decoded image for eye {eye.EyeId}: {eye.Width}x{eye.Height}");
-
                 var isLeft = eye.EyeId == 0;
                 ref Texture2D dstTex = ref (isLeft ? ref _leftTex : ref _rightTex);
 

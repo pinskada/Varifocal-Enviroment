@@ -79,7 +79,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
     {
         ConfigQueueContainer.configQueue.CompleteAdding();
         configThread?.Join(1000); // Wait for the thread to finish
-        SaveConfig();
+        // SaveConfig();
         UnregisterAllListeners();
     }
 
