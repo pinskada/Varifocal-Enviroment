@@ -134,7 +134,10 @@ public class GazeProcessorSettings
 public class GazeCalcSettings
 {
     public float distanceThreshold = 100.0f; // in meters
-    public int useTracker = 1; // 1 = use eye tracker, 0 = do not use
+    public int useTracker = 0; // 1 = use eye tracker, 0 = do not use
+    public int drawRays = 1; // 1 = draw gaze rays, 0 = do not draw
+    public float targetPreviewDistance = 5.0f; // in meters
+    public int numberOfRays = 1;
 }
 
 

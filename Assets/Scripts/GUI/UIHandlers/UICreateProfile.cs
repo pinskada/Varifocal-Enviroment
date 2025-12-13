@@ -15,7 +15,6 @@ public class UICreateProfile : MonoBehaviour
 
     private void Awake()
     {
-        newProfilePanel.SetActive(false);
         createProfileButton.onClick.AddListener(OnConfirmClicked);
         cancelButton.onClick.AddListener(OnCancelClicked);
     }
@@ -23,6 +22,7 @@ public class UICreateProfile : MonoBehaviour
 
     public void PromptUserForProfileName(Action<string> onConfirm)
     {
+        Debug.Log("[UICreateProfile] Prompting user for new profile name");
         onProfileConfirmed = onConfirm;
         profileNameInputField.text = "";
         newProfilePanel.SetActive(true);

@@ -16,6 +16,13 @@ public class GazeDistanceCalculator : MonoBehaviour
     private volatile float vergenceDistance = 0f;
     private volatile float cyclopeanYawDeg = 0f;   // horizontal gaze angle (deg)
     private volatile float cyclopeanPitchDeg = 0f; // vertical gaze angle (deg)
+    private LineRenderer leftRayRenderer;
+    private LineRenderer rightRayRenderer;
+    private float debugRayLength = 50f;
+    private volatile float leftYawDeg = 0f;
+    private volatile float leftPitchDeg = 0f;
+    private volatile float rightYawDeg = 0f;
+    private volatile float rightPitchDeg = 0f;
 
 
     void Start()
@@ -23,7 +30,10 @@ public class GazeDistanceCalculator : MonoBehaviour
         if (cameraObject == null)
         {
             Debug.LogError("[GazeDistanceCalculator] No camera object assigned!");
+            return;
         }
+
+        CreateLineRenderers();
 
         calibratorThread = new Thread(DequeueCalibrators)
         {
@@ -70,12 +80,6 @@ public class GazeDistanceCalculator : MonoBehaviour
         calibratedData = data;
         isCalibrated = true;
         RouteQueueContainer.routeQueue.Add((new { command = "start_gaze_calc" }, MessageType.gazeCalcControl));
-
-        // Debug.Log($"Calib ref_left: {calibratedData.reference.left_ref[0]}, {calibratedData.reference.left_ref[1]}.");
-        // Debug.Log($"Calib ref_right: {calibratedData.reference.right_ref[0]}, {calibratedData.reference.right_ref[1]}.");
-        // Debug.Log($"Calib angle_left: {string.Join(", ", calibratedData.angle.left.fx.coeffs)}, {string.Join(", ", calibratedData.angle.left.fy.coeffs)}.");
-        // Debug.Log($"Calib angle_right: {string.Join(", ", calibratedData.angle.right.fx.coeffs)}, {string.Join(", ", calibratedData.angle.right.fy.coeffs)}.");
-        // Debug.Log($"Calib distance: a={calibratedData.distance.a}, b={calibratedData.distance.b}.");
     }
 
 
@@ -102,6 +106,15 @@ public class GazeDistanceCalculator : MonoBehaviour
 
         // 2) Map deltas to angles (deg) using fitted polynomials
         var (leftAngles, rightAngles) = CalculateAngles(referenceVectors, calib.angle);
+
+        // store per-eye gaze angles for debug visualization
+        if (Settings.gazeCalculator.useTracker == 1)
+        {
+            leftYawDeg = leftAngles.x;
+            leftPitchDeg = leftAngles.y;
+            rightYawDeg = rightAngles.x;
+            rightPitchDeg = rightAngles.y;
+        }
 
         // 3) Compute vergence-based distance (m)
         var distance = CalculateVergenceDistance(leftAngles, rightAngles, calib.distance);
@@ -224,7 +237,7 @@ public class GazeDistanceCalculator : MonoBehaviour
         }
 
         // Skip update if not calibrated yet
-        if (!isCalibrated)
+        if (!isCalibrated && useTracker == 1)
             return;
         // Skip update if no new eyeVectors since last frame
         if (!newGazeAvailable && useTracker == 1)
@@ -245,6 +258,11 @@ public class GazeDistanceCalculator : MonoBehaviour
         newGazeAvailable = false;
         Debug.Log($"Final: {finalDistance}, Vergence: {vergenceDistance}, Raycast: {runRaycast}");
         RouteQueueContainer.routeQueue.Add((finalDistance, MessageType.gazeData));
+
+        if (Settings.gazeCalculator.drawRays == 1)
+        {
+            DrawGazeRays();
+        }
     }
 
 
@@ -302,4 +320,101 @@ public class GazeDistanceCalculator : MonoBehaviour
         }
         return result;
     }
+
+    private void CreateLineRenderers()
+    {
+        var goL = new GameObject("LeftGazeRay");
+        goL.transform.SetParent(cameraObject.transform, false);
+        leftRayRenderer = goL.AddComponent<LineRenderer>();
+        leftRayRenderer.positionCount = 2;
+        leftRayRenderer.startWidth = 0.002f;
+        leftRayRenderer.endWidth = 0.005f;
+        leftRayRenderer.useWorldSpace = true;
+
+        var goR = new GameObject("RightGazeRay");
+        goR.transform.SetParent(cameraObject.transform, false);
+        rightRayRenderer = goR.AddComponent<LineRenderer>();
+        rightRayRenderer.positionCount = 2;
+        rightRayRenderer.startWidth = 0.002f;
+        rightRayRenderer.endWidth = 0.005f;
+        rightRayRenderer.useWorldSpace = true;
+    }
+
+    private void DrawGazeRays()
+    {
+        if (cameraObject == null)
+            return;
+        if (Settings.gazeCalculator.numberOfRays == 2)
+        {
+            // Half IPD offset
+            float halfIpd = Settings.display.ipd * 0.0005f;
+
+            // camera's local horizontal axis in world space
+            Vector3 right = cameraObject.transform.right;
+            Vector3 up = cameraObject.transform.up;
+
+            Vector3 originL = cameraObject.transform.position - right * halfIpd * 2;
+            Vector3 originR = cameraObject.transform.position + right * halfIpd * 2;
+
+            // If you don't want rays when tracker is disabled, early out:
+            if (Settings.gazeCalculator.useTracker == 0)
+            {
+                // Optionally still show straight-forward rays:
+                UpdateLineRenderer(leftRayRenderer, originL,
+                    cameraObject.transform.forward * debugRayLength);
+                UpdateLineRenderer(rightRayRenderer, originR,
+                    cameraObject.transform.forward * debugRayLength);
+                Debug.Log($"Left Ray - Yaw: {leftYawDeg}, Pitch: {leftPitchDeg}; Right Ray - Yaw: {rightYawDeg}, Pitch: {rightPitchDeg}");
+
+                return;
+            }
+
+            Vector3 dirL = GetWorldGazeDirection(cameraObject.transform, leftYawDeg, leftPitchDeg);
+            Vector3 dirR = GetWorldGazeDirection(cameraObject.transform, rightYawDeg, rightPitchDeg);
+
+            UpdateLineRenderer(leftRayRenderer, originL, dirL * debugRayLength);
+            UpdateLineRenderer(rightRayRenderer, originR, dirR * debugRayLength);
+
+            Debug.Log($"Left Ray - Yaw: {leftYawDeg}, Pitch: {leftPitchDeg}; Right Ray - Yaw: {rightYawDeg}, Pitch: {rightPitchDeg}");
+        }
+        else if (Settings.gazeCalculator.numberOfRays == 1)
+        {
+            Vector3 origin = cameraObject.transform.position;
+
+            // If you don't want rays when tracker is disabled, early out:
+            if (Settings.gazeCalculator.useTracker == 0)
+            {
+                // Optionally still show straight-forward ray:
+                UpdateLineRenderer(leftRayRenderer, origin,
+                    cameraObject.transform.forward * debugRayLength);
+                Debug.Log($"Cyclopean Ray - Yaw: {cyclopeanYawDeg}, Pitch: {cyclopeanPitchDeg}");
+
+                return;
+            }
+
+            Vector3 dir = GetWorldGazeDirection(cameraObject.transform, cyclopeanYawDeg, cyclopeanPitchDeg);
+
+            UpdateLineRenderer(leftRayRenderer, origin, dir * debugRayLength);
+
+            Debug.Log($"Cyclopean Ray - Yaw: {cyclopeanYawDeg}, Pitch: {cyclopeanPitchDeg}");
+        }
+    }
+
+    private static Vector3 GetWorldGazeDirection(Transform origin, float yawDeg, float pitchDeg)
+    {
+        // Local rotation from forward by yaw (Y) and pitch (X)
+        Quaternion localRot = Quaternion.Euler(-pitchDeg, yawDeg, 0f);
+        return origin.TransformDirection(localRot * Vector3.forward);
+    }
+
+    private static void UpdateLineRenderer(LineRenderer lr, Vector3 origin, Vector3 offset)
+    {
+        if (lr == null)
+            return;
+
+        lr.positionCount = 2;
+        lr.SetPosition(0, origin);
+        lr.SetPosition(1, origin + offset);
+    }
+
 }

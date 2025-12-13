@@ -196,7 +196,7 @@ public class ConfigManager : MonoBehaviour, IConfigManagerCommunicator, IConfigP
         }
 
         // Create a new config path with the profile name
-        configPath = Path.Combine(configFolder, $"{profileName}.json");
+        configPath = Path.Combine(configFolder, $"{profileName}");
 
         if (File.Exists(configPath))
         {

@@ -132,6 +132,10 @@ public class GuiInterface : MonoBehaviour
                 continue;
             }
 
+            if (module == "gaze")
+            {
+                continue;
+            }
             var value = GetSettingValue(module, name, input);
             if (value != null)
             {
@@ -153,7 +157,7 @@ public class GuiInterface : MonoBehaviour
     {
         var configList = _IConfigManager.GetConfigFileNames();
         if (configList == null || configList.Count == 0) return;
-
+        configSettingsDropdown.ClearOptions();
         configSettingsDropdown.AddOptions(configList);
         configSettingsDropdown.options.Add(new TMP_Dropdown.OptionData("+ New Profile"));
     }
@@ -226,12 +230,11 @@ public class GuiInterface : MonoBehaviour
     public void OnModeChanged(int Index)
     {
         // RPI mode set based on dropdown index
-        // TODO
         var action = "";
         switch (Index)
         {
             case 0:
-                action = "offline";
+                action = "no_preview";
                 _imageDestroyer.ControlTextures(false);
                 break;
             case 1:
@@ -239,11 +242,11 @@ public class GuiInterface : MonoBehaviour
                 _imageDestroyer.ControlTextures(true);
                 break;
             case 2:
-                action = "tracker_preview";
+                action = "pupil_preview";
                 _imageDestroyer.ControlTextures(true);
                 break;
             case 3:
-                action = "online";
+                action = "cr_preview";
                 _imageDestroyer.ControlTextures(true);
                 break;
         }
@@ -268,6 +271,7 @@ public class GuiInterface : MonoBehaviour
 
         if (Index == configList.Count)
         {
+            Debug.Log("[GuiInterface] Prompting for new profile name");
             createProfileHandler.PromptUserForProfileName(OnProfileNameEntered);
             return;
         }
@@ -278,6 +282,7 @@ public class GuiInterface : MonoBehaviour
         _IConfigManager.ChangeCurrentProfile(selectedProfile);
 
         PopulateEditFields();
+        PopulateSettingsConfigDropdown();
     }
 
 
@@ -290,6 +295,8 @@ public class GuiInterface : MonoBehaviour
         }
 
         _IConfigManager.CreateNewConfigProfile(newProfileName);
+        PopulateSettingsConfigDropdown();
+        PopulateEditFields();
     }
 
 
@@ -307,6 +314,10 @@ public class GuiInterface : MonoBehaviour
             panel.SetActive(false);
 
         panels[Index].SetActive(true);
+
+        if (Index == panels.Count - 1)
+            _VRSceneManager.LoadCalibScene();
+
         PopulateEditFields();
     }
 
@@ -322,6 +333,12 @@ public class GuiInterface : MonoBehaviour
         if (string.IsNullOrEmpty(module) || string.IsNullOrEmpty(name))
         {
             Debug.LogWarning("[GuiInterface] Missing module or field name");
+            return;
+        }
+
+        if (module == "gazeCalculator" && name == "targetPreviewDistance")
+        {
+            TargetDistanceQueueContainer.TargetDistanceQueue.Enqueue(float.Parse(value));
             return;
         }
 

@@ -62,7 +62,7 @@ public class Bootstrapper : MonoBehaviour
 
     void Start()
     {
-        GetGuiComponents();
+        GetExternalComponents();
         filter = imuHandler.GetFilterInstance();
 
         guiInterface.InjectModules(configManager, VRSceneManager, imageRenderer);
@@ -70,7 +70,7 @@ public class Bootstrapper : MonoBehaviour
 
     }
 
-    private void GetGuiComponents()
+    private void GetExternalComponents()
     {
         var uiSceneName = "UI_EditorScene";
         // Get the already-loaded UI scene

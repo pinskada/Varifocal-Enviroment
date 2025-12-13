@@ -55,7 +55,6 @@ namespace Contracts
     {
         // Sets the current calibration state
         public void SetCalibState(CalibState state);
-
     }
 
 
@@ -125,5 +124,10 @@ namespace Contracts
     public static class EyeVectorsQueueContainer
     {
         public static readonly BlockingCollection<EyeVectors> EyeVectorsQueue = new BlockingCollection<EyeVectors>();
+    }
+
+    public static class TargetDistanceQueueContainer
+    {
+        public static readonly ConcurrentQueue<float> TargetDistanceQueue = new ConcurrentQueue<float>();
     }
 }

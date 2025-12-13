@@ -25,6 +25,20 @@ public class CalibrationLogic : MonoBehaviour, ICalibrationHub
 
     public void Update()
     {
+        var hasUpdate = TargetDistanceQueueContainer.TargetDistanceQueue.TryDequeue(out var distance);
+
+        if (hasUpdate && inPreviewMode)
+        {
+            SetTargetDistance(new TargetPosition { distance = distance, horizontal = 0f, vertical = 0f });
+            Debug.Log($"[CalibrationLogic] Updated gaze target distance to {distance}m in preview mode.");
+        }
+        else if (hasUpdate && !inPreviewMode)
+        {
+            SetCalibState(CalibState.GazePreview);
+            SetTargetDistance(new TargetPosition { distance = distance, horizontal = 0f, vertical = 0f });
+            Debug.Log($"[CalibrationLogic] Entered preview mode and set gaze target distance to {distance}m.");
+        }
+
         // Cycle to previous scene on Left Arrow
         if (Input.GetKeyDown(KeyCode.A))
         {
@@ -122,9 +136,6 @@ public class CalibrationLogic : MonoBehaviour, ICalibrationHub
         ToggleText(false);
         // Turns on GazeTarget
         ToggleGazeTarget(true);
-
-        // Sends "start_gaze_preview" command to RPI
-        RouteQueueContainer.routeQueue.Add((new { command = "start_gaze_preview" }, MessageType.gazeCalcControl));
 
         // SetTargetDistance() gets called from GUI with user defined distances
     }
@@ -263,6 +274,15 @@ public class CalibrationLogic : MonoBehaviour, ICalibrationHub
         if (InstructionText == null)
         {
             Debug.LogError("InstructionText is not assigned in CalibrationLogic.");
+        }
+    }
+
+    public void SettingsChanged(string moduleName, string fieldName)
+    {
+        if (fieldName == "targetPreviewDistance")
+        {
+            Debug.Log("[CalibrationLogic] Gaze target preview distance changed in settings.");
+            SetTargetDistance(new TargetPosition { distance = Settings.gazeCalculator.targetPreviewDistance, horizontal = 0f, vertical = 0f });
         }
     }
 
