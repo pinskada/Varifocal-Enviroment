@@ -123,7 +123,7 @@ public class EyeloopSettings
 [System.Serializable]
 public class GazeProcessorSettings
 {
-    public float filter_alpha = 0.5f;
+    public float filter_alpha_calc = 0.5f;
     public float buffer_crop_factor = 0.1f;
     public float std_threshold = 0.01f;
     public float gyro_threshold = 5f;
@@ -134,10 +134,15 @@ public class GazeProcessorSettings
 public class GazeCalcSettings
 {
     public float distanceThreshold = 100.0f; // in meters
-    public int useTracker = 0; // 1 = use eye tracker, 0 = do not use
-    public int drawRays = 1; // 1 = draw gaze rays, 0 = do not draw
+    public bool useTracker = true; // 1 = use eye tracker, 0 = do not use
+    public bool drawRays = true; // 1 = draw gaze rays, 0 = do not draw
     public float targetPreviewDistance = 5.0f; // in meters
     public int numberOfRays = 1;
+    public bool manualDistanceMode = false; // 1 = manual distance mode, 0 = automatic
+    public float manualDistanceValue = 2.0f; // in meters
+    public int sendRate = 10;
+    public float distanceChangeRatio = 1.5f; // ratio change to trigger sending new distance
+    public float minSendInterval = 0.5f; // minimum interval between sends in seconds
 }
 
 

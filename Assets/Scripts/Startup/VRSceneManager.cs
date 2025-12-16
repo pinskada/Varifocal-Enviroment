@@ -2,107 +2,131 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
-using Contracts;
 using UnityEngine.Rendering;
-
-// This script manages the VR scene transitions and maintains the state of the current scene
+using Contracts;
 
 public class VRSceneManager : MonoBehaviour, ISceneManagement
 {
     public static VRSceneManager Instance;
-    private string currentVRScene = null;
-    public List<string> availableScenes = new() { };
+
+    [SerializeField] private string uiSceneName = "UI_EditorScene";
+    [SerializeField] private string initialVRSceneName = "CoreScene";
+
+    public List<string> availableScenes = new();
+
+    private string currentVRScene;
     private int currentSceneIndex = 0;
+
+    private bool isSwitching = false;
+    private string pendingScene = null;
 
     void Awake()
     {
-        // Set game objects in the core scene to not be destroyed when loading new scenes
         DontDestroyOnLoad(gameObject);
-
         StartCoroutine(LoadInitialScenes());
     }
 
     private IEnumerator LoadInitialScenes()
     {
-        // Loads the initial scenes in the correct order
+        // Load UI additively once
+        if (!SceneManager.GetSceneByName(uiSceneName).isLoaded)
+            yield return SceneManager.LoadSceneAsync(uiSceneName, LoadSceneMode.Additive);
 
-        // Load GUI
-        //yield return null;
-        SceneManager.LoadScene("UI_EditorScene", LoadSceneMode.Additive);
-        // Load initial VR scene (CoreScene)
-        yield return null;
-        currentVRScene = "CoreScene";
-        //SceneManager.LoadSceneAsync("CoreScene", LoadSceneMode.Additive);
+        // Ensure initial VR scene is loaded (your original code only set the string)
+        if (!SceneManager.GetSceneByName(initialVRSceneName).isLoaded)
+            yield return SceneManager.LoadSceneAsync(initialVRSceneName, LoadSceneMode.Additive);
 
+        currentVRScene = initialVRSceneName;
     }
 
-    private IEnumerator SwitchVRScene(string newScene)
+    private void RequestSwitch(string newScene)
     {
-        // Checks if the new scene is already loaded and skip loading if it is
-
         if (string.IsNullOrEmpty(newScene))
+            return;
+
+        // If a switch is already running, remember only the latest request
+        if (isSwitching)
         {
-            Debug.LogWarning("[VRSceneManager] New scene name is null or empty. Aborting scene switch.");
-            yield return null;
+            pendingScene = newScene;
+            return;
         }
 
+        StartCoroutine(SwitchVRSceneRoutine(newScene));
+    }
+
+    private IEnumerator SwitchVRSceneRoutine(string newScene)
+    {
+        isSwitching = true;
+
+        // If same scene, do nothing
         if (newScene == currentVRScene)
         {
-            Debug.Log($"[VRSceneManager] Scene '{newScene}' already active. Skipping load.");
-            yield return null;
+            isSwitching = false;
+            yield break;
         }
 
-        yield return SceneManager.UnloadSceneAsync(currentVRScene);
+        // Unload current (only if it is actually loaded)
+        if (!string.IsNullOrEmpty(currentVRScene))
+        {
+            var cur = SceneManager.GetSceneByName(currentVRScene);
+            if (cur.isLoaded)
+                yield return SceneManager.UnloadSceneAsync(currentVRScene);
+        }
 
-        yield return SceneManager.LoadSceneAsync(newScene, LoadSceneMode.Additive);
+        // Load target (only if not loaded yet)
+        var target = SceneManager.GetSceneByName(newScene);
+        if (!target.isLoaded)
+            yield return SceneManager.LoadSceneAsync(newScene, LoadSceneMode.Additive);
 
         currentVRScene = newScene;
+
+        isSwitching = false;
+
+        // If another request came in while switching, process it now
+        if (!string.IsNullOrEmpty(pendingScene) && pendingScene != currentVRScene)
+        {
+            var next = pendingScene;
+            pendingScene = null;
+            RequestSwitch(next);
+        }
+        else
+        {
+            pendingScene = null;
+        }
     }
 
+    // --- Your public API ---
     public void LoadCalibScene()
     {
-        // Switches to the calibration scene and stores the previous scene
-
-        Debug.Log("Load Calib Scene called");
-
-        StartCoroutine(SwitchVRScene("CalibScene"));
-        currentVRScene = "CalibScene";
+        RequestSwitch("CalibScene");
         RenderSettings.ambientIntensity = 0.15f;
     }
 
     public void NextScene()
     {
-        // Loads the next scene in the list, or returns to the previous
-        // scene before calibration if currently in the calibration scene
-
-        Debug.Log("Next Scene called");
+        if (availableScenes == null || availableScenes.Count == 0) return;
 
         if (currentVRScene == "CalibScene")
         {
-            StartCoroutine(SwitchVRScene(availableScenes[0]));
+            RequestSwitch(availableScenes[0]);
             return;
         }
 
         currentSceneIndex = (currentSceneIndex + 1) % availableScenes.Count;
-        Debug.Log("New scene index: " + currentSceneIndex);
-
-        StartCoroutine(SwitchVRScene(availableScenes[currentSceneIndex]));
+        RequestSwitch(availableScenes[currentSceneIndex]);
     }
 
     public void PreviousScene()
     {
-        // Loads the previous scene in the list, or returns to the previous
-        // scene before calibration if currently in the calibration scene
-
+        if (availableScenes == null || availableScenes.Count == 0) return;
 
         if (currentVRScene == "CalibScene")
         {
-            StartCoroutine(SwitchVRScene(availableScenes[0]));
+            RequestSwitch(availableScenes[0]);
             return;
         }
 
         currentSceneIndex = (currentSceneIndex - 1 + availableScenes.Count) % availableScenes.Count;
-        Debug.Log("New scene index: " + currentSceneIndex);
-        StartCoroutine(SwitchVRScene(availableScenes[currentSceneIndex]));
+        RequestSwitch(availableScenes[currentSceneIndex]);
     }
 }

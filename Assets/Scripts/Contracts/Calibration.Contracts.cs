@@ -1,6 +1,5 @@
+using System;
 using System.Collections.Concurrent;
-using UnityEngine;
-
 namespace Contracts
 {
     public enum CalibState
@@ -129,5 +128,14 @@ namespace Contracts
     public static class TargetDistanceQueueContainer
     {
         public static readonly ConcurrentQueue<float> TargetDistanceQueue = new ConcurrentQueue<float>();
+    }
+
+    public static class CalibEvents
+    {
+        public static event Action CalibStarted;
+        public static event Action CalibStopped;
+
+        public static void RaiseCalibStarted() => CalibStarted?.Invoke();
+        public static void RaiseCalibStopped() => CalibStopped?.Invoke();
     }
 }

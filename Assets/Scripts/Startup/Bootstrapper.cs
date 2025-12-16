@@ -8,6 +8,7 @@ public class Bootstrapper : MonoBehaviour
     public NetworkManager networkManager; // receives raw IMU JSON and produces IMUData
     public CommRouter commRouter; // routes messages between modules
     public IMUHandler imuHandler; // filters IMUData and computes orientation
+    public GazeDistanceCalculator gazeDistanceCalculator; // calculates gaze distance from eye data
     public CameraFrustrum leftCameraFrustrum; // applies orientation to camera frustrums
     public CameraFrustrum rightCameraFrustrum;
     public CameraAligner cameraAligner; // interface to apply orientation to the camera
@@ -52,7 +53,7 @@ public class Bootstrapper : MonoBehaviour
 
         // External modules
         configManager.BindModule(networkManager, "eyeloop");
-        configManager.BindModule(networkManager, "gaze");
+        configManager.BindModule(networkManager, "gaze2");
         configManager.BindModule(networkManager, "camera");
         configManager.BindModule(networkManager, "tracker_crop");
 
@@ -65,8 +66,10 @@ public class Bootstrapper : MonoBehaviour
         GetExternalComponents();
         filter = imuHandler.GetFilterInstance();
 
-        guiInterface.InjectModules(configManager, VRSceneManager, imageRenderer);
+        guiInterface.InjectModules(configManager, VRSceneManager, imageRenderer, cameraAligner);
         configManager.BindModule(filter, "imu");
+        configManager.BindModule(gazeDistanceCalculator, "gazeCalculator");
+
 
     }
 

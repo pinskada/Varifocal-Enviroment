@@ -8,6 +8,7 @@
     "Config",
     "Gui",
     "ThreadingManager",
-    "GlobalSettings"
+    "GlobalSettings",
+    "GazeCalibration"
   ]
 }

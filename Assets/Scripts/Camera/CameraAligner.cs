@@ -1,66 +1,136 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using Contracts;
-
-// Position and align the camerarig to a specific anchor GameObject in the scene.
 
 public class CameraAligner : MonoBehaviour, ICameraAligner
 {
-    [SerializeField] private string anchorName = "CameraTarget"; // Name of the anchor GameObject to align the camera to.
-
+    private List<CameraTarget> targets = new();
+    private int currentIndex = 0;
+    private bool isReady = false;
+    private bool setCameraTargetRotation = false;
 
     private void OnEnable()
     {
         SceneManager.sceneLoaded += OnSceneLoaded;
+        SceneManager.sceneUnloaded += OnSceneUnloaded;
+        CalibEvents.CalibStarted += OnCalibStarted;
+        CalibEvents.CalibStopped += OnCalibStopped;
     }
-
 
     private void OnDisable()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
+        SceneManager.sceneUnloaded -= OnSceneUnloaded;
+        CalibEvents.CalibStarted -= OnCalibStarted;
+        CalibEvents.CalibStopped -= OnCalibStopped;
     }
 
+    void OnCalibStarted() => setCameraTargetRotation = true;
+    void OnCalibStopped() => setCameraTargetRotation = false;
+
+    private void LateUpdate()
+    {
+        if (setCameraTargetRotation)
+        {
+            var rotation = targets[currentIndex].transform.rotation;
+            ApplyOrientation(rotation);
+        }
+    }
+
+    private void OnSceneUnloaded(Scene scene)
+    {
+        // Old targets are about to be destroyed -> drop references immediately
+        targets.Clear();
+        currentIndex = 0;
+        isReady = false;
+    }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        StartCoroutine(AlignToAnchorNextFrame());
+        StartCoroutine(InitTargetsNextFrame());
     }
 
-    public void Update()
+    private IEnumerator InitTargetsNextFrame()
     {
-        //Debug.Log(transform.rotation);
-    }
+        isReady = false;
+        yield return null;
 
+        RefreshTargets();
 
-    private IEnumerator AlignToAnchorNextFrame()
-    {
-        // Alligns the camera to the specified anchor GameObject after the scene has loaded.
-
-        yield return null; // Wait one frame for objects in the new scene to initialize
-
-        GameObject anchor = GameObject.Find(anchorName);
-        if (anchor != null)
+        if (targets.Count == 0)
         {
-            transform.position = anchor.transform.position;
-            transform.rotation = anchor.transform.rotation;
-            //Debug.Log($"[CameraAligner] Camera aligned to anchor '{anchorName}' in scene.");
+            Debug.LogWarning("[CameraAligner] No CameraTargets found.");
+            yield break;
         }
+
+        currentIndex = Mathf.Clamp(currentIndex, 0, targets.Count - 1);
+        AlignToCurrent();
+        isReady = true;
+    }
+
+    private void RefreshTargets() // NEW
+    {
+        targets = FindObjectsByType<CameraTarget>(FindObjectsSortMode.None)
+            .Where(t => t != null)                 // handles destroyed refs
+            .OrderBy(t => t.order)
+            .ToList();
+
+        if (targets.Count == 0)
+            currentIndex = 0;
         else
-        {
-            Debug.LogWarning($"[CameraAligner] No anchor '{anchorName}' found in scene.");
-        }
+            currentIndex = Mathf.Clamp(currentIndex, 0, targets.Count - 1);
     }
 
-
-    public void ApplyOrientation(Quaternion worldRotation)
+    private bool EnsureValidCurrent() // NEW
     {
-        transform.rotation = worldRotation;
+        // Remove destroyed entries (Unity "fake null" safety)
+        targets.RemoveAll(t => t == null);
+
+        if (targets.Count == 0) return false;
+
+        if (currentIndex < 0 || currentIndex >= targets.Count)
+            currentIndex = Mathf.Clamp(currentIndex, 0, targets.Count - 1);
+
+        // current might still be null if it was destroyed this frame
+        if (targets[currentIndex] == null)
+            return false;
+
+        return true;
     }
 
-
-    public Quaternion GetCurrentOrientation()
+    private void AlignToCurrent()
     {
-        return transform.rotation;
+        if (!EnsureValidCurrent()) return;
+
+        Transform t = targets[currentIndex].transform;
+        transform.SetPositionAndRotation(t.position, t.rotation);
     }
+
+    public void NextTarget()
+    {
+        // In case user presses keys mid-switch, try to recover gracefully
+        if (targets.Count == 0) RefreshTargets();
+        if (!EnsureValidCurrent()) return;
+
+        currentIndex = (currentIndex + 1) % targets.Count;
+        AlignToCurrent();
+    }
+
+    public void PreviousTarget()
+    {
+        if (targets.Count == 0) RefreshTargets();
+        if (!EnsureValidCurrent()) return;
+
+        currentIndex--;
+        if (currentIndex < 0) currentIndex = targets.Count - 1;
+        AlignToCurrent();
+    }
+
+    public void ApplyOrientation(Quaternion worldRotation) => transform.rotation = worldRotation;
+    public Quaternion GetCurrentOrientation() => transform.rotation;
+
+    public bool IsReady() => isReady; // optional helper
 }

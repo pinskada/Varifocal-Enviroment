@@ -24,6 +24,7 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
     private bool smoothInit = false;
     private Vector3 accelFiltered = Vector3.zero;
     private Vector3 rotFiltered = Vector3.zero;
+    private bool updateCamera = true;
 
     // Ensure that the sensor data is valid and finite
     static bool IsFinite(double x) => !(double.IsNaN(x) || double.IsInfinity(x));
@@ -33,6 +34,20 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
 
     public Madgwick GetFilterInstance() => filter;
 
+    void OnEnable()
+    {
+        CalibEvents.CalibStarted += OnCalibStarted;
+        CalibEvents.CalibStopped += OnCalibStopped;
+    }
+
+    void OnDisable()
+    {
+        CalibEvents.CalibStarted -= OnCalibStarted;
+        CalibEvents.CalibStopped -= OnCalibStopped;
+    }
+
+    void OnCalibStarted() => updateCamera = false;
+    void OnCalibStopped() => updateCamera = true;
 
     public void InjectModules(ICameraAligner cameraAligner)
     {
@@ -210,7 +225,8 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
         // Apply the computed orientation to the target transform
         if (_ICameraAligner != null)
         {
-            _ICameraAligner.ApplyOrientation(q_smoothed);
+            if (updateCamera)
+                _ICameraAligner.ApplyOrientation(q_smoothed);
         }
         else
         {

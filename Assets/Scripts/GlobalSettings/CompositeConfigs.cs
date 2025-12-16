@@ -7,7 +7,7 @@ public abstract class BaseConfig
     public TCPSettings tcp = new TCPSettings();
     public TestSettings test = new TestSettings();
     public EyeloopSettings eyeloop = new EyeloopSettings();
-    public GazeProcessorSettings gaze = new GazeProcessorSettings();
+    public GazeProcessorSettings gaze2 = new GazeProcessorSettings();
     public GazeCalcSettings gazeCalculator = new GazeCalcSettings();
     public CameraSettings camera = new CameraSettings();
     public DisplaySettings display = new DisplaySettings();

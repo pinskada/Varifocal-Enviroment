@@ -227,7 +227,7 @@ public class IMUHandlerTests
 
     public void PassDummyModules(IMUHandler imuHandler, TestGlobals testGlobals)
     {
-        _ICameraAligner = new DummyCameraAligner(testGlobals);
+        // _ICameraAligner = new DummyCameraAligner(testGlobals);
         //_IConfigManager = null; //new DummyConfigManager();
 
         //imuHandler.InjectModules(_ICameraHub, _IConfigManager);
@@ -264,25 +264,25 @@ public class DummyConfigManager : IConfigManagerCommunicator
     }
 }
 
-*/
-public class DummyCameraAligner : ICameraAligner
-{
-    TestGlobals testGlobals;
+// */
+// public class DummyCameraAligner : ICameraAligner
+// {
+//     TestGlobals testGlobals;
 
-    public DummyCameraAligner(TestGlobals globals)
-    {
-        testGlobals = globals;
-    }
+//     public DummyCameraAligner(TestGlobals globals)
+//     {
+//         testGlobals = globals;
+//     }
 
-    public Quaternion GetCurrentOrientation()
-    {
-        return testGlobals.RandomQuaternion;
-    }
+//     public Quaternion GetCurrentOrientation()
+//     {
+//         return testGlobals.RandomQuaternion;
+//     }
 
-    public void ApplyOrientation(Quaternion orientation)
-    {
-        testGlobals.AppliedCount++;
-        testGlobals.AppliedOrientation = orientation;
-    }
-}
+//     public void ApplyOrientation(Quaternion orientation)
+//     {
+//         testGlobals.AppliedCount++;
+//         testGlobals.AppliedOrientation = orientation;
+//     }
+// }
 

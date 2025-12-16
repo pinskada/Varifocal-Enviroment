@@ -102,7 +102,7 @@ public static class RoutingTable
                 tcpRoutingList.Add(new RoutingEntry("camera", () => Settings.camera));
                 tcpRoutingList.Add(new RoutingEntry("tracker_crop", () => Settings.tracker_crop));
                 tcpRoutingList.Add(new RoutingEntry("eyeloop", () => Settings.eyeloop));
-                tcpRoutingList.Add(new RoutingEntry("gaze", () => Settings.gaze));
+                tcpRoutingList.Add(new RoutingEntry("gaze2", () => Settings.gaze2));
                 break;
 
             case VRMode.UserVR:
@@ -128,7 +128,7 @@ public static class RoutingTable
             case VRMode.UserVR:
                 serialRoutingList.Add(new RoutingEntry("camera", () => Settings.camera));
                 serialRoutingList.Add(new RoutingEntry("tracker_crop", () => Settings.tracker_crop));
-                serialRoutingList.Add(new RoutingEntry("gaze", () => Settings.gaze));
+                serialRoutingList.Add(new RoutingEntry("gaze", () => Settings.gaze2));
                 break;
         }
 

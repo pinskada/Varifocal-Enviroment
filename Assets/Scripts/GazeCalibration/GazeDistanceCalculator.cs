@@ -2,13 +2,14 @@ using UnityEngine;
 using Contracts;
 using System.Threading;
 
-public class GazeDistanceCalculator : MonoBehaviour
+public class GazeDistanceCalculator : MonoBehaviour, IModuleSettingsHandler
 {
     // Start is called once before the first execution of Update after the MonoBehaviour is created
 
     [SerializeField] GameObject cameraObject;
     private volatile CalibratedData calibratedData;
     private bool isCalibrated = false;
+    private bool isTcpReady = false;
     private Thread gazeCalculatorThread;
     private Thread calibratorThread;
     private volatile bool runRaycast = false;
@@ -23,6 +24,23 @@ public class GazeDistanceCalculator : MonoBehaviour
     private volatile float leftPitchDeg = 0f;
     private volatile float rightYawDeg = 0f;
     private volatile float rightPitchDeg = 0f;
+    private float lastSentDistance = -1f; // invalid = never sent
+    private float lastSendTime = -999f;
+
+    void OnEnable()
+    {
+        CommEvents.TcpConnected += OnTcpReady;
+        CommEvents.TcpDisconnected += OnTcpLost;
+    }
+
+    void OnDisable()
+    {
+        CommEvents.TcpConnected -= OnTcpReady;
+        CommEvents.TcpDisconnected -= OnTcpLost;
+    }
+
+    void OnTcpReady() => isTcpReady = true;
+    void OnTcpLost() => isTcpReady = false;
 
 
     void Start()
@@ -50,6 +68,16 @@ public class GazeDistanceCalculator : MonoBehaviour
         gazeCalculatorThread.Start();
     }
 
+    public void SettingsChanged(string moduleName, string fieldName)
+    {
+        // This method is called when settings are changed in the ConfigManager.
+        // You can implement any necessary actions to handle the updated settings here.
+        if (fieldName == "manualDistanceValue")
+        {
+            var manualDistance = Settings.gazeCalculator.manualDistanceValue;
+            RouteQueueContainer.routeQueue.Add((manualDistance, MessageType.gazeData));
+        }
+    }
 
     void OnApplicationQuit()
     {
@@ -80,6 +108,7 @@ public class GazeDistanceCalculator : MonoBehaviour
         calibratedData = data;
         isCalibrated = true;
         RouteQueueContainer.routeQueue.Add((new { command = "start_gaze_calc" }, MessageType.gazeCalcControl));
+        Debug.Log("Received new calibration data in GazeDistanceCalculator.");
     }
 
 
@@ -88,8 +117,9 @@ public class GazeDistanceCalculator : MonoBehaviour
         foreach (EyeVectors data in EyeVectorsQueueContainer.EyeVectorsQueue.GetConsumingEnumerable())
         {
             // Debug.Log($"Left - {data.left_eye_vector.dx}, {data.left_eye_vector.dy}; Right - {data.right_eye_vector.dx}, {data.right_eye_vector.dy}");
-            if (calibratedData != null)
+            if (isCalibrated == true)
             {
+                Debug.Log("GazeDistanceCalculator received new EyeVectors.");
                 CalculateData(data);
             }
         }
@@ -108,7 +138,7 @@ public class GazeDistanceCalculator : MonoBehaviour
         var (leftAngles, rightAngles) = CalculateAngles(referenceVectors, calib.angle);
 
         // store per-eye gaze angles for debug visualization
-        if (Settings.gazeCalculator.useTracker == 1)
+        if (Settings.gazeCalculator.useTracker == true)
         {
             leftYawDeg = leftAngles.x;
             leftPitchDeg = leftAngles.y;
@@ -230,19 +260,27 @@ public class GazeDistanceCalculator : MonoBehaviour
 
     void Update()
     {
+        if (!isTcpReady)
+            return;
+        // Debug.Log("Got past tcp ready check.");
+        if (Settings.gazeCalculator.manualDistanceMode)
+        {
+            return;
+        }
         var useTracker = Settings.gazeCalculator.useTracker;
-        if (useTracker == 0)
+        if (useTracker == false)
         {
             runRaycast = true;
         }
 
         // Skip update if not calibrated yet
-        if (!isCalibrated && useTracker == 1)
+        if (!isCalibrated && useTracker == true)
             return;
+        // Debug.Log("Got past calibration check.");
         // Skip update if no new eyeVectors since last frame
-        if (!newGazeAvailable && useTracker == 1)
+        if (!newGazeAvailable && useTracker == true)
             return;
-
+        Debug.Log("Got past new gaze check.");
         float finalDistance;
         // Optionally, you can call calculation methods here if they need to run on the main thread
         if (runRaycast)
@@ -256,15 +294,53 @@ public class GazeDistanceCalculator : MonoBehaviour
         }
         // Reset flag: we consumed the new value
         newGazeAvailable = false;
-        Debug.Log($"Final: {finalDistance}, Vergence: {vergenceDistance}, Raycast: {runRaycast}");
-        RouteQueueContainer.routeQueue.Add((finalDistance, MessageType.gazeData));
-
-        if (Settings.gazeCalculator.drawRays == 1)
+        // Debug.Log($"Final: {finalDistance}, Vergence: {vergenceDistance}, Raycast: {runRaycast}");
+        if (ShouldSendDistance(finalDistance))
         {
+            lastSentDistance = finalDistance;
+            RouteQueueContainer.routeQueue.Add((finalDistance, MessageType.gazeData));
+        }
+
+        if (Settings.gazeCalculator.drawRays)
+        {
+            // Debug.Log("Drawing gaze rays.");
+            SetRaysVisible(true);
             DrawGazeRays();
+        }
+        else
+        {
+            // Debug.Log("Hiding gaze rays.");
+            SetRaysVisible(false);
         }
     }
 
+    private bool ShouldSendDistance(float newDistance)
+    {
+        if (Time.time - lastSendTime < Settings.gazeCalculator.minSendInterval)
+            return false;
+
+        lastSendTime = Time.time;
+        // Always send first valid value
+        if (lastSentDistance <= 0f)
+            return true;
+
+        // Reject non-finite values (optional safety)
+        if (!float.IsFinite(newDistance))
+            return false;
+
+        float ratio = newDistance / lastSentDistance;
+
+        return ratio >= Settings.gazeCalculator.distanceChangeRatio || ratio <= (1f / Settings.gazeCalculator.distanceChangeRatio);
+    }
+
+    private void SetRaysVisible(bool visible)
+    {
+        if (leftRayRenderer != null)
+            leftRayRenderer.enabled = visible;
+
+        if (rightRayRenderer != null)
+            rightRayRenderer.enabled = visible;
+    }
 
     // Raycast-based distance estimation for far objects.
     // Currently uses camera forward as a proxy for gaze direction.
@@ -276,7 +352,7 @@ public class GazeDistanceCalculator : MonoBehaviour
         Vector3 origin = cameraObject.transform.position;
         Vector3 direction;
 
-        if (useTracker == 0)
+        if (useTracker == false)
         {
             // Eye tracker disabled → always raycast straight forward
             direction = cameraObject.transform.forward;
@@ -357,14 +433,14 @@ public class GazeDistanceCalculator : MonoBehaviour
             Vector3 originR = cameraObject.transform.position + right * halfIpd * 2;
 
             // If you don't want rays when tracker is disabled, early out:
-            if (Settings.gazeCalculator.useTracker == 0)
+            if (Settings.gazeCalculator.useTracker == false)
             {
                 // Optionally still show straight-forward rays:
                 UpdateLineRenderer(leftRayRenderer, originL,
                     cameraObject.transform.forward * debugRayLength);
                 UpdateLineRenderer(rightRayRenderer, originR,
                     cameraObject.transform.forward * debugRayLength);
-                Debug.Log($"Left Ray - Yaw: {leftYawDeg}, Pitch: {leftPitchDeg}; Right Ray - Yaw: {rightYawDeg}, Pitch: {rightPitchDeg}");
+                // Debug.Log($"Left Ray - Yaw: {leftYawDeg}, Pitch: {leftPitchDeg}; Right Ray - Yaw: {rightYawDeg}, Pitch: {rightPitchDeg}");
 
                 return;
             }
@@ -375,19 +451,19 @@ public class GazeDistanceCalculator : MonoBehaviour
             UpdateLineRenderer(leftRayRenderer, originL, dirL * debugRayLength);
             UpdateLineRenderer(rightRayRenderer, originR, dirR * debugRayLength);
 
-            Debug.Log($"Left Ray - Yaw: {leftYawDeg}, Pitch: {leftPitchDeg}; Right Ray - Yaw: {rightYawDeg}, Pitch: {rightPitchDeg}");
+            // Debug.Log($"Left Ray - Yaw: {leftYawDeg}, Pitch: {leftPitchDeg}; Right Ray - Yaw: {rightYawDeg}, Pitch: {rightPitchDeg}");
         }
         else if (Settings.gazeCalculator.numberOfRays == 1)
         {
             Vector3 origin = cameraObject.transform.position;
 
             // If you don't want rays when tracker is disabled, early out:
-            if (Settings.gazeCalculator.useTracker == 0)
+            if (Settings.gazeCalculator.useTracker == false)
             {
                 // Optionally still show straight-forward ray:
                 UpdateLineRenderer(leftRayRenderer, origin,
                     cameraObject.transform.forward * debugRayLength);
-                Debug.Log($"Cyclopean Ray - Yaw: {cyclopeanYawDeg}, Pitch: {cyclopeanPitchDeg}");
+                // Debug.Log($"Cyclopean Ray - Yaw: {cyclopeanYawDeg}, Pitch: {cyclopeanPitchDeg}");
 
                 return;
             }
@@ -396,7 +472,7 @@ public class GazeDistanceCalculator : MonoBehaviour
 
             UpdateLineRenderer(leftRayRenderer, origin, dir * debugRayLength);
 
-            Debug.Log($"Cyclopean Ray - Yaw: {cyclopeanYawDeg}, Pitch: {cyclopeanPitchDeg}");
+            // Debug.Log($"Cyclopean Ray - Yaw: {cyclopeanYawDeg}, Pitch: {cyclopeanPitchDeg}");
         }
     }
 

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 
 namespace Contracts
@@ -64,5 +65,14 @@ namespace Contracts
         public int Width;
         public int Height;
         public byte[] Data;   // compressed image bytes
+    }
+
+    public static class CommEvents
+    {
+        public static event Action TcpConnected;
+        public static event Action TcpDisconnected;
+
+        public static void RaiseTcpConnected() => TcpConnected?.Invoke();
+        public static void RaiseTcpDisconnected() => TcpDisconnected?.Invoke();
     }
 }

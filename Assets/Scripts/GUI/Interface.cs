@@ -16,16 +16,19 @@ public class GuiInterface : MonoBehaviour
     public IConfigManagerCommunicator _IConfigManager;
     public ISceneManagement _VRSceneManager;
     public ImageDestroyer _imageDestroyer;
+    public ICameraAligner _cameraAligner;
 
     public void InjectModules(
         IConfigManagerCommunicator _IConfigManager,
         ISceneManagement _VRSceneManager,
-        ImageDestroyer _imageDestroyer
+        ImageDestroyer _imageDestroyer,
+        ICameraAligner _cameraAligner
     )
     {
         this._IConfigManager = _IConfigManager;
         this._VRSceneManager = _VRSceneManager;
         this._imageDestroyer = _imageDestroyer;
+        this._cameraAligner = _cameraAligner;
     }
 
     private void Awake()
@@ -39,7 +42,9 @@ public class GuiInterface : MonoBehaviour
 
         SetVersionText();
         ConnectEditFields();
+        ConnectToggles();
         PopulateEditFields();
+        PopulateToggles();
         PopulateSettingsConfigDropdown();
     }
 
@@ -56,6 +61,16 @@ public class GuiInterface : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
             _VRSceneManager.PreviousScene();
+        }
+
+        if (Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            _cameraAligner.PreviousTarget();
+        }
+
+        if (Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            _cameraAligner.PreviousTarget();
         }
     }
 
@@ -100,6 +115,66 @@ public class GuiInterface : MonoBehaviour
         }
     }
 
+    private IEnumerable<Toggle> GetAllToggles()
+    {
+        return FindObjectsByType<Toggle>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None
+        );
+    }
+
+
+    private void ConnectToggles()
+    {
+        foreach (var toggle in GetAllToggles())
+        {
+            toggle.onValueChanged.AddListener(isOn => OnToggleChanged(toggle, isOn));
+        }
+    }
+
+
+    private void PopulateToggles()
+    {
+        foreach (var toggle in GetAllToggles())
+        {
+            var field = toggle.GetComponent<UIField>();
+            if (field == null) continue;
+
+            string module = field.moduleName;
+            string name = field.fieldName;
+
+            if (string.IsNullOrEmpty(module) || string.IsNullOrEmpty(name))
+                continue;
+
+            var value = GetSettingValue(module, name, null);
+            if (value == null) continue;
+
+            // Expecting bool in Settings
+            if (value is bool b)
+                toggle.SetIsOnWithoutNotify(b);
+            else
+                Debug.LogWarning($"[GuiInterface] Setting {module}.{name} is not bool (got {value.GetType().Name})");
+        }
+    }
+
+    public void OnToggleChanged(Toggle toggle, bool isOn)
+    {
+        var field = toggle.GetComponent<UIField>();
+        if (field == null) return;
+
+        string module = field.moduleName;
+        string name = field.fieldName;
+
+        if (string.IsNullOrEmpty(module) || string.IsNullOrEmpty(name))
+        {
+            Debug.LogWarning("[GuiInterface] Missing module or field name on Toggle");
+            return;
+        }
+
+        // Send as "true"/"false" (or swap to "1"/"0" if your backend expects that)
+        SendConfig(module, name, isOn ? "true" : "false");
+    }
+
 
     private void PopulateEditFields()
     {
@@ -132,10 +207,10 @@ public class GuiInterface : MonoBehaviour
                 continue;
             }
 
-            if (module == "gaze")
-            {
-                continue;
-            }
+            // if (module == "gaze")
+            // {
+            //     continue;
+            // }
             var value = GetSettingValue(module, name, input);
             if (value != null)
             {
@@ -163,22 +238,20 @@ public class GuiInterface : MonoBehaviour
     }
 
 
-    private object GetSettingValue(string moduleName, string fieldName, TMP_InputField inputField)
+    private object GetSettingValue(string moduleName, string fieldName, Component source = null)
     {
         try
         {
-            // Get the type of the Settings class
             var settingsType = typeof(Settings);
 
-            // Find the field representing the module
             var moduleProp = settingsType.GetProperty(moduleName, BindingFlags.Public | BindingFlags.Static);
             if (moduleProp == null)
             {
-                Debug.LogWarning($"[GuiInterface] Module '{moduleName}' of gameObject {inputField.gameObject.name} not found in Settings");
+                var srcName = source ? source.gameObject.name : "(unknown)";
+                Debug.LogWarning($"[GuiInterface] Module '{moduleName}' of gameObject {srcName} not found in Settings");
                 return null;
             }
 
-            // Get the instance of that module
             var moduleInstance = moduleProp.GetValue(null);
             if (moduleInstance == null)
             {
@@ -186,7 +259,6 @@ public class GuiInterface : MonoBehaviour
                 return null;
             }
 
-            // Find the field inside the module
             var fieldInfo = moduleInstance.GetType().GetField(fieldName, BindingFlags.Public | BindingFlags.Instance);
             if (fieldInfo == null)
             {
@@ -194,7 +266,6 @@ public class GuiInterface : MonoBehaviour
                 return null;
             }
 
-            // Extract and return the value
             return fieldInfo.GetValue(moduleInstance);
         }
         catch (Exception ex)
@@ -208,6 +279,7 @@ public class GuiInterface : MonoBehaviour
     public void OnSceneChanged(int Index)
     {
         // Scene set based on dropdown index
+        configSettingsDropdown.SetValueWithoutNotify(-1);
 
         switch (Index)
         {

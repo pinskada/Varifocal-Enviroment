@@ -4,24 +4,38 @@ using System.Collections;
 
 public class CalibrationLogic : MonoBehaviour, ICalibrationHub
 {
+
+    [SerializeField] private Transform referenceTransform; // CameraRig or active cam
+    [SerializeField] private string cameraRigName = "CameraRig"; // optional fallback
     [SerializeField] private GameObject CameraTarget;
     [SerializeField] private GameObject GazeTarget;
     [SerializeField] private GameObject InstructionText;
 
+    private Quaternion frozenCameraOrientation;
+
     private Coroutine currentRoutine;
     private bool inPreviewMode = false;
 
-    private UnityEngine.Vector3 targetOffset = new UnityEngine.Vector3(0f, 0.065f, 0f);
-
+    private Vector3 targetOffset = new Vector3(0f, 0.065f, 0f);
 
 
     public void Start()
     {
         CheckComponents();
+        if (referenceTransform == null)
+        {
+            // 1) Try find by name (matches your hierarchy)
+            var rigObj = GameObject.Find(cameraRigName);
+            if (rigObj != null) referenceTransform = rigObj.transform;
+
+            // 2) Fallback: main camera (or composite cam)
+            if (referenceTransform == null && Camera.main != null)
+                referenceTransform = Camera.main.transform;
+        }
+
         ToggleGazeTarget(false);
         ToggleText(true);
     }
-
 
     public void Update()
     {
@@ -82,6 +96,8 @@ public class CalibrationLogic : MonoBehaviour, ICalibrationHub
 
     private IEnumerator RunCalibrationSequence()
     {
+        CalibEvents.RaiseCalibStarted();
+
         // Turns off InstructionText
         ToggleText(false);
         // Turns on GazeTarget
@@ -102,6 +118,7 @@ public class CalibrationLogic : MonoBehaviour, ICalibrationHub
         ToggleText(true);
 
         yield return null;
+        CalibEvents.RaiseCalibStopped();
     }
 
 

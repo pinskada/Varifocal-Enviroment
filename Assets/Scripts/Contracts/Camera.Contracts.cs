@@ -9,5 +9,8 @@ namespace Contracts
         void ApplyOrientation(Quaternion worldRotation);
 
         Quaternion GetCurrentOrientation();
+
+        void NextTarget();
+        void PreviousTarget();
     }
 }

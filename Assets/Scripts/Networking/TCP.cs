@@ -22,7 +22,9 @@ public class TCP : IModuleSettingsHandler
     private int bufferOffset = 0;  // Start of unprocessed data
     private int bufferCount = 0;   // How many valid bytes are in the buffer
     private int sendRetryCount = 0; // Counter for send retries
+    public bool IsConnected => isConnected;
 
+    private readonly SynchronizationContext unityContext;
 
     public TCP(NetworkManager networkManager)
     {
@@ -30,6 +32,7 @@ public class TCP : IModuleSettingsHandler
 
 
         this.networkManager = networkManager;
+        unityContext ??= SynchronizationContext.Current;
     }
 
 
@@ -39,6 +42,13 @@ public class TCP : IModuleSettingsHandler
         // You can implement any necessary actions to handle the updated settings here.
     }
 
+
+    private void RaiseOnMainThread(Action a)
+    {
+        if (a == null) return;
+        if (unityContext == null) { a(); return; }
+        unityContext.Post(_ => a(), null);
+    }
 
     public void InjectHardwareRouter(CommRouter router)
     {
@@ -206,11 +216,14 @@ public class TCP : IModuleSettingsHandler
             receiveThread = new Thread(ReceiveViaTCP) { IsBackground = true, Name = "TCP.Receive" };
             receiveThread.Start();
 
+
             if (networkManager != null)
                 // Send initial configuration to the RPI
                 networkManager.SendTCPConfig();
             else
                 UnityEngine.Debug.LogError("[TCP] NetworkManager reference is null, cannot send config over TCP.");
+
+            RaiseOnMainThread(CommEvents.RaiseTcpConnected);
         }
         catch (Exception e)
         {
@@ -222,8 +235,9 @@ public class TCP : IModuleSettingsHandler
     private void DisconnectFromServer()
     {
         // This method disconnects from the TCP server.
-
         if (!isConnected) return;
+
+        RaiseOnMainThread(CommEvents.RaiseTcpDisconnected);
         isConnected = false;
 
         if (receiveThread != null && receiveThread.IsAlive)
@@ -273,6 +287,7 @@ public class TCP : IModuleSettingsHandler
             byte[] byteMessage = message as byte[];
             byte[] data = EncodeTCPStream(byteMessage, messageType);
             stream.Write(data, 0, data.Length);
+            UnityEngine.Debug.Log("[TCP] Sent message of type: " + messageType.ToString());
 
         }
         catch (Exception e)
@@ -334,7 +349,13 @@ public class TCP : IModuleSettingsHandler
                 {
                     // Read data from the stream into the buffer
                     int bytesRead = stream.Read(buffer, 0, buffer.Length);
-                    if (bytesRead == 0) break;
+                    if (bytesRead == 0)
+                    {
+                        // Remote closed connection
+                        isConnected = false;
+                        RaiseOnMainThread(CommEvents.RaiseTcpDisconnected);
+                        break;
+                    }
 
                     // Decode the incoming packet
                     DecodeTCPStream(buffer, bytesRead);
