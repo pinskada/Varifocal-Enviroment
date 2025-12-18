@@ -287,7 +287,7 @@ public class TCP : IModuleSettingsHandler
             byte[] byteMessage = message as byte[];
             byte[] data = EncodeTCPStream(byteMessage, messageType);
             stream.Write(data, 0, data.Length);
-            UnityEngine.Debug.Log("[TCP] Sent message of type: " + messageType.ToString());
+            // UnityEngine.Debug.Log("[TCP] Sent message of type: " + messageType.ToString());
 
         }
         catch (Exception e)

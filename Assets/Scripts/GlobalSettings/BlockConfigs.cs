@@ -57,6 +57,7 @@ public class IMUSettings
     public float betaThreshold = 2f; // Threshold to switch between moving and still states [-]
     public float minGyroMagnitude = 1f;  // Threshold to skip updates when gyro is nearly zero [rad/s]
     public float qSmoothAlpha = 0.65f; // Smoothing factor for accelerometer low-pass filter [0..1]
+    public float accelRejectWidth = 2.0f; // Width of the accelerometer rejection band [m/s^2]
 
 }
 
@@ -142,7 +143,7 @@ public class GazeCalcSettings
     public float manualDistanceValue = 2.0f; // in meters
     public int sendRate = 10;
     public float distanceChangeRatio = 1.5f; // ratio change to trigger sending new distance
-    public float minSendInterval = 0.5f; // minimum interval between sends in seconds
+    public float minSendInterval = 2.0f; // minimum interval between sends in seconds
 }
 
 

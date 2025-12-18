@@ -26,6 +26,7 @@ public class GazeDistanceCalculator : MonoBehaviour, IModuleSettingsHandler
     private volatile float rightPitchDeg = 0f;
     private float lastSentDistance = -1f; // invalid = never sent
     private float lastSendTime = -999f;
+    [SerializeField] private LayerMask raycastMask = ~0;
 
     void OnEnable()
     {
@@ -260,41 +261,31 @@ public class GazeDistanceCalculator : MonoBehaviour, IModuleSettingsHandler
 
     void Update()
     {
+        SetRaysVisibility();
+
         if (!isTcpReady)
             return;
-        // Debug.Log("Got past tcp ready check.");
-        if (Settings.gazeCalculator.manualDistanceMode)
-        {
-            return;
-        }
-        var useTracker = Settings.gazeCalculator.useTracker;
-        if (useTracker == false)
-        {
-            runRaycast = true;
-        }
 
-        // Skip update if not calibrated yet
+        if (Settings.gazeCalculator.manualDistanceMode)
+            return;
+
+        var useTracker = Settings.gazeCalculator.useTracker;
+
         if (!isCalibrated && useTracker == true)
             return;
-        // Debug.Log("Got past calibration check.");
-        // Skip update if no new eyeVectors since last frame
+
         if (!newGazeAvailable && useTracker == true)
             return;
-        Debug.Log("Got past new gaze check.");
+
         float finalDistance;
-        // Optionally, you can call calculation methods here if they need to run on the main thread
-        if (runRaycast)
-        {
-            var rayCastDistance = CalculateRayCastDistance();
-            finalDistance = rayCastDistance;
-        }
-        else
-        {
+        if (!runRaycast && useTracker)
             finalDistance = vergenceDistance;
-        }
-        // Reset flag: we consumed the new value
+        else
+            finalDistance = CalculateRayCastDistance();
+
         newGazeAvailable = false;
-        // Debug.Log($"Final: {finalDistance}, Vergence: {vergenceDistance}, Raycast: {runRaycast}");
+
+        // Debug.Log(finalDistance);
         if (ShouldSendDistance(finalDistance))
         {
             lastSentDistance = finalDistance;
@@ -302,21 +293,16 @@ public class GazeDistanceCalculator : MonoBehaviour, IModuleSettingsHandler
         }
 
         if (Settings.gazeCalculator.drawRays)
-        {
-            // Debug.Log("Drawing gaze rays.");
-            SetRaysVisible(true);
             DrawGazeRays();
-        }
-        else
-        {
-            // Debug.Log("Hiding gaze rays.");
-            SetRaysVisible(false);
-        }
     }
+
 
     private bool ShouldSendDistance(float newDistance)
     {
         if (Time.time - lastSendTime < Settings.gazeCalculator.minSendInterval)
+            return false;
+
+        if (newDistance <= 0.0f)
             return false;
 
         lastSendTime = Time.time;
@@ -333,13 +319,13 @@ public class GazeDistanceCalculator : MonoBehaviour, IModuleSettingsHandler
         return ratio >= Settings.gazeCalculator.distanceChangeRatio || ratio <= (1f / Settings.gazeCalculator.distanceChangeRatio);
     }
 
-    private void SetRaysVisible(bool visible)
+    private void SetRaysVisibility()
     {
         if (leftRayRenderer != null)
-            leftRayRenderer.enabled = visible;
+            leftRayRenderer.enabled = Settings.gazeCalculator.drawRays;
 
         if (rightRayRenderer != null)
-            rightRayRenderer.enabled = visible;
+            rightRayRenderer.enabled = Settings.gazeCalculator.drawRays;
     }
 
     // Raycast-based distance estimation for far objects.
@@ -349,7 +335,6 @@ public class GazeDistanceCalculator : MonoBehaviour, IModuleSettingsHandler
     {
         var useTracker = Settings.gazeCalculator.useTracker;
 
-        Vector3 origin = cameraObject.transform.position;
         Vector3 direction;
 
         if (useTracker == false)
@@ -371,10 +356,11 @@ public class GazeDistanceCalculator : MonoBehaviour, IModuleSettingsHandler
         }
 
         float maxDistance = Settings.gazeCalculator.distanceThreshold; // 2.0f meters
+        Vector3 origin = cameraObject.transform.position + direction * 0.05f;
 
-        if (Physics.Raycast(origin, direction, out RaycastHit hit, maxDistance))
+        if (Physics.Raycast(origin, direction, out RaycastHit hit, maxDistance, raycastMask, QueryTriggerInteraction.Ignore))
         {
-            return hit.distance;
+            return Mathf.Max(hit.distance, 0.2f);
         }
 
         // If nothing is hit, treat as max distance

@@ -100,7 +100,7 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
         Vector3 rawAccel = imuData.accel;
         Vector3 rawMag = imuData.mag;
         double tempTime = imuData.timestamp;
-
+        //new Vector3(-16000, 0, 0);
         //Debug.Log("Accelerometer: " + accel.ToString("F4"));
 
         // Drop bad packets early
@@ -132,6 +132,7 @@ public class IMUHandler : MonoBehaviour, IIMUHandler, IModuleSettingsHandler
         deltaTime = Mathf.Clamp((float)rawDt, Settings.imu.minDt, Settings.imu.maxDt);
         lastPacketTime = currentTime;
 
+        Debug.Log($"{rawGyro}, {rawAccel}, {rawMag}");
 
         // --- new: remap accelerometer into Madgwick's expected frame ---
         // Rotate +90° around X so that "down" (0,1,0) -> (0,0,1)
